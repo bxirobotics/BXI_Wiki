@@ -89,7 +89,7 @@
 
 机器上的运行环境以及底层程序已经准备好，完全支持“开箱即用”。
 - 配套 SDK 与 ROS2 示例链接：
-  👉 <https://github.com/bxirobotics/bxi_rl_controller_ros2_example>
+  <https://github.com/bxirobotics/bxi_rl_controller_ros2_example>
 
 ---
 
