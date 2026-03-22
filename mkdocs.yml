@@ -40,7 +40,7 @@ extra:
       lang: en
 
 repo_name: MineSunshineone/BXI_Wiki
-repo_url: https://github.com/MineSunshineone/BXI_Wiki
+repo_url: https://github.com/bxirobotics/BXI_Wiki
 edit_uri: edit/main/docs/
 
 plugins:
