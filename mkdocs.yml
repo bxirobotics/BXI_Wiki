@@ -4,6 +4,8 @@ site_url: https://wiki.bxirobotics.cn
 
 theme:
   name: material
+  logo: assets/other/logo.png
+  favicon: assets/other/logo.png
   icon:
     alternate: material/translate
   features:
@@ -44,9 +46,7 @@ edit_uri: edit/main/docs/
 plugins:
   - search
   - awesome-pages
-  - redirects:
-      redirect_maps:
-        'old.md': 'index.md'
+  - redirects
   - mkdocs-video
   - glightbox
   - git-authors
