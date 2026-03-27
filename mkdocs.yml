@@ -52,6 +52,10 @@ edit_uri: edit/main/docs/
 
 plugins:
   - search
+  - privacy:
+      assets: false
+      links_attr_map:
+        target: _blank
   - redirects
   - mkdocs-video
   - glightbox

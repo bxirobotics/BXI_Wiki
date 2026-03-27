@@ -1,6 +1,7 @@
 * [Home](en/index.md)
 * ELF3
     * en/elf3/*.md
+* [Demo](https://demo.bxirobotics.cn)
 * Joint Module
     * en/joint_module/*.md
 * RL

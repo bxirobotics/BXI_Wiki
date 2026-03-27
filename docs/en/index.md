@@ -11,6 +11,7 @@ hide:
   <br>
   <a href="elf3/" class="md-button md-button--primary">Get Started with ELF3</a>
   <a href="joint_module/" class="md-button md-button--primary">Explore Joint Modules</a>
+  <a href="https://demo.bxirobotics.cn" class="md-button">Open Demo</a>
 </div>
 
 <br>

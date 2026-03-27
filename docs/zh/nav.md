@@ -1,6 +1,7 @@
 * [首页](zh/index.md)
 * 精灵3
     * zh/elf3/*.md
+* [Demo](https://demo.bxirobotics.cn)
 * 关节模组
     * zh/joint_module/*.md
 * 强化学习
