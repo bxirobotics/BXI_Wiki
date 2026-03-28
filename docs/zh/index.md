@@ -9,8 +9,8 @@ hide:
   <h1>欢迎来到 BXI Robotics 开发者文档</h1>
   <p>探索双足机器人、自研关节模组以及先进的强化学习算法</p>
   <br>
-  <a href="elf3/" class="md-button md-button--primary">开始了解 ELF3 机器人</a>
-  <a href="joint_module/" class="md-button md-button--primary">探索关节模组</a>
+  <a href="elf3/" class="md-button md-button--primary">精灵3 人形机器人</a>
+  <a href="joint_module/" class="md-button md-button--primary">关节模组</a>
   <a href="https://demo.bxirobotics.cn" class="md-button">打开 Demo</a>
 </div>
 
