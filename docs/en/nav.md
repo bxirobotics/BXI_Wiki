@@ -1,5 +1,5 @@
 * [Home](en/index.md)
-* ELF3
+* ELF3 Humanoid Robot
     * en/elf3/*.md
 * [Demo](https://demo.bxirobotics.cn)
 * Joint Module

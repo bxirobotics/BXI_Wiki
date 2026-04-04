@@ -1,5 +1,5 @@
 * [首页](zh/index.md)
-* 精灵3
+* 精灵3 人形机器人
     * zh/elf3/*.md
 * [Demo](https://demo.bxirobotics.cn)
 * 关节模组
