@@ -1,4 +1,4 @@
-# CAN 通信说明
+# CANFD 通信说明
 
 本文档说明 BXI 关节模组在 MIT 控制模式下的 CAN/CANFD 通信协议。
 
