@@ -1,3 +1,7 @@
+---
+title: Reinforcement Learning
+---
+
 # Reinforcement Learning (RL)
 
 This document is currently under construction.

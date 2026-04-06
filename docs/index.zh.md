@@ -10,7 +10,7 @@ hide:
   <p>探索人形机器人精灵3、BXI关节电机以及算法模型</p>
   <br>
   <a href="elf3/" class="md-button md-button--primary">精灵3 人形机器人</a>
-  <a href="joint_module/" class="md-button md-button--primary">关节电机模组</a>
+  <a href="actuators/" class="md-button md-button--primary">关节电机模组</a>
   <a href="https://demo.bxirobotics.cn" class="md-button">在线 Demo</a>
 </div>
 
@@ -32,7 +32,7 @@ hide:
 
     获取 BXI 关节模组的接线说明、通信协议手册以及性能调试指南。
 
-    [查看详情 :octicons-arrow-right-24:](joint_module/index.md)
+    [查看详情 :octicons-arrow-right-24:](actuators/index.md)
 
 -   **强化学习 (RL)**
 

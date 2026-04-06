@@ -1,0 +1,10 @@
+use_index_title: true
+
+nav:
+  - index.md
+  - elf3
+  - Demo: https://demo.bxirobotics.cn/
+  - actuators
+  - rl
+  - remapping
+  - others

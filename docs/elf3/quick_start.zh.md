@@ -71,7 +71,7 @@
 
 ## 手柄运动按键说明
 
-![Gamepad](../../assets/elf3/gamepad.png)
+![Gamepad](../assets/elf3/gamepad.png)
 
 | 功能 | 操作方式 | 说明 |
 | :--- | :--- | :--- |

@@ -1,3 +1,7 @@
+---
+title: ELF3 Robot
+---
+
 # ELF3 Operation and Development Guide
 
 This document contains instructions for unboxing, basic operations, safety precautions, and secondary development for the ELF3 robot.

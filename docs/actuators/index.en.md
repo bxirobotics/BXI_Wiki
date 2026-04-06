@@ -1,3 +1,7 @@
+---
+title: Joint Module
+---
+
 # Joint Module
 
 This section contains communication protocol and PC tool usage documents for the joint module.

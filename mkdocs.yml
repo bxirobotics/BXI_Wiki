@@ -63,7 +63,7 @@ plugins:
   - minify:
       minify_html: true
   - i18n:
-      docs_structure: folder
+      docs_structure: suffix
       fallback_to_default: true
       languages:
         - locale: zh
@@ -71,8 +71,7 @@ plugins:
           name: 简体中文
         - locale: en
           name: English
-  - literate-nav:
-      nav_file: nav.md
+  - awesome-nav
   - git-revision-date-localized:
       enable_creation_date: true
       fallback_to_build_date: true
