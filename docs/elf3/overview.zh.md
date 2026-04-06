@@ -55,15 +55,18 @@ title: 产品介绍
 
 ### 关节电机选型
 
-| 关节位置 | 电机型号 | 峰值扭矩 |
+> `l` = left，`r` = right，`l/r` 表示左右对称各一个关节。
+
+| 关节 | 电机型号 | 峰值扭矩 |
 | :--- | :--- | :--- |
-| 腰 Z | BXI8515-19 | 120–150 Nm |
-| 腰 X、腰 Y | BXI7010-19 × 2（双电机） | 各 2 × 50 Nm |
-| 髋 X、髋 Y、膝 Y | BXI8515-19 | 150 Nm |
-| 髋 Z | BXI7010-19 | 50 Nm |
-| 踝 Y、踝 X | BXI5018-19 × 2（双电机并联） | > 50 Nm（合计） |
-| 肩 Y、肩 X、肘 Y | BXI7010-19 | 50 Nm |
-| 肩 Z、腕 X/Y/Z | BXI5014-19 | 25 Nm |
+| `waist_z_joint` | BXI8515-19 | 120–150 Nm |
+| `waist_x_joint`、`waist_y_joint` | BXI7010-19 × 2（双电机） | 各 2 × 50 Nm |
+| `l/r_hip_x_joint`、`l/r_hip_y_joint`、`l/r_knee_y_joint` | BXI8515-19 | 150 Nm |
+| `l/r_hip_z_joint` | BXI7010-19 | 50 Nm |
+| `l/r_ankle_y_joint`、`l/r_ankle_x_joint` | BXI5018-19 × 2（双电机并联） | > 50 Nm（合计） |
+| `l/r_shoulder_y_joint`、`l/r_shoulder_x_joint`、`l/r_elbow_y_joint` | BXI7010-19 | 50 Nm |
+| `l/r_shoulder_z_joint`、`l/r_wrist_x_joint`、`l/r_wrist_y_joint`、`l/r_wrist_z_joint` | BXI5014-19 | 25 Nm |
+| `neck_z_joint`、`neck_y_joint` | BXI5014-19 | 25 Nm |
 
 ---
 
