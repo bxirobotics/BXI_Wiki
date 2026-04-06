@@ -45,28 +45,47 @@ mkdocs serve
 docs/
 ├── assets/                  # 全站共享静态资源（图片等）
 │   ├── elf3/
-│   ├── joint_module/
+│   ├── actuators/
 │   └── ...
-├── .nav.yml                 # 根级导航配置
-├── index.zh.md              # 中文首页
-├── index.en.md              # 英文首页
+├── .nav.yml                 # 根级导航配置（含 use_index_title: true）
+├── home.zh.md               # 中文首页
+├── home.en.md               # 英文首页
+│
 ├── elf3/
-│   ├── .nav.yml
-│   ├── index.zh.md
-│   ├── index.en.md
-│   ├── quick_start.zh.md
+│   ├── .nav.yml             # 控制子项排序，不含 index.md
+│   ├── index.zh.md          # 仅含 title frontmatter，提供 section 名称
+│   ├── index.en.md          # 仅含 title frontmatter
+│   ├── overview.zh.md       # 产品介绍内容
+│   ├── overview.en.md
+│   ├── quick_start.zh.md    # 操作指南内容
 │   ├── quick_start.en.md
 │   └── developer/
 │       ├── .nav.yml
-│       ├── index.zh.md
-│       └── index.en.md
+│       ├── index.zh.md      # 仅含 title frontmatter
+│       ├── index.en.md
+│       ├── navigation.zh.md
+│       └── navigation.en.md
+│
 ├── actuators/
 │   ├── .nav.yml
-│   ├── index.zh.md
+│   ├── index.zh.md          # 仅含 title frontmatter
 │   ├── index.en.md
+│   ├── can_communication.zh.md
 │   └── ...
 └── ...
 ```
+
+### index 文件的特殊规则
+
+每个栏目目录下都有一对 `index.zh.md` / `index.en.md`，**只包含 frontmatter title，无正文内容**：
+
+```markdown
+---
+title: 精灵3 人形机器人
+---
+```
+
+这两个文件**不出现在导航菜单中**，仅用于提供该栏目在导航栏的中英文显示名称（由根 `.nav.yml` 的 `use_index_title: true` 读取）。
 
 ### 文件命名规范
 
@@ -83,30 +102,32 @@ docs/
 
 ### 新增一篇文章
 
-在对应目录下同时创建中英文文件：
+在对应目录下同时创建中英文文件即可，无需修改任何配置：
 
 ```
 docs/elf3/new_page.zh.md
 docs/elf3/new_page.en.md
 ```
 
-文件创建后 `awesome-nav` 自动扫描识别，**无需修改任何配置文件**。
+### 新增一个栏目
 
-### 新增一个栏目（二级分类）
-
-1. 创建目录和必要文件：
+1. 创建目录结构：
 
 ```
 docs/half_robot/
-├── .nav.yml          # 可选，用于控制子项排序
-├── index.zh.md       # 栏目首页（必须存在）
-├── index.en.md
+├── .nav.yml             # 控制子项排序，不含 index.md
+├── index.zh.md          # 仅 title: 半人形机器人
+├── index.en.md          # 仅 title: Half Robot
+├── overview.zh.md       # 栏目第一篇文章（内容）
+├── overview.en.md
 └── pnd_adam_u_sdk/
-    ├── index.zh.md
-    └── index.en.md
+    ├── .nav.yml
+    ├── index.zh.md      # 仅 title: PND Adam U SDK
+    ├── index.en.md
+    └── ...
 ```
 
-2. 在上级 `.nav.yml` 的 `nav:` 列表中加入该目录名：
+2. 在上级 `.nav.yml` 加入目录名：
 
 ```yaml
 # docs/.nav.yml
@@ -124,45 +145,14 @@ nav:
 
 ## 导航配置（`.nav.yml`）
 
-每个目录可以有一个 `.nav.yml` 文件，控制该目录下的导航行为。
-
-### 控制子项排序
+每个目录有一个 `.nav.yml`，控制该目录下的导航顺序。**不要在 `nav:` 中列出 `index.md`**（index 不在菜单中显示）。
 
 ```yaml
 # docs/elf3/.nav.yml
 nav:
-  - index.md
+  - overview.md       # 写不带语言后缀的逻辑名，插件自动匹配当前语言
   - quick_start.md
   - developer
-```
-
-`nav:` 中使用**不带语言后缀的逻辑名**（写 `index.md`，不写 `index.zh.md`），插件会自动解析为当前语言的对应文件。
-
-### 控制导航栏显示名称
-
-Section 的导航栏名称来自该目录 `index.md` 的 frontmatter `title:` 字段（需根目录 `.nav.yml` 中开启 `use_index_title: true`）。
-
-在 `index.zh.md` 中：
-```markdown
----
-title: 精灵3 人形机器人
----
-```
-
-在 `index.en.md` 中：
-```markdown
----
-title: ELF3 Robot
----
-```
-
-### 单篇文章的显示名称
-
-在文件顶部加 frontmatter：
-```markdown
----
-title: 操作指南
----
 ```
 
 ---

@@ -17,7 +17,11 @@
       "Bash(cat /d/GithubRepo/BXI_Wiki/.github/workflows/*.yml)",
       "Bash(python3 -c \" data = open\\('/d/GithubRepo/BXI_Wiki/requirements.txt','rb'\\).read\\(\\) print\\('encoding detect:', data[:4].hex\\(\\)\\) text = data.decode\\('utf-16-le'\\) if data[:2] == b'\\\\xff\\\\xfe' else data.decode\\('utf-8', errors='replace'\\) for line in text.splitlines\\(\\): if line.strip\\(\\): print\\(repr\\(line\\)\\) \")",
       "Bash(python3:*)",
-      "Bash(.venv/Scripts/python.exe:*)"
+      "Bash(.venv/Scripts/python.exe:*)",
+      "WebFetch(domain:wiki.pndbotics.com)",
+      "Bash(curl -s https://wiki.pndbotics.com)",
+      "Bash(PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -m mkdocs build)",
+      "Bash(ls docs/*.md docs/*.zh.md docs/*.en.md)"
     ]
   }
 }

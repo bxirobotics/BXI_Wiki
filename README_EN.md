@@ -45,28 +45,47 @@ This project uses **i18n suffix mode**: Chinese and English files share the same
 docs/
 ├── assets/                  # Shared static assets (images, etc.)
 │   ├── elf3/
-│   ├── joint_module/
+│   ├── actuators/
 │   └── ...
-├── .nav.yml                 # Root navigation config
-├── index.zh.md              # Chinese homepage
-├── index.en.md              # English homepage
+├── .nav.yml                 # Root navigation config (includes use_index_title: true)
+├── home.zh.md               # Chinese homepage
+├── home.en.md               # English homepage
+│
 ├── elf3/
-│   ├── .nav.yml
-│   ├── index.zh.md
-│   ├── index.en.md
-│   ├── quick_start.zh.md
+│   ├── .nav.yml             # Controls item order, does NOT include index.md
+│   ├── index.zh.md          # Title frontmatter only — provides section name
+│   ├── index.en.md          # Title frontmatter only
+│   ├── overview.zh.md       # Product overview content
+│   ├── overview.en.md
+│   ├── quick_start.zh.md    # Operation guide content
 │   ├── quick_start.en.md
 │   └── developer/
 │       ├── .nav.yml
-│       ├── index.zh.md
-│       └── index.en.md
+│       ├── index.zh.md      # Title frontmatter only
+│       ├── index.en.md
+│       ├── navigation.zh.md
+│       └── navigation.en.md
+│
 ├── actuators/
 │   ├── .nav.yml
-│   ├── index.zh.md
+│   ├── index.zh.md          # Title frontmatter only
 │   ├── index.en.md
+│   ├── can_communication.zh.md
 │   └── ...
 └── ...
 ```
+
+### The index file convention
+
+Each section directory has a pair of `index.zh.md` / `index.en.md` files containing **only a frontmatter title, no body content**:
+
+```markdown
+---
+title: ELF3 Robot
+---
+```
+
+These files **do not appear in the navigation menu** — they exist only to provide the section's localized display name (read by `use_index_title: true` in the root `.nav.yml`).
 
 ### Naming Conventions
 
@@ -83,27 +102,29 @@ docs/
 
 ### Adding a new page
 
-Create both language files in the target directory:
+Create both language files in the target directory — no config changes needed:
 
 ```
 docs/elf3/new_page.zh.md
 docs/elf3/new_page.en.md
 ```
 
-`awesome-nav` auto-discovers new files — **no config changes needed**.
+### Adding a new section
 
-### Adding a new section (nested category)
-
-1. Create the directory and required files:
+1. Create the directory structure:
 
 ```
 docs/half_robot/
-├── .nav.yml          # Optional — controls child item order
-├── index.zh.md       # Section index page (required)
-├── index.en.md
+├── .nav.yml             # Controls item order, does NOT include index.md
+├── index.zh.md          # Title only: 半人形机器人
+├── index.en.md          # Title only: Half Robot
+├── overview.zh.md       # First content page
+├── overview.en.md
 └── pnd_adam_u_sdk/
-    ├── index.zh.md
-    └── index.en.md
+    ├── .nav.yml
+    ├── index.zh.md      # Title only: PND Adam U SDK
+    ├── index.en.md
+    └── ...
 ```
 
 2. Add the directory name to the parent `.nav.yml`:
@@ -113,9 +134,9 @@ docs/half_robot/
 use_index_title: true
 
 nav:
-  - index.md
+  - home.md
   - elf3
-  - half_robot    # add this line
+  - half_robot      # add this line
   - actuators
   - ...
 ```
@@ -124,45 +145,14 @@ nav:
 
 ## Navigation Config (`.nav.yml`)
 
-Each directory can have a `.nav.yml` file to control its navigation behavior.
-
-### Controlling item order
+Each directory has a `.nav.yml` to control the order of nav items. **Do not list `index.md` in `nav:`** — index files are not shown in the menu.
 
 ```yaml
 # docs/elf3/.nav.yml
 nav:
-  - index.md
+  - overview.md       # Use logical names without locale suffix
   - quick_start.md
   - developer
-```
-
-Use **locale-stripped logical names** in `nav:` (write `index.md`, not `index.zh.md`) — the plugin resolves them to the correct language file automatically.
-
-### Setting section display names
-
-Section names in the navigation come from the `title:` frontmatter field of that directory's `index.md` (requires `use_index_title: true` in the root `.nav.yml`).
-
-In `index.zh.md`:
-```markdown
----
-title: 精灵3 人形机器人
----
-```
-
-In `index.en.md`:
-```markdown
----
-title: ELF3 Robot
----
-```
-
-### Setting individual page display names
-
-Add frontmatter at the top of the file:
-```markdown
----
-title: Quick Start Guide
----
 ```
 
 ---
