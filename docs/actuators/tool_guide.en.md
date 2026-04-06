@@ -14,7 +14,7 @@
 
 <div style="display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
   <div style="flex:0 0 38%; min-width:180px;">
-    <img src="../assets/joint_module/intro.png" alt="Interface Overview" style="width:100%; height:auto; display:block;" />
+    <img src="../assets/actuators/intro.png" alt="Interface Overview" style="width:100%; height:auto; display:block;" />
   </div>
   <div style="flex:1 1 58%; min-width:220px;">
 
@@ -65,15 +65,15 @@ Find the correct COM port:
 - Expand "Ports (COM & LPT)"
 - Find the COM port under "USB Serial Device" (e.g. `COM20`, `COM31`)
 
-![COM Example](../assets/joint_module/com.png)
+![COM Example](../assets/actuators/com.png)
 
 Open `bxi_tool`, then select the corresponding port from the top-left port dropdown. If no port appears, click refresh.
 
-![Connect and Refresh Example](../assets/joint_module/connectrefreash.png)
+![Connect and Refresh Example](../assets/actuators/connectrefreash.png)
 
 ### 2.2 Select Target
 
-![Connection Example](../assets/joint_module/connect.png)
+![Connection Example](../assets/actuators/connect.png)
 
 When the debugger is connected for the first time, it outputs a target selection menu:
 
@@ -82,7 +82,7 @@ When the debugger is connected for the first time, it outputs a target selection
 
 Example: choose `9`.
 
-![Selection Example](../assets/joint_module/9.png)
+![Selection Example](../assets/actuators/9.png)
 
 ### 2.3 Connect Motor
 
@@ -98,7 +98,7 @@ Recommended power input:
 
 After power-on, observe motor serial output.
 
-![Motor Power-on Output Example](../assets/joint_module/boot.png)
+![Motor Power-on Output Example](../assets/actuators/boot.png)
 
 ---
 
@@ -106,7 +106,7 @@ After power-on, observe motor serial output.
 
 Used to view motor output and basic communication information.
 
-![Serial Page](../assets/joint_module/serial.png)
+![Serial Page](../assets/actuators/serial.png)
 
 ---
 
@@ -114,7 +114,7 @@ Used to view motor output and basic communication information.
 
 Used for MIT control debugging, command sending, and status monitoring.
 
-![Debug Page](../assets/joint_module/debug.png)
+![Debug Page](../assets/actuators/debug.png)
 
 ---
 
@@ -122,7 +122,7 @@ Used for MIT control debugging, command sending, and status monitoring.
 
 Used to modify motor parameters and communication settings.
 
-![Config Page](../assets/joint_module/config.png)
+![Config Page](../assets/actuators/config.png)
 
 After connecting and powering on the motor, enter the left menu `Config` page to edit parameters.
 
@@ -146,13 +146,13 @@ Rules:
 - `master_id` can also be written independently
 - If you want to change only `can_id` while keeping a specific `master_id`, write `master_id` again after updating `can_id`
 
-![CAN BUS Section](../assets/joint_module/canbus.png)
+![CAN BUS Section](../assets/actuators/canbus.png)
 
 ### 5.2 Save Parameters
 
 To keep parameters after power-off, use the "Save Parameters" button at the bottom-right after modification.
 
-![Save Parameters Button](../assets/joint_module/configsave.png)
+![Save Parameters Button](../assets/actuators/configsave.png)
 
 ---
 
@@ -160,7 +160,7 @@ To keep parameters after power-off, use the "Save Parameters" button at the bott
 
 Used to run the magnetic encoder calibration process.
 
-![Calibration Page](../assets/joint_module/calibration.png)
+![Calibration Page](../assets/actuators/calibration.png)
 
 ---
 
@@ -168,4 +168,4 @@ Used to run the magnetic encoder calibration process.
 
 Used to upgrade motor firmware.
 
-![Firmware Page](../assets/joint_module/firmware.png)
+![Firmware Page](../assets/actuators/firmware.png)

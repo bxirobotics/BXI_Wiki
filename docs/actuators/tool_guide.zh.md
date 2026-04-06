@@ -14,7 +14,7 @@
 
 <div style="display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap;">
   <div style="flex:0 0 38%; min-width:180px;">
-    <img src="../assets/joint_module/intro.png" alt="界面介绍" style="width:100%; height:auto; display:block;" />
+    <img src="../assets/actuators/intro.png" alt="界面介绍" style="width:100%; height:auto; display:block;" />
   </div>
   <div style="flex:1 1 58%; min-width:220px;">
 
@@ -65,15 +65,15 @@
 - 展开"端口（COM 和 LPT）"
 - 查找"USB 串行设备"对应端口（例如 `COM20`、`COM31`）
 
-![COM示意图](../assets/joint_module/com.png)
+![COM示意图](../assets/actuators/com.png)
 
 打开 `bxi_tool` 后，在左上角端口下拉框选择对应端口。若无选项，点击右侧刷新按钮。
 
-![连接刷新示意图](../assets/joint_module/connectrefreash.png)
+![连接刷新示意图](../assets/actuators/connectrefreash.png)
 
 ### 2）选择目标
 
-![接线示意图](../assets/joint_module/connect.png)
+![接线示意图](../assets/actuators/connect.png)
 
 首次连接调试器时，会输出目标选择菜单：
 
@@ -82,7 +82,7 @@
 
 示例：选择 `9`。
 
-![实例示意图](../assets/joint_module/9.png)
+![实例示意图](../assets/actuators/9.png)
 
 ### 3）连接电机
 
@@ -98,7 +98,7 @@
 
 上电后观察电机串口输出。
 
-![电机上电输出示例](../assets/joint_module/boot.png)
+![电机上电输出示例](../assets/actuators/boot.png)
 
 ---
 
@@ -106,7 +106,7 @@
 
 用于查看电机输出与基础通信信息。
 
-![串口界面截图](../assets/joint_module/serial.png)
+![串口界面截图](../assets/actuators/serial.png)
 
 ---
 
@@ -114,7 +114,7 @@
 
 用于 MIT 控制调试、参数下发与状态观察。
 
-![调试界面截图](../assets/joint_module/debug.png)
+![调试界面截图](../assets/actuators/debug.png)
 
 ---
 
@@ -122,7 +122,7 @@
 
 用于修改电机参数与通信设置。
 
-![配置界面截图](../assets/joint_module/config.png)
+![配置界面截图](../assets/actuators/config.png)
 
 连接上电机后，进入左侧菜单 `Config` 页面可修改参数。
 
@@ -146,13 +146,13 @@
 - 也支持单独写入 `master_id`
 - 如果希望只改 `can_id` 而保留特定 `master_id`，需在改完 `can_id` 后重新写入 `master_id`
 
-![CAN BUS 参数区截图](../assets/joint_module/canbus.png)
+![CAN BUS 参数区截图](../assets/actuators/canbus.png)
 
 ### 5.2 参数保存
 
 若希望参数掉电不丢失，请在修改后使用右下角"保存参数"功能。
 
-![保存参数按钮截图](../assets/joint_module/configsave.png)
+![保存参数按钮截图](../assets/actuators/configsave.png)
 
 ---
 
@@ -160,7 +160,7 @@
 
 用于执行磁编校准流程。
 
-![校准界面截图](../assets/joint_module/calibration.png)
+![校准界面截图](../assets/actuators/calibration.png)
 
 ---
 
@@ -168,5 +168,5 @@
 
 用于升级电机固件。
 
-![固件烧录界面截图](../assets/joint_module/firmware.png)
+![固件烧录界面截图](../assets/actuators/firmware.png)
 

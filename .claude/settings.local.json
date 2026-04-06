@@ -13,7 +13,8 @@
       "Bash(.venv/Scripts/python.exe -m pip show mkdocs-awesome-pages-plugin)",
       "Bash(.venv/Scripts/python.exe -m mkdocs build)",
       "Bash(.venv/Scripts/python.exe -c ':*)",
-      "Bash(python3 -c ':*)"
+      "Bash(python3 -c ':*)",
+      "Bash(cat /d/GithubRepo/BXI_Wiki/.github/workflows/*.yml)"
     ]
   }
 }
