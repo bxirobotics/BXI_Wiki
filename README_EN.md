@@ -1,73 +1,178 @@
 [简体中文](README.md) | English
 
-# BXI Robotics Wiki (Developer Documentation Repository)
+# BXI Robotics Wiki
 
-Welcome to the central BXI Robotics Wiki code repository. This documentation architecture is powered by the **MkDocs Material** theme supplemented by advanced extensions, seamlessly driving multi-language environments (Chinese and English) and deployed entirely autonomously to 1Panel containers via GitHub Actions.
+Developer documentation for BXI Robotics, built with **MkDocs Material**, supporting Chinese and English, and automatically deployed via GitHub Actions.
 
----
-
-## 🛠️ Documentation Workflow: How Is Code Brought to Live Stages?
-
-Thanks to the automated GitHub CI pipelines pre-configured under `.github/workflows/deploy.yml`, authors will **never** need to execute complex `mkdocs build` protocols explicitly on local rigs. Editing proceeds painlessly through two main steps:
-
-1. Maintain or draft your new Markdown files.
-2. Form a commit and enact `git push` directly onto `master` or `main`.
-
-**Automated Deep Mechanics**: As a push is intercepted, GitHub synchronizes non-compiled, bare-bone references (`docs/`, `mkdocs.yml`, `requirements.txt`) directly via SCP onto the 1Panel volume mount paths. Post synchronization, an overarching SSH command triggers a restart logic for the active MkDocs docker suite running live in the data-center nodes. Upon spin-up, the container recursively checks into our `requirements` map dynamically and caches extensions securely before mounting an agile layout in memory.
+- Live site: [wiki.bxirobotics.cn](https://wiki.bxirobotics.cn)
 
 ---
 
-## 📂 Page Routing & Bilingual File Tree Structure
+## Deployment
 
-As our engine governs translated sites context, documents are strictly silo-ed beneath the respective language root node folders preventing indexing cross-contamination. Meanwhile, binary/media items leverage a shared overarching parent vault for re-usability.
+This repository uses a GitHub Actions pipeline — **no local `mkdocs build` required**.
 
-```text
-docs/
-├── assets/          <-- ★ Global Shared Content (Images, Videos, CADs)
-│   ├── elf3/
-│   └── ...
-├── zh/              <-- 🇨🇳 Main Chinese Translation Source
-│   ├── elf3/
-│   │   ├── index.md         <-- Fallback root gateway
-│   │   └── quick_start.md   <-- Supplemental sub-sheet
-│   └── index.md
-└── en/              <-- 🇬🇧 Main English Translation Source
-    ├── elf3/
-    └── index.md
+1. Edit or create Markdown files locally
+2. `git push` to the `master` branch
+
+After pushing, GitHub Actions syncs `docs/`, `mkdocs.yml`, and `requirements.txt` to the server via SCP, then runs `docker compose restart` to restart the MkDocs container. The container installs dependencies from `requirements.txt` and renders pages on startup.
+
+---
+
+## Local Preview
+
+```bash
+# Create and activate virtual environment (first time only)
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# Install dependencies (first time only)
+pip install -r requirements.txt
+
+# Start local preview server
+mkdocs serve
 ```
 
-### 1. Markdown Core Standards
-Contributions must follow the fundamental Markdown guidelines.
-- **Global Image Referencing**: **Never duplicate matching media blobs twice into separated directories**. Route the source file into the unifying `docs/assets/[Sub-Series_Name]/` library and invoke the relative exit path to pull the asset onto current domains reliably:
-  `![Descriptive Tagging](../../assets/elf3/demo.jpg)`
+Visit `http://127.0.0.1:8000` for a live preview.
 
-### 2. Spawning New Index Categories & Custom Filtering
-The repository does **not** rely on authors performing manual updates towards maintaining the nested YAML `nav:` branch maps inside the settings configuration. Through utilizing the `awesome-nav` framework mechanism, MkDocs detects your branch layout context inherently!
-- **Setting Up New Directory Routes**: Deploying a completely separate structural layer means just appending a folder matching the new product unit names, under `docs/zh` and inversely mapped inside `docs/en`, such as `dog1`.
-- **Primary Sub-Link Requirement**: Keep in mind that inside any initialized content layer branch, an index root must be defined (thus ensuring you drop an `index.md` acting as the welcoming entry module).
-- **Overriding Alphabetic Sort Constraints**: The automated crawler processes contents and organizes trees following strict alphabetic indexing rules. For circumstances requiring custom sorting (Ex: Pushing the "Quick Guide" link above the "Advanced Breakdown"), initialize a file named `.nav.yml` strictly inside the acting problematic directory carrying sorting overrides syntax:
-  ```yaml
-  nav:
-    - index.md
-    - quick_start.md
-    - '*'
-  ```
-- **Customizing Top-Level Tab Names**: By default, the plugin extracts raw physical folder strings (e.g., `joint_module`) to render the top root tabs. To forcefully map proper capitalized names or localized translations, initialize a `.nav.yml` file within that specific subfolder defining solely the title metadata:
-  ```yaml
-  title: Joint Module
-  ```
-- **File-Level Title Overrides (Homepage Injection)**: To overwrite the display name of raw Markdown page entities (like swapping "index" text in the menu to read "Home"), seamlessly inject explicit YAML Frontmatter atop the exact file itself `index.md`:
-  ```yaml
-  ---
-  title: Home
-  ---
-  ```
+---
 
-### 3. Naming Convention Formalities & URL Generations
-1. **File / Folder Entities**: Restrict standard file naming mechanisms uniquely to lowercase alphabet digits merged consistently by an underscore `_` or dash `-` (`joint_module`, `quick_start.md`). Deployments integrating UTF8-encoded Chinese script variants natively inside raw filesystem entities generate unreadable URL parameters breaking active site structures inevitably!
-2. **Dynamic Sidebar Headers Lookup Parsing**: Although the base filename inherits English characters dynamically, the interface abstracts these paths smartly. The sidebar menu actively pulls the first `# H1 Heading` literal mapping from internal markup document syntax. Should it be required to override external menu aliases distinctly from heading representations, utilize the top-line YAML block parameter insertion procedure (`frontmatter`):
-   ```yaml
-   ---
-   title: Overridden Short Name For Explicit Sidebar Rendering
-   ---
-   ```
+## Project Structure
+
+This project uses **i18n suffix mode**: Chinese and English files share the same directory, distinguished by filename suffix.
+
+```
+docs/
+├── assets/                  # Shared static assets (images, etc.)
+│   ├── elf3/
+│   ├── joint_module/
+│   └── ...
+├── .nav.yml                 # Root navigation config
+├── index.zh.md              # Chinese homepage
+├── index.en.md              # English homepage
+├── elf3/
+│   ├── .nav.yml
+│   ├── index.zh.md
+│   ├── index.en.md
+│   ├── quick_start.zh.md
+│   ├── quick_start.en.md
+│   └── developer/
+│       ├── .nav.yml
+│       ├── index.zh.md
+│       └── index.en.md
+├── actuators/
+│   ├── .nav.yml
+│   ├── index.zh.md
+│   ├── index.en.md
+│   └── ...
+└── ...
+```
+
+### Naming Conventions
+
+| Rule | Details |
+|------|---------|
+| Folder / file names | Lowercase letters, digits, `_`, `-` only — **no Chinese characters or spaces** |
+| Chinese documents | `filename.zh.md` |
+| English documents | `filename.en.md` |
+| Shared assets | Place under `docs/assets/<product>/` — never duplicate |
+
+---
+
+## Adding Content
+
+### Adding a new page
+
+Create both language files in the target directory:
+
+```
+docs/elf3/new_page.zh.md
+docs/elf3/new_page.en.md
+```
+
+`awesome-nav` auto-discovers new files — **no config changes needed**.
+
+### Adding a new section (nested category)
+
+1. Create the directory and required files:
+
+```
+docs/half_robot/
+├── .nav.yml          # Optional — controls child item order
+├── index.zh.md       # Section index page (required)
+├── index.en.md
+└── pnd_adam_u_sdk/
+    ├── index.zh.md
+    └── index.en.md
+```
+
+2. Add the directory name to the parent `.nav.yml`:
+
+```yaml
+# docs/.nav.yml
+use_index_title: true
+
+nav:
+  - index.md
+  - elf3
+  - half_robot    # add this line
+  - actuators
+  - ...
+```
+
+---
+
+## Navigation Config (`.nav.yml`)
+
+Each directory can have a `.nav.yml` file to control its navigation behavior.
+
+### Controlling item order
+
+```yaml
+# docs/elf3/.nav.yml
+nav:
+  - index.md
+  - quick_start.md
+  - developer
+```
+
+Use **locale-stripped logical names** in `nav:` (write `index.md`, not `index.zh.md`) — the plugin resolves them to the correct language file automatically.
+
+### Setting section display names
+
+Section names in the navigation come from the `title:` frontmatter field of that directory's `index.md` (requires `use_index_title: true` in the root `.nav.yml`).
+
+In `index.zh.md`:
+```markdown
+---
+title: 精灵3 人形机器人
+---
+```
+
+In `index.en.md`:
+```markdown
+---
+title: ELF3 Robot
+---
+```
+
+### Setting individual page display names
+
+Add frontmatter at the top of the file:
+```markdown
+---
+title: Quick Start Guide
+---
+```
+
+---
+
+## Image References
+
+All images go under `docs/assets/`. Reference them with relative paths:
+
+```markdown
+![Description](../assets/elf3/demo.png)
+```
+
+**Never** store duplicate copies of the same image under separate language directories.
