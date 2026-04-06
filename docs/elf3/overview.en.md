@@ -55,17 +55,15 @@ ELF 3 is a medium-sized humanoid robot developed in-house by BXI Robotics, stand
 
 ### Joint Motor Selection
 
-> `l` = left, `r` = right. `l/r` denotes a symmetric pair — one joint on each side.
-
 | Joint | Motor | Peak Torque |
 | :--- | :--- | :--- |
 | `waist_z_joint` | BXI8515-19 | 120–150 Nm |
 | `waist_x_joint`, `waist_y_joint` | BXI7010-19 × 2 (dual motor) | 2 × 50 Nm each |
-| `l/r_hip_x_joint`, `l/r_hip_y_joint`, `l/r_knee_y_joint` | BXI8515-19 | 150 Nm |
-| `l/r_hip_z_joint` | BXI7010-19 | 50 Nm |
-| `l/r_ankle_y_joint`, `l/r_ankle_x_joint` | BXI5018-19 × 2 (parallel) | > 50 Nm combined |
-| `l/r_shoulder_y_joint`, `l/r_shoulder_x_joint`, `l/r_elbow_y_joint` | BXI7010-19 | 50 Nm |
-| `l/r_shoulder_z_joint`, `l/r_wrist_x_joint`, `l/r_wrist_y_joint`, `l/r_wrist_z_joint` | BXI5014-19 | 25 Nm |
+| `l_hip_x_joint`, `r_hip_x_joint`, `l_hip_y_joint`, `r_hip_y_joint`, `l_knee_y_joint`, `r_knee_y_joint` | BXI8515-19 | 150 Nm |
+| `l_hip_z_joint`, `r_hip_z_joint` | BXI7010-19 | 50 Nm |
+| `l_ankle_y_joint`, `r_ankle_y_joint`, `l_ankle_x_joint`, `r_ankle_x_joint` | BXI5018-19 × 2 (parallel) | > 50 Nm combined |
+| `l_shoulder_y_joint`, `r_shoulder_y_joint`, `l_shoulder_x_joint`, `r_shoulder_x_joint`, `l_elbow_y_joint`, `r_elbow_y_joint` | BXI7010-19 | 50 Nm |
+| `l_shoulder_z_joint`, `r_shoulder_z_joint`, `l_wrist_x_joint`, `r_wrist_x_joint`, `l_wrist_y_joint`, `r_wrist_y_joint`, `l_wrist_z_joint`, `r_wrist_z_joint` | BXI5014-19 | 25 Nm |
 | `neck_z_joint`, `neck_y_joint` | BXI5014-19 | 25 Nm |
 
 ---
