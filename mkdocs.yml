@@ -11,6 +11,7 @@ theme:
     alternate: material/translate
   features:
     - navigation.tabs
+    - navigation.indexes
     - navigation.top
   palette:
     # 浅色模式
