@@ -5,6 +5,7 @@ copyright: Copyright &copy; 2022-2026 BXI Robotics
 
 theme:
   name: material
+  custom_dir: overrides
   logo: assets/other/logo.png
   favicon: assets/other/logo.png
   icon:
