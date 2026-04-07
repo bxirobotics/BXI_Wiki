@@ -9,8 +9,8 @@ hide:
   <h1>Welcome to BXI Robotics Developer Documentation</h1>
   <p>Explore bipedal robots, custom actuators, and advanced reinforcement learning algorithms</p>
   <br>
-  <a href="elf3/" class="md-button md-button--primary">Get Started with ELF3</a>
-  <a href="actuators/" class="md-button md-button--primary">Explore Actuators</a>
+  <a href="elf3/overview/" class="md-button md-button--primary">Get Started with ELF3</a>
+  <a href="actuators/can_communication/" class="md-button md-button--primary">Explore Actuators</a>
   <a href="https://demo.bxirobotics.cn" class="md-button">Open Demo</a>
 </div>
 

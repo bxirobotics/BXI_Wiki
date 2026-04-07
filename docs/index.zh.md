@@ -9,8 +9,8 @@ hide:
   <h1>欢迎来到 BXI Robotics 开发者文档</h1>
   <p>探索人形机器人精灵3、BXI关节电机以及算法模型</p>
   <br>
-  <a href="elf3/" class="md-button md-button--primary">精灵3 人形机器人</a>
-  <a href="actuators/" class="md-button md-button--primary">关节电机模组</a>
+  <a href="elf3/overview/" class="md-button md-button--primary">精灵3 人形机器人</a>
+  <a href="actuators/can_communication/" class="md-button md-button--primary">关节电机模组</a>
   <a href="https://demo.bxirobotics.cn" class="md-button">在线 Demo</a>
 </div>
 
