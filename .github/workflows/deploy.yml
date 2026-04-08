@@ -22,7 +22,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          source: "docs/,overrides/,mkdocs.yml,requirements.txt,.git/"
+          source: "docs/,overrides/,hooks/,mkdocs.yml,requirements.txt,.git/"
           target: /opt/1panel/apps/mkdocs-material/mkdocs-material/data/
           overwrite: true
           rm: true
