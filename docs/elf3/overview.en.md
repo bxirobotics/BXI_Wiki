@@ -70,12 +70,52 @@ ELF 3 is a medium-sized humanoid robot developed in-house by BXI Robotics, stand
 
 ## Computing & Perception
 
+### Main Computer
+
 | Item | Specification |
 | :--- | :--- |
-| **CPU** | NUC Intel i7-1370p (ARM optional) |
+| **CPU** | 13th Gen Intel® Core™ i7-1370P |
+| **Codename** | Raptor Lake |
+| **Cores** | 14 (6 P-cores + 8 E-cores) |
+| **Threads** | 20 |
+| **Max Turbo Frequency** | 5.20 GHz |
+| **P-core Max Turbo** | 5.20 GHz |
+| **E-core Max Turbo** | 3.90 GHz |
+| **Cache** | 24 MB Intel® Smart Cache |
+| **Processor Base Power** | 28 W |
+| **Max Turbo Power** | 64 W |
+| **Memory** | 16 GB DDR4 3200 MHz |
+| **Storage** | 512 GB |
+| **GPU** | Intel® Iris® Xe Graphics (96 EU) |
+| **GPU Max Dynamic Frequency** | 1.50 GHz |
+| **Instruction Set** | 64-bit (SSE4.1 / SSE4.2 / AVX2) |
+| **Intel® Deep Learning Boost** | Yes |
+| **Intel® Adaptix™ Technology** | Yes |
+| **Intel® Hyper-Threading Technology** | Yes |
+| **Intel® Thunderbolt™ 4** | Yes |
+
+### IMU
+
+| Item | Specification |
+| :--- | :--- |
+| **Operating Voltage** | 3.3 ~ 5.5 V |
+| **Operating Temperature** | −40 ~ 85 ℃ |
+| **Interface** | UART / CAN |
+| **Accelerometer Range** | ±12 g |
+| **Accelerometer Resolution** | 0.001 g |
+| **Gyroscope Range** | ±2000 °/s |
+| **Gyroscope Resolution** | 0.001 °/s |
+| **Magnetometer Range** | ±8 Gs |
+| **Magnetometer Resolution** | 0.25 mg |
+| **Barometer Range** | 300 ~ 1100 hPa |
+| **Barometer Resolution** | 0.06 Pa |
+
+### Other Sensors & Peripherals
+
+| Item | Specification |
+| :--- | :--- |
 | **NPU/GPU** | NVIDIA Jetson series supported (optional or user-installed) |
 | **Control Module** | FPGA PCIE-CAN |
-| **IMU** | Onboard |
 | **Depth Camera** | Intel RealSense D435i |
 | **LiDAR** | Optional (Livox Mid360) |
 | **Microphone** | HAOKAI 8-array omnidirectional microphone |

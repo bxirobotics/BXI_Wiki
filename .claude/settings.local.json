@@ -28,7 +28,11 @@
       "Bash(magick --version)",
       "Bash(python -c \"import fitz; print\\('pymupdf ok'\\)\")",
       "Bash(python -c \"import pdf2image; print\\('pdf2image ok'\\)\")",
-      "Bash(/d/soft/uv/uv.exe:*)"
+      "Bash(/d/soft/uv/uv.exe:*)",
+      "WebSearch",
+      "WebFetch(domain:www.intel.com)",
+      "WebFetch(domain:www.notebookcheck.net)",
+      "WebFetch(domain:nanoreview.net)"
     ]
   }
 }
