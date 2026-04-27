@@ -30,6 +30,13 @@ This document contains instructions for unboxing, basic operations, safety preca
 - Press the battery power button. The battery will supply power normally, and the voltage should display **above 45V**; the host will also power on simultaneously. **If the voltage is insufficient, it is recommended to charge it to above 47V before operating.**
 - After the robot PC powers on, the Linux system starts running, **but the control program is not yet running**. At this time, the robot joint torque is 0, and it is in a **relaxed state**. It is recommended to hang the robot on a hanger at this point.
 
+!!! tip "Charging Notes"
+    The charger supports a charging voltage range of **42V–88V**. To adjust the charging voltage, **long-press the knob for 20 seconds** to enter adjustment mode.
+
+    **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger displays a voltage between **58V–60V**. If the voltage is outside this range, adjust it before connecting the robot.
+
+    ![Charger Diagram](../assets/elf3/charge.png){ width="300" }
+
 ### 2. Connect Remote Controller
 Connect the remote controller to the robot PC via Bluetooth. The controller is pre-paired at the factory.
 - **Long press the Xbox button** directly.

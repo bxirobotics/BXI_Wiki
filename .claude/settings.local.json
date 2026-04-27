@@ -32,7 +32,11 @@
       "WebSearch",
       "WebFetch(domain:www.intel.com)",
       "WebFetch(domain:www.notebookcheck.net)",
-      "WebFetch(domain:nanoreview.net)"
+      "WebFetch(domain:nanoreview.net)",
+      "Bash(pkill -f \"mkdocs serve\")",
+      "Bash(.venv/Scripts/mkdocs serve *)",
+      "Read(//tmp/**)",
+      "Bash(awk '{print $1}')"
     ]
   }
 }
