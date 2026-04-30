@@ -56,7 +56,7 @@ ros2 launch remote_controller remote_conroller_launch.py
 #It is recommended to use a script to shut down; this operation can only be used when the remote controller is connected.
     systemctl stop ros_elf_launch.service
 ```
-**Usage**<br>
+**Script-Based Shutdown Guide**<br>
 Create a .sh file anywhere.
 ```
 sudo chmod 777  xxx.sh

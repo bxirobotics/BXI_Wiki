@@ -56,7 +56,7 @@ ros2 launch remote_controller remote_conroller_launch.py
  #建议使用脚本关闭，该操作只能在插上遥控器后使用
     systemctl stop ros_elf_launch.service
 ```
-**使用方法**
+**脚本关闭教程**
 任意地方创建一个 .sh文件
 ```
 sudo chmod 777  xxx.sh
