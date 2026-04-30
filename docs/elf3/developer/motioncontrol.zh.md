@@ -53,7 +53,45 @@ ros2 launch remote_controller remote_conroller_launch.py
 ### 如何引入自定义控制器
 -  **重要**：关闭机器人自启动服务
 ```
+ #建议使用脚本关闭，该操作只能在插上遥控器后使用
     systemctl stop ros_elf_launch.service
+```
+**使用方法**
+任意地方创建一个 .sh文件
+```
+sudo chmod 777  xxx.sh
+bash xxx.sh文件即可
+```
+**脚本示例**
+```
+#!/bin/bash
+
+# 定义进程名称
+PROCESS_NAME="remote_controller"
+
+echo "正在尝试关闭进程: $PROCESS_NAME ..."
+
+# 获取进程 PID
+# pgrep -f 会匹配包含该字符串的完整命令行
+PID=$(pgrep -f "$PROCESS_NAME")
+
+if [ -z "$PID" ]; then
+    echo "未找到正在运行的 $PROCESS_NAME 进程。"
+else
+    echo "发现 PID: $PID，正在发送终止信号..."
+    
+    # 先尝试温柔地终止 (SIGTERM)
+    kill $PID
+    
+    # 等待一秒检查是否成功，如果没有则强制结束 (SIGKILL)
+    sleep 1
+    if ps -p $PID > /dev/null; then
+        echo "进程未响应，正在强制关闭 (kill -9)..."
+        kill -9 $PID
+    fi
+    
+    echo "进程 $PROCESS_NAME 已关闭。"
+fi
 ```
 发布的消息类型<br>
 机器启动的时候会订阅 /motion_commands 话题
@@ -239,6 +277,7 @@ systemctl status ros_elf_launch.service
 ```
 ![alt text](../../assets/elf3/developer/motioncontrol/motionservice.png)<br>
 关掉它有以下办法<br>
+1.插上遥控器时候
 - 暂时关闭
 ```
 systemctl stop ros_elf_launch.service
@@ -253,6 +292,38 @@ systemctl stop ros_elf_launch.service
 sudo systemctl disable ros_elf_launch.service
 #这个会禁用开机自启
 ```
+2.脚本关闭 (**建议**)
+```
+#!/bin/bash
+
+# 定义进程名称
+PROCESS_NAME="remote_controller"
+
+echo "正在尝试关闭进程: $PROCESS_NAME ..."
+
+# 获取进程 PID
+# pgrep -f 会匹配包含该字符串的完整命令行
+PID=$(pgrep -f "$PROCESS_NAME")
+
+if [ -z "$PID" ]; then
+    echo "未找到正在运行的 $PROCESS_NAME 进程。"
+else
+    echo "发现 PID: $PID，正在发送终止信号..."
+    
+    # 先尝试温柔地终止 (SIGTERM)
+    kill $PID
+    
+    # 等待一秒检查是否成功，如果没有则强制结束 (SIGKILL)
+    sleep 1
+    if ps -p $PID > /dev/null; then
+        echo "进程未响应，正在强制关闭 (kill -9)..."
+        kill -9 $PID
+    fi
+    
+    echo "进程 $PROCESS_NAME 已关闭。"
+fi
+```
+
 ### 2.真机程序启动失败后日志查看
 
 - 官方程序会把日志放在 /var/log/bxi_log路径内，按照时间排序

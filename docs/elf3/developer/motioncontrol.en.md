@@ -53,7 +53,45 @@ ros2 launch remote_controller remote_conroller_launch.py
 ### How to Integrate Your Own Controller
 -  **Important**：Disable the robot auto-start service
 ```
+#It is recommended to use a script to shut down; this operation can only be used when the remote controller is connected.
     systemctl stop ros_elf_launch.service
+```
+**Usage**<br>
+Create a .sh file anywhere.
+```
+sudo chmod 777  xxx.sh
+bash xxx.sh文件即可
+```
+example
+```
+#!/bin/bash
+
+# Define the process name
+PROCESS_NAME="remote_controller"
+
+echo "Attempting to stop process: $PROCESS_NAME ..."
+
+# Get the process PID
+# pgrep -f matches the full command line containing the string
+PID=$(pgrep -f "$PROCESS_NAME")
+
+if [ -z "$PID" ]; then
+    echo "No running process found for $PROCESS_NAME."
+else
+    echo "Found PID: $PID, sending termination signal..."
+    
+    # First try a graceful termination (SIGTERM)
+    kill $PID
+    
+    # Wait one second and check if it's still running; if so, force kill (SIGKILL)
+    sleep 1
+    if ps -p $PID > /dev/null; then
+        echo "Process did not respond, forcing shutdown (kill -9)..."
+        kill -9 $PID
+    fi
+    
+    echo "Process $PROCESS_NAME has been terminated."
+fi
 ```
 **Message Type to Publish**
 When the robot starts, it subscribes to the **/motion_commands** topic.
@@ -251,6 +289,37 @@ systemctl start ros_elf_launch.service
 systemctl stop ros_elf_launch.service
 sudo systemctl disable ros_elf_launch.service
 #This disables auto-start on boot
+```
+2. Stop via Script (**Recommended**)
+```
+#!/bin/bash
+
+# Define the process name
+PROCESS_NAME="remote_controller"
+
+echo "Attempting to stop process: $PROCESS_NAME ..."
+
+# Get the process PID
+# pgrep -f matches the full command line containing the string
+PID=$(pgrep -f "$PROCESS_NAME")
+
+if [ -z "$PID" ]; then
+    echo "No running process found for $PROCESS_NAME."
+else
+    echo "Found PID: $PID, sending termination signal..."
+    
+    # First try a graceful termination (SIGTERM)
+    kill $PID
+    
+    # Wait one second and check if it's still running; if so, force kill (SIGKILL)
+    sleep 1
+    if ps -p $PID > /dev/null; then
+        echo "Process did not respond, forcing shutdown (kill -9)..."
+        kill -9 $PID
+    fi
+    
+    echo "Process $PROCESS_NAME has been terminated."
+fi
 ```
 ### 2.Viewing Logs When Real Robot Program Fails to Start
 
