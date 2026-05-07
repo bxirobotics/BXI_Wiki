@@ -3,6 +3,7 @@
 BXI Control 是配套 BXI 机器人使用的专业遥控应用程序，支持 Android 和 Windows 平台。用户可通过 WiFi 或蓝牙连接机器人，进行实时远程控制、视频监控、遥测数据查看及固件升级等操作。
 
 ---
+- 下载链接：[点击跳转下载站](https://download.bxirobotics.cn/%E7%94%B5%E6%9C%BAAPP)
 
 ## 界面总览
 

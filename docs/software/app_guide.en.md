@@ -3,6 +3,7 @@
 BXI Control is a professional remote control application for BXI robots, supporting Android and Windows platforms. Users can connect to robots via WiFi or Bluetooth for real-time remote control, video monitoring, telemetry data viewing, and firmware upgrades.
 
 ---
+- Download: [Go to Download Page](https://download.bxirobotics.cn/%E7%94%B5%E6%9C%BAAPP)
 
 ## Interface Overview
 
