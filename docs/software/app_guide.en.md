@@ -279,7 +279,7 @@ Real-time display of battery SOC percentage, voltage, current, and temperature, 
 
 Real-time display of each joint motor's temperature to identify overheating joints.
 
-> [Screenshot pending: Joint temperature page showing motor temperature list]
+![Joint Temperature](../assets/control/appguide/joint.png)
 
 ### 3D Pose
 
