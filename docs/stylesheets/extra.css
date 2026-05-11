@@ -1,0 +1,28 @@
+.md-copyright__beian {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.4rem 0;
+}
+
+.md-copyright__beian-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: inherit;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.md-copyright__beian-item:hover {
+  opacity: 1;
+}
+
+.md-copyright__beian-item img {
+  height: 1rem;
+  width: auto;
+  vertical-align: middle;
+}

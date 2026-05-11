@@ -1,0 +1,28 @@
+{#-
+  Custom copyright partial - adds ICP and Public Security Bureau filings
+-#}
+<div class="md-copyright">
+  {% if config.copyright %}
+    <div class="md-copyright__highlight">
+      {{ config.copyright }}
+    </div>
+  {% endif %}
+  <div class="md-copyright__beian">
+    <a href="https://beian.mps.gov.cn/#/query/webSearch?code=31010102008687"
+       target="_blank" rel="noopener noreferrer" class="md-copyright__beian-item">
+      <img src="{{ 'assets/other/gongan_beian.webp' | url }}" alt="公安备案" />
+      <span>沪公网安备31010102008687号</span>
+    </a>
+    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer"
+       class="md-copyright__beian-item">
+      <img src="{{ 'assets/other/icp.webp' | url }}" alt="ICP备案" />
+      <span>沪ICP备2025153059号-1</span>
+    </a>
+  </div>
+  {% if not config.extra.generator == false %}
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  {% endif %}
+</div>
