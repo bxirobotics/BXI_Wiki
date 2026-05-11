@@ -84,13 +84,13 @@ sudo su
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 cd /home/bxi/bxi_ws/bxi_rl_controller_ros2_example
 source install/setup.bash
-ros2 launch remote_controller remote_conroller_launch.py
+ros2 launch remote_controller remote_controller_launch.py
 
 # Simulation
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 cd ~/bxi_ws/bxi_rl_controller_ros2_example
 source install/setup.bash
-ros2 launch remote_controller remote_conroller_launch.py
+ros2 launch remote_controller remote_controller_launch.py
 ```
 
 To start a single node, after sourcing the environment:
@@ -149,7 +149,7 @@ int32 axis_1 ... int32 axis_10
 ```
 
 ---
-
+**Step 2: Create a Publisher**
 #### C++ Example
 
 **1. Create a Package**

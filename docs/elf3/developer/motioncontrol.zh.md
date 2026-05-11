@@ -84,13 +84,13 @@ sudo su
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 cd /home/bxi/bxi_ws/bxi_rl_controller_ros2_example
 source install/setup.bash
-ros2 launch remote_controller remote_conroller_launch.py
+ros2 launch remote_controller remote_controller_launch.py
 
 # 仿真
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 cd ~/bxi_ws/bxi_rl_controller_ros2_example
 source install/setup.bash
-ros2 launch remote_controller remote_conroller_launch.py
+ros2 launch remote_controller remote_controller_launch.py
 ```
 
 如果只需要启动单个节点，完成环境加载后使用：
@@ -149,7 +149,7 @@ int32 axis_1 ... int32 axis_10
 ```
 
 ---
-
+**第二步：创建一个发布者**
 #### C++ 示例
 
 **1. 创建功能包**
