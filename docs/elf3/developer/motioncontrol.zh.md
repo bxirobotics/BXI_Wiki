@@ -15,7 +15,7 @@
 机器人主控上电后，默认由 systemd 自启动服务 `ros_elf_launch.service` 拉起机器人程序。启动链路分为以下两个环节：
 
 1. **自启动服务**：`ros_elf_launch.service` 是开机入口，负责在后台启动遥控器程序`remote_controller/remote_conroller_launch.py`。
-2. **真机程序**：遥控器程序`remote_conroller_launch.py`里面有启动真机程序的部分（即按下遥控器右遥感），自启动的真机程序默认都在`~/bxi_ws/bxi_rl_controller_ros2_example`中
+2. **真机程序**：遥控器程序`remote_conroller_launch.py`里面有启动真机程序的部分（即按下遥控器右遥杆启动），自启动的真机程序默认都在`~/bxi_ws/bxi_rl_controller_ros2_example`中
 
 > **提示**：调试单个 launch 或自定义节点前，建议先停止 `ros_elf_launch.service`，避免后台默认节点和手动节点同时运行产生冲突。
 
