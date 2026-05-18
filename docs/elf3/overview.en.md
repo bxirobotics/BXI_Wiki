@@ -99,10 +99,10 @@ Detailed motor specifications can be found in [Joint Actuator Modules](https://w
 
 | Item | Specification |
 | :--- | :--- |
-| **Operating Voltage** | 48 V |
+| **Max Voltage** | 58.8 V |
 | **Rated Current** | 50 A |
 | **Max Current** | > 100 A |
-| **Battery Capacity** | 432 Wh, lithium |
+| **Battery Capacity** | 518 Wh, lithium |
 | **Battery Life** | ~1 hour walking |
 | **Hot-Swap** | Supported |
 

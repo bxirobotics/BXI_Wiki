@@ -19,7 +19,7 @@ This document contains instructions for unboxing, basic operations, safety preca
 3. **Host System Information**:
     - The host operating system of the robot is **Ubuntu 22**.
     - **Username**: `bxi`
-    - **Password**: `12345`
+    - **Password**: `Contact the supplier to obtain`
 
 ---
 
@@ -80,6 +80,8 @@ The built-in control program of the robot has multiple modes: Zero Torque, PD Ho
 ---
 
 ## Gamepad Motion Control
+
+![Gamepad](../assets/elf3/quick_start/gamepad.png)
 
 | Function | Operation | Description |
 | :--- | :--- | :--- |
