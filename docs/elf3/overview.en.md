@@ -162,7 +162,7 @@ Detailed motor specifications can be found in [Joint Actuator Modules](https://w
 | Item | Specification |
 | :--- | :--- |
 | **Depth Camera** | Intel RealSense D435i |
-| **LiDAR** | Optional (Livox Mid360) |
+| **LiDAR** | Optional (Livox Mid360s) |
 | **Microphone** | HAOKAI 8-array omnidirectional microphone |
 | **Speaker** | Yuexin active speaker (DC 5V) |
 | **Wi-Fi / Bluetooth** | Onboard |
