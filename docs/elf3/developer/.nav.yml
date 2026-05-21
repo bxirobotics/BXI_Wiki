@@ -1,5 +1,6 @@
 nav:
   - overview.md
+  - topscreen.md
   - navigation.md
   - manipulation.md
   - motioncontrol.md
