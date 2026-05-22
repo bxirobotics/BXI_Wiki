@@ -92,10 +92,9 @@
 
 ## 手柄运动按键说明
 
-<div style="display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
-  <img src="../assets/elf3/quick_start/remote_controller_front_view.png" width="50%" alt="remote_controller_front_view">
-  <img src="../assets/elf3/quick_start/remote_controller_vertical_view.png" width="50%" alt="remote_controller_vertical_view">
-</div>
+![remote_controller_front_view](../assets/elf3/quick_start/remote_controller_front_view.png)
+
+![remote_controller_vertical_view](../assets/elf3/quick_start/remote_controller_vertical_view.png)
 
 | 模式等级 | 模式名称 | 按键组合 | 可切换的模式 | 备注 |
 | :--- | :--- | :--- | :--- | :--- |
