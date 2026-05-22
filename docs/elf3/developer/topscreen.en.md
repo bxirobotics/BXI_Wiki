@@ -25,7 +25,7 @@ The top display is based on the **Waveshare ESP32-S3-Touch-LCD-2.1** touch displ
 | Memory | 16MB Flash, 8MB PSRAM |
 | Wireless | 2.4GHz Wi-Fi, Bluetooth 5 (BLE) |
 | Common interfaces | USB Type-C, UART, I2C, Micro SD card slot |
-| Onboard resources | QMI8658 six-axis sensor, RTC, battery charging management, and more |
+| Onboard resources | QMI8658 six-axis sensor, RTC, and more |
 
 !!! note "Interface Note"
     Before hardware debugging, refer to the official Waveshare manual for interface usage restrictions. This helps avoid firmware hangs caused by incorrect programs. If the screen firmware hangs and cannot be flashed normally, follow the recovery steps in the official manual to reflash the firmware.
