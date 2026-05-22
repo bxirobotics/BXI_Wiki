@@ -29,13 +29,18 @@ This document contains instructions for unboxing, basic operations, safety preca
 ### 1. Turn on Battery Power & Host Power
 - At this stage, the robot should be suspended on the hanger, with both feet touching the ground.
 - Press the battery power button. The battery will supply power normally, and the host will also power on simultaneously. Check the **voltage value** on the backplate display, not only the percentage / battery bars.
-- **Voltage note**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is usually close to the charger output setting (about **58V–60V**). The voltage gradually decreases during use. If the voltage is clearly low, you cannot confirm that the battery is sufficient, or the voltage drops quickly during operation, stop and charge the robot first.
+- **Voltage note**:
+    1. **58V new robots**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is about **58V-60V**. The voltage gradually decreases during use. If the voltage is clearly low (**below 50V**), stop and charge the robot first.
+    2. **48V old robots**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is about **48V-50V**. The voltage gradually decreases during use. If the voltage is clearly low (**below 40V**), stop and charge the robot first.
 - After the robot PC powers on, the Linux system starts running, **but the control program is not yet running**. At this time, the robot joint torque is 0, and it is in a **relaxed state**. It is recommended to hang the robot on a hanger at this point.
 
 !!! tip "Charging Notes"
-    The charger supports a charging voltage range of **42V–88V**. To adjust the charging voltage, **long-press the knob for 20 seconds** to enter adjustment mode.
+    The charger supports a charging voltage range of **42V-88V**. To adjust the charging voltage, **long-press the knob for 20 seconds** to enter adjustment mode.
 
-    **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger display is within the supplier-specified range. The current recommended check range is **58V–60V**. If the voltage is outside this range, adjust it before connecting the robot.
+    **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger display is within the supplier-specified range:
+
+    1. **48V old robots**: The recommended range is **48V-51V**. If the voltage is outside this range, adjust it before connecting the robot.
+    2. **58V new robots**: The recommended range is **58V-61V**. If the voltage is outside this range, adjust it before connecting the robot.
 
     **Note**: The percentage / battery bars may be inaccurate. Before powering on or moving the robot, use the voltage value as the primary battery-state reference.
 
@@ -50,12 +55,12 @@ Connect the remote controller to the robot PC via Bluetooth. The controller is p
 
 ### 3. Run the Control Program
 Watch the operation instruction video carefully.
-The built-in control program of the robot has multiple modes: Zero Torque, PD Homing, Walk/Run, Dance, etc., and will be continuously updated.
+The built-in control program of the robot has multiple modes: Zero Torque, PD Homing, Walk/Run, Dance, Wave, etc., and will be continuously updated.
 
 !!! warning "Important: Pre-Movement Preparation"
     - To prevent accidental falls, ensure the robot is hung on a gantry crane using a lanyard, sitting on a chair, or sitting upright on the ground. **It is highly recommended to use a hanger and suspend the robot at an appropriate height.**
     - **Remove all cables from the body** (such as charging cables) to prevent tangling during movement.
-    - **Make sure the battery voltage is sufficient** (use the backplate display voltage, not the percentage / battery bars) so the robot does not fall because it cannot complete certain motions due to insufficient power.
+    - **Make sure the battery voltage is sufficient** (55V or above is recommended; use the backplate display voltage, not the percentage / battery bars) so the robot does not fall because it cannot complete certain motions due to insufficient power.
     - **Always prioritize safety** during operation. **No one should enter the robot's motion range**, and avoid getting hit by the swinging joints of the robot.
 
 #### 3.1 Start the Program    
@@ -67,7 +72,7 @@ The built-in control program of the robot has multiple modes: Zero Torque, PD Ho
 *(It is recommended to remain suspended)*:
 - **Press `RB` + `B` simultaneously** to make the robot enter the initial position.
 - **Check if the robot is normal**: Briefly observe if the motors have any anomalies (such as no response or abnormal noises).
-- **Stand the robot up**: If everything is normal, stand the robot up in this state. The operator should assist in maintaining the zero-position standing state to prevent external forces from disrupting the zeroing process.
+- **Stand the robot up**: If everything is normal, stand the robot up in this state, with **both feet touching the ground**. The operator should assist in maintaining the zero-position standing state to prevent external forces from disrupting the zeroing process.
 
 #### 3.3 Switch to Motion State
 *(At this point, zeroing is complete, it is still recommended to remain suspended, and you can release the lanyard after a successful and stable switch)*:
@@ -79,7 +84,7 @@ The built-in control program of the robot has multiple modes: Zero Torque, PD Ho
 
 ## Shutdown and De-energization
 
-- Press the **Terminate button**, the control program will exit automatically, and the robot motors will **immediately de-energize**. The robot will naturally fall due to gravity.
+- Press **Start**, the control program will exit automatically, and the robot motors will **immediately de-energize**. The robot will naturally fall due to gravity.
     > **Note**: Before shutdown, place a chair under the robot or hang it on a hanger to ensure it does not fall hard onto the ground.
 - **Restart**: Return to Section 3.1 to restart the program.
 
@@ -87,15 +92,34 @@ The built-in control program of the robot has multiple modes: Zero Torque, PD Ho
 
 ## Gamepad Motion Control
 
-![Gamepad](../assets/elf3/quick_start/gamepad.png)
+![Remote Controller Front View](../assets/elf3/quick_start/remote_controller_front_view.en.png)
 
-| Function | Operation | Description |
-| :--- | :--- | :--- |
-| **Forward / Backward** | Right joystick | Push to control front/back; **long press** to increase speed. |
-| **Left / Right Turn** | Left D-Pad | Press to control turning; **long press** to increase rotation speed. |
+**Remote controller power indicator colors**: A solid light means the controller is connected successfully. White indicates 2.4G wireless connection, blue indicates Bluetooth connection, and green indicates USB wired connection. A flashing red battery indicator means the battery is low.
+
+**Remote controller mode switch**: The mode switch is located on the bottom/back of the controller near the USB-C port. It has three positions: `USB`, `BT`, and `RF`.
+
+- `USB`: USB wired connection mode, using a USB-C data cable to connect to the PC.
+- `BT`: Bluetooth connection mode, used to connect to the robot PC via Bluetooth.
+- `RF`: 2.4G wireless connection mode, used with a 2.4G USB receiver. The 2.4G USB receiver is located in the controller box by default.
+
+![Remote Controller Top View](../assets/elf3/quick_start/remote_controller_vertical_view.en.png)
+
+| Mode Level | Mode Name | Button Combination | Switchable Modes | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| Normal Mode | Zero-position Mode | RB + Y | Walking / Initial Posture / Zero Torque / Fall Recovery | Joints output no torque and can be rotated freely |
+| Normal Mode | Walking Mode | RB + X | All modes | Omnidirectional movement, with certain obstacle-avoidance ability |
+| Normal Mode | Initial Posture Mode | RB + B | Walking / Zero-position / Zero Torque / Fall Recovery | Joints are fixed at preset angles |
+| Normal Mode | Zero Torque Mode | RB + A | Walking / Zero-position / Initial Posture / Fall Recovery | All joints remain at the zero position |
+| Advanced Mode | Running Mode | LB + Y | Walking | High-speed running, without obstacle-avoidance ability |
+| Advanced Mode | Dance Mode | LB + X | Walking / press `X` once to pause | Switches back to walking after the dance ends. When paused, the robot will move to maintain balance |
+| Advanced Mode | Flat-ground Running Mode | LB + B | Walking | Medium-speed running, without obstacle-avoidance ability |
+| Advanced Mode | Fall Recovery Mode | LB + A | Walking / Zero-position / Initial Posture / Zero Torque | Switch to this mode when the robot is lying face down or on its back. After standing up, it automatically switches to walking |
+| Advanced Mode | Front Flip | LT + Y | Walking / Zero Torque | Requires sufficient space in front. After completion, it automatically switches back to walking |
+| Interactive Action | Wave | RT + A | Walking / press `X` once to pause | Does not return to walking automatically |
+| Interactive Action | Clap | RT + B | Walking / press `X` once to pause | Automatically switches back to walking after completion |
 
 !!! tip "Advice for Beginners"
-    When operating for the first time, hold the lanyard at all times to prevent falls. Press the stop button immediately if any anomaly occurs.
+    When operating for the first time, hold the lanyard at all times to prevent falls. Be familiar with the controller button positions before operation. Press the stop button immediately if any anomaly occurs.
 
 ---
 
@@ -110,5 +134,7 @@ The operating environment and low-level programs are pre-configured, fully suppo
 
 ## Packing and Transportation
 
+> [To be added: insert packing guide images here]
+
 - **Avoid Limits**: Do not leave joints in mechanical dead zones or extreme limit positions.
-- **Isolation Protection**: Insert original foam cushioning to prevent direct contact between metal casings during transportation.
+- **Isolation Protection**: Insert original foam cushioning to prevent direct contact between metal casings, especially between two motor housings, during transportation.
