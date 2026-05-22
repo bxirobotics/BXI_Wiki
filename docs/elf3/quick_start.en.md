@@ -27,20 +27,20 @@ This document contains instructions for unboxing, basic operations, safety preca
 ## Power-on and Operation Steps
 
 ### 1. Turn on Battery Power & Host Power
-- At this stage, the robot should be suspended on the hanger, with both feet touching the ground.
-- Press the battery power button. The battery will supply power normally, and the host will also power on simultaneously. Check the **voltage value** on the backplate display, not only the percentage / battery bars.
+- Press the battery power button. The battery will supply power normally, and the host will also power on simultaneously. Check the **voltage value** on the backplate display. The percentage / battery bars may be inaccurate, so use the voltage value as the reference.
 - **Voltage note**:
-    1. **58V new robots**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is about **58V-60V**. The voltage gradually decreases during use. If the voltage is clearly low (**below 50V**), stop and charge the robot first.
-    2. **48V old robots**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is about **48V-50V**. The voltage gradually decreases during use. If the voltage is clearly low (**below 40V**), stop and charge the robot first.
-- After the robot PC powers on, the Linux system starts running, **but the control program is not yet running**. At this time, the robot joint torque is 0, and it is in a **relaxed state**. It is recommended to hang the robot on a hanger at this point.
+    1. **New 58V machines**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is about **58V–60V**. The voltage gradually decreases during use. If the voltage is clearly low (**below 50V**), stop and charge the robot first.
+    2. **Older 48V machines**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is about **48V–50V**. The voltage gradually decreases during use. If the voltage is clearly low (**below 40V**), stop and charge the robot first.
 
 !!! tip "Charging Notes"
     The charger supports a charging voltage range of **42V-88V**. To adjust the charging voltage, **long-press the knob for 20 seconds** to enter adjustment mode.
 
     **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger display is within the supplier-specified range:
 
-    1. **48V old robots**: The recommended range is **48V-51V**. If the voltage is outside this range, adjust it before connecting the robot.
-    2. **58V new robots**: The recommended range is **58V-61V**. If the voltage is outside this range, adjust it before connecting the robot.
+    **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger display is within the supplier-specified range:
+
+    1. **Older machines with 48V batteries**: The recommended range is **48V–51V**. If the voltage is outside this range, adjust it before connecting the robot.
+    2. **New machines with 58V batteries**: The recommended range is **58V–61V**. If the voltage is outside this range, adjust it before connecting the robot.
 
     **Note**: The percentage / battery bars may be inaccurate. Before powering on or moving the robot, use the voltage value as the primary battery-state reference.
 
