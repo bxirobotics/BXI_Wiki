@@ -11,8 +11,9 @@ This document contains instructions for unboxing, basic operations, safety preca
     - After taking it out, it is recommended to **suspend the robot using a hanger** or lay it flat on the ground.
 
 2. **Backplate Structure Introduction**:
-    - The following figure shows the backplate structure of the robot (*(Physical image pending)*).
-    - **Upper Display Screen**: Shows voltage, battery level, and temperature. Press the button on the right side of the screen to wake it up and display the battery level; it will automatically turn off after 10 seconds.
+    - The following figure shows the robot backplate structure (*(backplate and charging-port photo pending)*).
+    - **Upper Display Screen**: Shows voltage, reference battery level, and temperature. Press the button on the right side of the screen to wake it up; it will automatically turn off after 10 seconds.
+        - **Use the voltage value as the main battery-state reference**. The percentage / battery bars are for reference only and may not match the actual remaining capacity.
     - **Lower Right**: The power switch button for the main battery.
     - **Upper Body**: Charging port.
 
@@ -27,15 +28,20 @@ This document contains instructions for unboxing, basic operations, safety preca
 
 ### 1. Turn on Battery Power & Host Power
 - At this stage, the robot should be suspended on the hanger, with both feet touching the ground.
-- Press the battery power button. The battery will supply power normally, and the voltage should display **above 45V**; the host will also power on simultaneously. **If the voltage is insufficient, it is recommended to charge it to above 47V before operating.**
+- Press the battery power button. The battery will supply power normally, and the host will also power on simultaneously. Check the **voltage value** on the backplate display, not only the percentage / battery bars.
+- **Voltage note**: The backplate display shows the current battery-pack voltage. When fully charged, the voltage is usually close to the charger output setting (about **58V–60V**). The voltage gradually decreases during use. If the voltage is clearly low, you cannot confirm that the battery is sufficient, or the voltage drops quickly during operation, stop and charge the robot first.
 - After the robot PC powers on, the Linux system starts running, **but the control program is not yet running**. At this time, the robot joint torque is 0, and it is in a **relaxed state**. It is recommended to hang the robot on a hanger at this point.
 
 !!! tip "Charging Notes"
     The charger supports a charging voltage range of **42V–88V**. To adjust the charging voltage, **long-press the knob for 20 seconds** to enter adjustment mode.
 
-    **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger displays a voltage between **58V–60V**. If the voltage is outside this range, adjust it before connecting the robot.
+    **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger display is within the supplier-specified range. The current recommended check range is **58V–60V**. If the voltage is outside this range, adjust it before connecting the robot.
 
-    ![Charger Diagram](../assets/elf3/quick_start/charge.png){ width="300" }
+    **Note**: The percentage / battery bars may be inaccurate. Before powering on or moving the robot, use the voltage value as the primary battery-state reference.
+
+    | Robot Backplate Charging Port | Charger Diagram |
+    | :---: | :---: |
+    | ![Robot Backplate Charging Port](../assets/elf3/quick_start/rear-charging_Panel.jpg){ width="300" } | ![Charger Diagram](../assets/elf3/quick_start/charge.png){ width="300" } |
 
 ### 2. Connect Remote Controller
 Connect the remote controller to the robot PC via Bluetooth. The controller is pre-paired at the factory.
@@ -49,7 +55,7 @@ The built-in control program of the robot has multiple modes: Zero Torque, PD Ho
 !!! warning "Important: Pre-Movement Preparation"
     - To prevent accidental falls, ensure the robot is hung on a gantry crane using a lanyard, sitting on a chair, or sitting upright on the ground. **It is highly recommended to use a hanger and suspend the robot at an appropriate height.**
     - **Remove all cables from the body** (such as charging cables) to prevent tangling during movement.
-    - **Make sure the battery has enough charge** (above 45V) so the robot does not fall because it cannot complete certain motions due to insufficient power.
+    - **Make sure the battery voltage is sufficient** (use the backplate display voltage, not the percentage / battery bars) so the robot does not fall because it cannot complete certain motions due to insufficient power.
     - **Always prioritize safety** during operation. **No one should enter the robot's motion range**, and avoid getting hit by the swinging joints of the robot.
 
 #### 3.1 Start the Program    
