@@ -34,6 +34,8 @@ title: 外接灵巧手快速部署
 | 左手 | CAN5 | 126 / `0x7E` | CANFD | 1 |
 | 右手 | CAN6 | 127 / `0x7F` | CANFD | 1 |
 
+![Revo2 灵巧手接线示意图](../../assets/elf3/developer/dexterous_hand/dexterous_hand.jpg)
+
 接线完成后，正常启动机器人。机器人硬件节点启动成功后，灵巧手通常会自动张开，可作为硬件链路的第一步检查。
 
 ## 快速部署

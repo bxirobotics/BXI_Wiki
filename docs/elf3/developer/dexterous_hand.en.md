@@ -34,6 +34,8 @@ With the default wiring, no source-code changes are required:
 | Left hand | CAN5 | 126 / `0x7E` | CANFD | 1 |
 | Right hand | CAN6 | 127 / `0x7F` | CANFD | 1 |
 
+![Revo2 dexterous hand wiring diagram](../../assets/elf3/developer/dexterous_hand/dexterous_hand.jpg)
+
 After wiring, start the robot normally. When the hardware node starts successfully, the Revo2 hand usually opens automatically. Use this as the first hardware-link check.
 
 ## Quick Deployment
