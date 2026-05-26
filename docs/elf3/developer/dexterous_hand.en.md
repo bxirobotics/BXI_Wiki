@@ -1,8 +1,8 @@
 ---
-title: External Dexterous Hand Quick Deployment
+title: External Dexterous Hand
 ---
 
-# External Dexterous Hand Quick Deployment
+# External Dexterous Hand
 
 This page is intended for customer-side deployment of the Revo2 dexterous hand on ELF3. It focuses on wiring, dependency installation, build, run, and acceptance checks. For SDK APIs and custom development, refer to the example repository:
 
