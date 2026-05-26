@@ -1,6 +1,7 @@
 nav:
   - overview.md
   - topscreen.md
+  - dexterous_hand.md
   - navigation.md
   - manipulation.md
   - motioncontrol.md
