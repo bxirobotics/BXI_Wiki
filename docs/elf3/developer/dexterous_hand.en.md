@@ -46,8 +46,6 @@ Run the following on the robot controller or a ROS 2 host:
 
 ```bash
 cd ~/bxi_ws
-mkdir -p src
-cd src
 git clone https://github.com/konodoki/bxi_revo2_example.git
 ```
 
@@ -79,10 +77,10 @@ pip install bc-stark-sdk==1.5.1 --index-url https://pypi.org/simple/
 ### 4. Build The Package
 
 ```bash
-cd ~/bxi_ws
+cd ~/bxi_ws/bxi_revo2_example
 source /opt/ros/humble/setup.bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
-colcon build --packages-select bxi_revo2_example
+colcon build
 source install/setup.bash
 ```
 
@@ -115,7 +113,7 @@ Expected topics:
 Run the C++ demo:
 
 ```bash
-cd ~/bxi_ws
+cd ~/bxi_ws/bxi_revo2_example
 source /opt/ros/humble/setup.bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 source install/setup.bash
@@ -125,7 +123,7 @@ ros2 run bxi_revo2_example bxi_revo2_example
 Or run the Python demo:
 
 ```bash
-cd ~/bxi_ws
+cd ~/bxi_ws/bxi_revo2_example
 source /opt/ros/humble/setup.bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 source install/setup.bash
@@ -177,8 +175,8 @@ init_bxipci_device(&right_ctx_, 6, 127, true);
 Rebuild after changing the source:
 
 ```bash
-cd ~/bxi_ws
-colcon build --packages-select bxi_revo2_example
+cd ~/bxi_ws/bxi_revo2_example
+colcon build
 source install/setup.bash
 ```
 
@@ -209,7 +207,7 @@ The BXI ROS 2 message package environment has not been sourced:
 
 ```bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
-source ~/bxi_ws/install/setup.bash
+source ~/bxi_ws/bxi_revo2_example/install/setup.bash
 ```
 
 ### No Response Or Read Timeout

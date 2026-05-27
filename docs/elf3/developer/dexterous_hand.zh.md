@@ -77,10 +77,10 @@ pip install bc-stark-sdk==1.5.1 --index-url https://pypi.org/simple/
 ### 4. 编译示例包
 
 ```bash
-cd ~/bxi_ws
+cd ~/bxi_ws/bxi_revo2_example
 source /opt/ros/humble/setup.bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
-colcon build --packages-select bxi_revo2_example
+colcon build
 source install/setup.bash
 ```
 
@@ -113,7 +113,7 @@ ros2 topic list | grep canfd_packet
 运行 C++ 示例：
 
 ```bash
-cd ~/bxi_ws
+cd ~/bxi_ws/bxi_revo2_example
 source /opt/ros/humble/setup.bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 source install/setup.bash
@@ -123,7 +123,7 @@ ros2 run bxi_revo2_example bxi_revo2_example
 或运行 Python 示例：
 
 ```bash
-cd ~/bxi_ws
+cd ~/bxi_ws/bxi_revo2_example
 source /opt/ros/humble/setup.bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 source install/setup.bash
@@ -175,8 +175,8 @@ init_bxipci_device(&right_ctx_, 6, 127, true);
 修改后重新编译并加载环境：
 
 ```bash
-cd ~/bxi_ws
-colcon build --packages-select bxi_revo2_example
+cd ~/bxi_ws/bxi_revo2_example
+colcon build
 source install/setup.bash
 ```
 
@@ -206,7 +206,7 @@ pip install bc-stark-sdk==1.5.1 --index-url https://pypi.org/simple/
 
 ```bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
-source ~/bxi_ws/install/setup.bash
+source ~/bxi_ws/bxi_revo2_example/install/setup.bash
 ```
 
 ### 灵巧手无响应或读取超时
