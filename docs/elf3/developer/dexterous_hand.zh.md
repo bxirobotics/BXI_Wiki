@@ -10,6 +10,8 @@ title: 外接灵巧手
 - 灵巧手官方 SDK：[brainco-hand-sdk](https://github.com/BrainCoTech/brainco-hand-sdk.git)
 
 !!! warning "安全提示"
+    注意只有Revo2进阶版和触觉版支持58V电压，切勿把基础版接入机器人
+    
     运行示例程序会驱动灵巧手执行握拳、张开、捏合、单指运动、速度/电流/PWM 控制等动作。请先确认手指活动范围内没有人体、线缆和易损物体，不要在抓取物体时直接运行完整 demo。
 
 ## 适用环境
@@ -17,7 +19,7 @@ title: 外接灵巧手
 | 项目 | 要求 |
 |---|---|
 | 机器人 | ELF3，已正常启动机器人硬件节点 |
-| 灵巧手 | Revo2 Basic |
+| 灵巧手 | Revo2 进阶版 && 触觉版|
 | 通信方式 | BXI 主控板 CANFD |
 | ROS 版本 | ROS 2 Humble |
 | 示例包 | `bxi_revo2_example` |

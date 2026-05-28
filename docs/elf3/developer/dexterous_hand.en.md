@@ -10,6 +10,8 @@ This page is intended for customer-side deployment of the Revo2 dexterous hand o
 - Official hand SDK: [brainco-hand-sdk](https://github.com/BrainCoTech/brainco-hand-sdk.git)
 
 !!! warning "Safety"
+    Note that only the Revo2 Advanced and Haptic versions support 58V voltage. Do not connect the basic version to the robot.
+    
     The demo moves the fingers through open, fist, pinch, single-finger motion, speed/current/PWM control, and other gestures. Make sure no body parts, cables, or fragile objects are inside the hand motion range. Do not run the full demo while the hand is holding an object.
 
 ## Environment
@@ -17,7 +19,7 @@ This page is intended for customer-side deployment of the Revo2 dexterous hand o
 | Item | Requirement |
 |---|---|
 | Robot | ELF3 with the robot hardware node running |
-| Dexterous hand | Revo2 Basic |
+| Dexterous hand | Revo2 PRO && TOUCH |
 | Communication | BXI controller CANFD |
 | ROS version | ROS 2 Humble |
 | Example package | `bxi_revo2_example` |
