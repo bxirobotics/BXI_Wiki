@@ -55,7 +55,7 @@ Connect the remote controller to the robot PC via Bluetooth. The controller is p
 
 ### 3. Run the Control Program
 Watch the operation instruction video carefully.
-The built-in control program of the robot has multiple modes: Zero Torque, PD Homing, Walk/Run, Dance, Wave, etc., and will be continuously updated.
+The built-in control program of the robot has multiple modes: Walking, Zero Torque, Initial Posture, Zero-position, High-speed Run, Medium-speed Run, Dance, Recovery, Front Flip, Clap, Wave, etc., and will be continuously updated.
 
 !!! warning "Important: Pre-Movement Preparation"
     - To prevent accidental falls, ensure the robot is hung on a gantry crane using a lanyard, sitting on a chair, or sitting upright on the ground. **It is highly recommended to use a hanger and suspend the robot at an appropriate height.**
@@ -64,21 +64,21 @@ The built-in control program of the robot has multiple modes: Zero Torque, PD Ho
     - **Always prioritize safety** during operation. **No one should enter the robot's motion range**, and avoid getting hit by the swinging joints of the robot.
 
 #### 3.1 Start the Program    
-!!! warning "Important: Pre-Zero-Position Check"    
-    - Ensure the robot’s limbs are not in a posture that may cause motor stalling during the zero-position movement.    
+!!! warning "Important: Pre-Initial-Posture Check"
+    - Ensure the robot’s limbs are not in a posture that may cause motor stalling when switching to the initial posture.
 *(It is recommended to remain suspended)*: After the robot powers on, **press the Right Stick (RS/R3)**. Observe the chest light of the robot; if it lights up, the control program has started running. It enters **Zero Torque mode** by default. After starting the program, the robot won't react until another button is pressed.
 
-#### 3.2 Initial Position (Zeroing) Initialization
+#### 3.2 Initial Posture Initialization
 *(It is recommended to remain suspended)*:
-- **Press `RB` + `B` simultaneously** to make the robot enter the initial position.
+- **Press `RB` + `B` simultaneously** to make the robot enter the initial posture.
 - **Check if the robot is normal**: Briefly observe if the motors have any anomalies (such as no response or abnormal noises).
-- **Stand the robot up**: If everything is normal, stand the robot up in this state, with **both feet touching the ground**. The operator should assist in maintaining the zero-position standing state to prevent external forces from disrupting the zeroing process.
+- **Stand the robot up**: If everything is normal, stand the robot up in this state, with **both feet touching the ground**. The operator should assist in maintaining the initial-posture standing state to prevent external forces from disrupting the posture initialization.
 
 #### 3.3 Switch to Motion State
-*(At this point, zeroing is complete, it is still recommended to remain suspended, and you can release the lanyard after a successful and stable switch)*:
-- **Walk/Run Control State**: Press **`RB` + `X`** simultaneously. The robot enters the walk/run control state, where it can walk and run on flat ground.
-- **Dance State**: While the robot is in the walk/run state (please stop walking first), press **`LB` + `X`** simultaneously to switch to the dance state. After the dance terminates, it will automatically switch back to the walking state.
-- **Pause Dance**: During dancing, you can press **`X`** to pause. (*Note: Pausing at an awkward posture may cause the robot to lose balance and fall.*) Press **`X`** again to resume dancing, or press **`RB` + `X`** to exit dancing and return to the walk/run state.
+*(At this point, initial-posture initialization is complete, it is still recommended to remain suspended, and you can release the lanyard after a successful and stable switch)*:
+- **Walking State**: Press **`RB` + `X`** simultaneously. The robot enters the walking state, where it can move omnidirectionally on flat ground.
+- **Dance State**: While the robot is in the walking state (please stop walking first), press **`LB` + `X`** simultaneously to switch to the dance state. After the dance terminates, it will automatically switch back to the walking state.
+- **Pause Dance**: During dancing, you can press **`X`** to pause. (*Note: Pausing at an awkward posture may cause the robot to lose balance and fall.*) Press **`X`** again to resume dancing, or press **`RB` + `X`** to exit dancing and return to the walking state.
 
 ---
 
@@ -106,17 +106,17 @@ The built-in control program of the robot has multiple modes: Zero Torque, PD Ho
 
 | Mode Level | Mode Name | Button Combination | Switchable Modes | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| Normal Mode | Zero-position Mode | RB + Y | Walking / Initial Posture / Zero Torque / Fall Recovery | Joints output no torque and can be rotated freely |
-| Normal Mode | Walking Mode | RB + X | All modes | Omnidirectional movement, with certain obstacle-avoidance ability |
-| Normal Mode | Initial Posture Mode | RB + B | Walking / Zero-position / Zero Torque / Fall Recovery | Joints are fixed at preset angles |
-| Normal Mode | Zero Torque Mode | RB + A | Walking / Zero-position / Initial Posture / Fall Recovery | All joints remain at the zero position |
-| Advanced Mode | Running Mode | LB + Y | Walking | High-speed running, without obstacle-avoidance ability |
-| Advanced Mode | Dance Mode | LB + X | Walking / press `X` once to pause | Switches back to walking after the dance ends. When paused, the robot will move to maintain balance |
-| Advanced Mode | Flat-ground Running Mode | LB + B | Walking | Medium-speed running, without obstacle-avoidance ability |
-| Advanced Mode | Fall Recovery Mode | LB + A | Walking / Zero-position / Initial Posture / Zero Torque | Switch to this mode when the robot is lying face down or on its back. After standing up, it automatically switches to walking |
-| Advanced Mode | Front Flip | LT + Y | Walking / Zero Torque | Requires sufficient space in front. After completion, it automatically switches back to walking |
-| Interactive Action | Wave | RT + A | Walking / press `X` once to pause | Does not return to walking automatically |
-| Interactive Action | Clap | RT + B | Walking / press `X` once to pause | Automatically switches back to walking after completion |
+| Normal | Walking | RB + X | **All modes** | Omnidirectional movement, with some obstacle-avoidance ability |
+| Normal | Zero Torque | RB + A | Initial Posture / Zero-position | Joints output no torque and can be rotated freely |
+| Normal | Initial Posture | RB + B | Walking / Zero Torque / Zero-position / Recovery | Joints hold the initial posture |
+| Normal | Zero-position | RB + Y | Initial Posture / Zero Torque | All joints hold the zero position |
+| Advanced | Dance | LB + X | Walking / Zero Torque / press `X` to pause or resume | Automatically returns to Walking after completion. While paused, the robot may move to maintain balance (Make sure there are no obstacles within 1 m around the robot) |
+| Advanced | Recovery | LB + A | Zero Torque | Use only when the robot is lying face down or on its back. After standing up, it automatically returns to Walking (Make sure there are no obstacles within 1 m around the robot) |
+| Advanced | High-speed Run | LB + Y | Walking | Up to about 4 m/s, with no obstacle-crossing ability |
+| Advanced | Medium-speed Run | LB + B | Walking | Up to about 2 m/s, with no obstacle-crossing ability |
+| Advanced | Front Flip | LT + Y | Zero Torque | Keep the front 3 m clear of obstacles. After completion, it automatically returns to Walking |
+| Normal | Clap | RT + B | Walking / press `X` to pause or resume | Automatically returns to Walking after completion |
+| Normal | Wave | RT + A | Walking / press `X` to pause or resume | Does not automatically return to Walking |
 
 !!! tip "Advice for Beginners"
     When operating for the first time, hold the lanyard at all times to prevent falls. Be familiar with the controller button positions before operation. Press the stop button immediately if any anomaly occurs.
