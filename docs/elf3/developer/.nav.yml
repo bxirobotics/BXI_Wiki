@@ -1,8 +1,8 @@
 nav:
   - overview.md
+  - motioncontrol.md
   - topscreen.md
   - dexterous_hand.md
   - upper_body_teleop.md
   - navigation.md
   - manipulation.md
-  - motioncontrol.md
