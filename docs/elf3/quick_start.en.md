@@ -66,7 +66,7 @@ The built-in control program of the robot has multiple modes: Walking, Zero Torq
 #### 3.1 Start the Program    
 !!! warning "Important: Pre-Initial-Posture Check"
     - Ensure the robot’s limbs are not in a posture that may cause motor stalling when switching to the initial posture.
-*(It is recommended to remain suspended)*: After the robot powers on, **press the Right Stick (RS/R3)**. Observe the chest light of the robot; if it lights up, the control program has started running. It enters **Zero Torque mode** by default. After starting the program, the robot won't react until another button is pressed.
+*(It is recommended to remain suspended)*: After the robot powers on, wait about **30 seconds** for the system to finish starting up, then **press the Right Stick (RS/R3)** to start the robot. Observe the chest light of the robot; if it lights up, the control program has started running. It enters **Zero Torque mode** by default. After the chest light turns on, wait about **10 seconds** for self-check to complete before switching the robot to Initial Posture, Walking, or other modes.
 
 #### 3.2 Initial Posture Initialization
 *(It is recommended to remain suspended)*:
@@ -103,6 +103,19 @@ The built-in control program of the robot has multiple modes: Walking, Zero Torq
 - `RF`: 2.4G wireless connection mode, used with a 2.4G USB receiver. The 2.4G USB receiver is located in the controller box by default.
 
 ![Remote Controller Top View](../assets/elf3/quick_start/remote_controller_vertical_view.en.png)
+
+### Movement Direction Control
+
+In **Walking**, **High-speed Run**, and **Medium-speed Run** modes, use the following inputs to move the robot:
+
+| Control | Operation | Effect |
+| :--- | :--- | :--- |
+| Right stick | Push forward or backward | Forward / Backward |
+| Left stick | Push left or right | Left translation / Right translation |
+| D-pad | Press `←` or `→` | Turn left / Turn right |
+
+!!! note "Speed"
+    The robot speed depends on how far the stick is pushed: a larger stick input produces faster movement, and a smaller stick input produces slower movement.
 
 | Mode Level | Mode Name | Button Combination | Switchable Modes | Notes |
 | :--- | :--- | :--- | :--- | :--- |
