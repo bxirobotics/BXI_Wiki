@@ -35,18 +35,30 @@ By function, frames are divided into:
 
 ### 2.3 Default Parameter Ranges
 
-!!! info "`Kp` / `Kd` ranges (configurable via upper computer)"
-    | Parameter | Range |
-    |---|---|
-    | `Kp` | `[0, 500]` |
-    | `Kd` | `MOTOR_50`: `[0, 5]`<br>`MOTOR_50_L`: `[0, 5]`<br>`MOTOR_70`: `[0, 5]`<br>`MOTOR_85`: `[0, 20]`<br>`MOTOR_J3505`: `[0, 5]`<br>`MOTOR_J3510`: `[0, 5]` |
+**`Kp` / `Kd` ranges (configurable via upper computer)**
 
-!!! info "`p_des` / `v_des` / `t_ff` ranges (configurable via upper computer)"
-    | Parameter | Range |
-    |---|---|
-    | `p_des` | `[-12.5, 12.5]` |
-    | `v_des` | `[-45.0, 45.0]` |
-    | `t_ff` | `MOTOR_50`: `[-40.0, 40]`<br>`MOTOR_50_L`: `[-40, 40]`<br>`MOTOR_70`: `[-80, 80]`<br>`MOTOR_85`: `[-160, 160]`<br>`MOTOR_J3505`: `[-18, 18]`<br>`MOTOR_J3510`: `[-18, 18]` |
+| Parameter | Applicable object | Range |
+|---|---|---|
+| `Kp` | General | `[0, 500]` |
+| `Kd` | `MOTOR_50` | `[0, 5]` |
+|  | `MOTOR_50_L` | `[0, 5]` |
+|  | `MOTOR_70` | `[0, 5]` |
+|  | `MOTOR_85` | `[0, 20]` |
+|  | `MOTOR_J3505` | `[0, 5]` |
+|  | `MOTOR_J3510` | `[0, 5]` |
+
+**`p_des` / `v_des` / `t_ff` ranges (configurable via upper computer)**
+
+| Parameter | Applicable object | Range |
+|---|---|---|
+| `p_des` | General | `[-12.5, 12.5]` |
+| `v_des` | General | `[-45.0, 45.0]` |
+| `t_ff` | `MOTOR_50` | `[-40.0, 40]` |
+|  | `MOTOR_50_L` | `[-40, 40]` |
+|  | `MOTOR_70` | `[-80, 80]` |
+|  | `MOTOR_85` | `[-160, 160]` |
+|  | `MOTOR_J3505` | `[-18, 18]` |
+|  | `MOTOR_J3510` | `[-18, 18]` |
 
 Temperature communication range: `[-30.0, 150.0]` ℃.
 
