@@ -37,8 +37,6 @@ This document contains instructions for unboxing, basic operations, safety preca
 
     **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger display is within the supplier-specified range:
 
-    **Verify charger output voltage**: Connect the charger directly to a power source (without connecting to the robot) and check that the charger display is within the supplier-specified range:
-
     1. **Older machines with 48V batteries**: The recommended range is **48V–51V**. If the voltage is outside this range, adjust it before connecting the robot.
     2. **New machines with 58V batteries**: The recommended range is **58V–61V**. If the voltage is outside this range, adjust it before connecting the robot.
 
@@ -55,7 +53,7 @@ Connect the remote controller to the robot PC via Bluetooth. The controller is p
 
 ### 3. Run the Control Program
 Watch the operation instruction video carefully.
-The built-in control program of the robot has multiple modes: Walking, Zero Torque, Initial Posture, Zero-position, High-speed Run, Medium-speed Run, Dance, Recovery, Front Flip, Clap, Wave, etc., and will be continuously updated.
+The built-in control program of the robot has multiple modes: Walking, Zero Torque, Initial Posture, Zero-position, High-speed Run, Medium-speed Run, Dance, Recovery, Front Flip **(run without dummy hands installed)**, Clap, Wave, etc., and will be continuously updated.
 
 !!! warning "Important: Pre-Movement Preparation"
     - To prevent accidental falls, ensure the robot is hung on a gantry crane using a lanyard, sitting on a chair, or sitting upright on the ground. **It is highly recommended to use a hanger and suspend the robot at an appropriate height.**
@@ -77,13 +75,12 @@ The built-in control program of the robot has multiple modes: Walking, Zero Torq
 #### 3.3 Switch to Motion State
 *(At this point, initial-posture initialization is complete, it is still recommended to remain suspended, and you can release the lanyard after a successful and stable switch)*:
 - **Walking State**: Press **`RB` + `X`** simultaneously. The robot enters the walking state, where it can move omnidirectionally on flat ground.
-- **Dance State**: While the robot is in the walking state (please stop walking first), press **`LB` + `X`** simultaneously to switch to the dance state. After the dance terminates, it will automatically switch back to the walking state.
-- **Pause Dance**: During dancing, you can press **`X`** to pause. (*Note: Pausing at an awkward posture may cause the robot to lose balance and fall.*) Press **`X`** again to resume dancing, or press **`RB` + `X`** to exit dancing and return to the walking state.
 
 ---
 
 ## Shutdown and De-energization
 
+#### 4.1 Termination Shutdown (De-Energization Button)
 - Press **Start**, the control program will exit automatically, and the robot motors will **immediately de-energize**. The robot will naturally fall due to gravity.
     > **Note**: Before shutdown, place a chair under the robot or hang it on a hanger to ensure it does not fall hard onto the ground.
 - **Restart**: Return to Section 3.1 to restart the program.
@@ -119,7 +116,7 @@ In **Walking**, **High-speed Run**, and **Medium-speed Run** modes, use the foll
 
 | Mode Level | Mode Name | Button Combination | Switchable Modes | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| Normal | Walking | RB + X | **All modes** | Omnidirectional movement, with some obstacle-avoidance ability |
+| Normal | Walking | RB + X | **All modes except Recovery** | Omnidirectional movement, with some obstacle-crossing ability  **(10-15 cm steps)** |
 | Normal | Zero Torque | RB + A | Initial Posture / Zero-position | Joints output no torque and can be rotated freely |
 | Normal | Initial Posture | RB + B | Walking / Zero Torque / Zero-position / Recovery | Joints hold the initial posture |
 | Normal | Zero-position | RB + Y | Initial Posture / Zero Torque | All joints hold the zero position |
@@ -127,7 +124,7 @@ In **Walking**, **High-speed Run**, and **Medium-speed Run** modes, use the foll
 | Advanced | Recovery | LB + A | Zero Torque | Use only when the robot is lying face down or on its back. After standing up, it automatically returns to Walking (Make sure there are no obstacles within 1 m around the robot) |
 | Advanced | High-speed Run | LB + Y | Walking | Up to about 4 m/s, with no obstacle-crossing ability |
 | Advanced | Medium-speed Run | LB + B | Walking | Up to about 2 m/s, with no obstacle-crossing ability |
-| Advanced | Front Flip | LT + Y | Zero Torque | Keep the front 3 m clear of obstacles. After completion, it automatically returns to Walking |
+| Advanced | Front Flip | LT + Y | Zero Torque | Keep the front 3 m clear of obstacles. After completion, it automatically returns to Walking. **Run without dummy hands installed** |
 | Normal | Clap | RT + B | Walking / press `X` to pause or resume | Automatically returns to Walking after completion |
 | Normal | Wave | RT + A | Walking / press `X` to pause or resume | Does not automatically return to Walking |
 
