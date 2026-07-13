@@ -13,6 +13,7 @@ theme:
   features:
     - navigation.tabs
     - navigation.top
+    - navigation.expand
   palette:
     # 浅色模式
     - media: "(prefers-color-scheme: light)"
