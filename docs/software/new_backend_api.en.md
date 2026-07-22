@@ -17,7 +17,7 @@ flowchart LR
     A[Custom App] -->|Initial local claim over BLE| R[RC ROS2]
     A -->|LAN WebSocket / HTTP HMAC| R
     A -->|BLE HMAC8 control| R
-    R -.Robot itself.->|Activation / heartbeat / logs| C[Robot Cloud Service]
+    R -.->|Activation / heartbeat / logs| C[Robot Cloud Service]
 ```
 
 - The app can control RC directly without account login or SMS verification.

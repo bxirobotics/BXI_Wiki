@@ -17,7 +17,7 @@ flowchart LR
     A[自研 App] -->|BLE 首次本地认领| R[RC ROS2]
     A -->|LAN WebSocket / HTTP HMAC| R
     A -->|BLE HMAC8 控制| R
-    R -.机器人自身.->|激活 / 心跳 / 日志| C[机器人云服务]
+    R -.->|激活 / 心跳 / 日志| C[机器人云服务]
 ```
 
 - App 可直接控制 RC，不需要账号登录或发送短信验证码。
