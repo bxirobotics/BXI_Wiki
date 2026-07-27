@@ -239,6 +239,40 @@ frame = headerBytes + tag
 
 `auth`: `0` means no tag, `1` means HMAC4, and `2` means HMAC8. Use `auth=2` in production. Maintain an increasing u16 `seq` for each BLE connection. RC uses a `0x8000` half-window for wraparound handling and replay prevention.
 
+### 4.4 Offline guest sharing
+
+The owner can issue a local `BXIS1.<base64url(JSON)>` share token. It lets a guest use WS, HTTP, and BLE without learning the owner's `deviceKey`. The payload fields are:
+
+```json
+{
+  "v": 1,
+  "sn": "BXI-EXAMPLE-0001",
+  "role": "co_owner",
+  "iat": 1780000000,
+  "exp": 1780000120,
+  "epoch": 0,
+  "jti": "unique random value for this token",
+  "k": "64 hexadecimal characters encoding the subkey",
+  "sig": "Base64 HMAC-SHA256 signature",
+  "conn": {"i": "192.168.88.162", "p": 8081}
+}
+```
+
+`conn` is an optional connection hint and is not signed. `k` is the connection subkey delivered to the guest. The robot does not trust this field directly; it independently derives the subkey from its local owner key and verifies the handshake signature:
+
+```text
+shareKey = HMAC-SHA256(deviceKeyRaw, "bxi-share-key-v1|<epoch>")
+tokenSig = Base64(HMAC-SHA256(shareKey,
+           "bxishare.v1|<sn>|<role>|<iat>|<exp>|<epoch>|<jti>"))
+subkey   = HMAC-SHA256(shareKey, "bxi-share-tx-v1|<jti>")
+```
+
+- For WS and HTTP, generate signatures as described in sections 4.1 and 4.2, but use `subkey` and include the complete `share_token` in the query.
+- For BLE, first write a `{user_id,sn,ts,nonce,sig,share_token}` JSON proof to `CONTROL_GUEST_AUTH`. After it succeeds, use `subkey` for HMAC8 on that connection.
+- `epoch` must equal `share_epoch` in the robot's `binding.json`. Incrementing the epoch lets the owner revoke every older share token at once.
+- The robot registers the `jti` when the guest first connects before `exp`. A registered guest may reconnect during a sliding authorization period, currently 30 days by default and configurable through `BXI_SHARE_GRANT_TTL_SEC`. An expired token that was never registered is rejected.
+- A share token contains the guest control subkey. Treat it like a password and never upload it to logs or analytics.
+
 ## 5. Interfaces exposed by RC ROS2
 
 | Interface | Address | Authentication | Purpose |
@@ -299,6 +333,7 @@ App → RC:
 | `offer` / `candidate` / `bye` | WebRTC fields | Signaling |
 | `assist.request/cancel/status/extend` | Assistance parameters | Remote assistance |
 | `logs.list/open/close` | `name/path/tail` | Log access |
+| `peek.set_domain` / `peek.clear` | `domain_id` / None | Set or clear cross-ROS-domain inspection |
 
 Velocity control fields must be flat members of `payload`:
 
@@ -317,15 +352,11 @@ Velocity control fields must be flat members of `payload`:
 }
 ```
 
-There is no `control.acquire` or `control.release` message. An authenticated client becomes the active controller when it sends `control.cmd_vel`. Disconnecting the control connection triggers a safe stop. The client should send a control frame or heartbeat at intervals shorter than 500 ms. By default, RC zeros the command after approximately 1500 ms without a ControlIntent.
+There is no `control.acquire` or `control.release` message. An authenticated client becomes the active controller when it sends `control.cmd_vel`. Disconnecting the control connection triggers a safe stop. The client should send a control frame or `control.heartbeat` at intervals shorter than 500 ms. A heartbeat creates a `heartbeat_only` ControlIntent: it refreshes the deadman timer without overwriting autonomous navigation with a zero-velocity command.
 
-Soft emergency stop:
+The gateway no longer implements a software E-stop or latched reset. Values `mode=2` and `safety_state=3` remain permanently unused; E-stop and freeze semantics belong entirely to the motion-control layer. The gateway retains only the connection deadman: after 1500 ms without a ControlIntent by default, it enters `STATE_TIMEOUT=2` and zeros the command. Including the two-tick debounce and slew-rate deceleration, worst-case stopping time is approximately 2.1 seconds.
 
-| Action | Message |
-|---|---|
-| Engage | Zero-velocity `control.cmd_vel` with `mode:"estop"` |
-| Maintain | Resend the zero-velocity estop frame approximately every 200 ms |
-| Reset | Zero-velocity frame with `mode:"manual" + btn_1:1` |
+`/ws/signaling` accepts only `offer`, `candidate`, `bye`, and `ping`. Send `logs.*`, `peek.*`, power, and control commands through the regular `/` control channel.
 
 Common RC → App messages:
 
@@ -337,14 +368,45 @@ Common RC → App messages:
 | `control.manifest` | Dynamic button and state-machine definitions |
 | `control.state` | Live state-machine state |
 | `control.authz_ack` | Authorization-list update result |
+| `control.preflight_conflict` | Conflicting processes detected before startup |
+| `control.controller_disconnected` | Active controller disconnected; other clients should refresh control state |
+| `system.reboot.ack` / `system.shutdown.ack` | Power-command acceptance result |
+| `assist.status` | Remote-assistance tunnel status |
+| `logs.list_response` / `logs.chunk` / `logs.error` | Log list, content chunks, and errors |
+| `peek.error` | Cross-ROS-domain inspection startup failure |
 | `pong` / `health` / `error` | General responses |
-| `nav.*` | Map, localization, path, mapping, and tour data |
+| `nav.*` | Map, localization, path, mapping, and tour data; see the list below |
 | `offer/answer/candidate/peer_failed/stop` | WebRTC signaling |
 | `video.stats` / `video.degraded` | Video status |
+
+The complete set of `nav.*` message types is:
+
+```text
+nav.map                 nav.scan
+nav.pose                nav.path.global
+nav.path.local          nav.costmap.global
+nav.costmap.local       nav.footprint
+nav.cloud               nav.status
+nav.tour.status         nav.mapping.status
+nav.runtime.status      nav.reloc_required
+```
+
+Grid and point-cloud payloads use gzip+base64. When a new control connection is established, the gateway replays the most recent navigation states that have latched semantics.
+
+Digital-twin telemetry uses length-prefixed binary frames rather than JSON. The first byte is one of these tags:
+
+| tag | Content |
+|---:|---|
+| `0xB0` | BMS |
+| `0xB1` | Joint temperatures |
+| `0xB2` | Joint positions, approximately 20 Hz |
+| `0xB3` | IMU orientation |
 
 ### 5.3 HTTP REST (port 8082)
 
 Except for CORS `OPTIONS`, all business routes below use HTTP v2 HMAC:
+
+Request-body limits depend on the route: 64 KB for regular and OTA routes, 8 MB for map and mapping routes, and 64 MB after decompressing a gzip grid. Oversized requests are rejected.
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -358,14 +420,14 @@ Except for CORS `OPTIONS`, all business routes below use HTTP v2 HMAC:
 | GET | `/api/v1/maps/{id}/thumbnail.png` | Thumbnail |
 | GET | `/api/v1/maps/{id}/tile/{z}/{x}/{y}.png` | Map tile |
 | GET/PUT | `/api/v1/maps/{id}/{waypoints\|regions\|topology}` | Read or write sidecar data |
-| POST | `/api/v1/maps/{id}/activate` | Activate localization and navigation |
+| POST | `/api/v1/maps/{id}/activate` | Activate localization and navigation; a 202 response may still be `localizing` |
 | POST | `/api/v1/maps/{id}/rename` | `{name}` |
 | DELETE | `/api/v1/maps/{id}` | Delete a map |
 | POST | `/api/v1/nav/initial_pose` | `{x,y,yaw,frame_id?,cov?}` |
 | POST | `/api/v1/nav/goal` | `{x,y,yaw,frame_id?}` |
 | POST | `/api/v1/nav/cancel` | Cancel navigation |
 | POST | `/api/v1/nav/pause` | `{data:bool}` |
-| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,loop?}` |
+| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,loop?,speed_scale?}` with a speed scale in `[0.2,1.0]` |
 | POST | `/api/v1/tour/{pause\|resume\|stop\|skip}` | Tour control |
 | GET | `/api/v1/tour/status` | Tour status |
 | POST | `/api/v1/mapping/start` | `{base_map_id?}` |
@@ -377,7 +439,16 @@ Except for CORS `OPTIONS`, all business routes below use HTTP v2 HMAC:
 | PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}` |
 | GET | `/api/v1/runtime/status` | Runtime mode and localization quality |
 
-The app and RC should both reject navigation and tour actions until localization is complete.
+A map bundle always contains `manifest.json`, `map.pcd`, `map.pgm`, and `map.yaml`. A `legacy_2d_only` map containing only the old PGM/YAML format cannot be activated, used for navigation, or extended; it must be rebuilt with the 3D mapping flow.
+
+The main fields returned by `GET /api/v1/runtime/status` and WS `nav.runtime.status` are:
+
+```text
+current_mode, desired_mode, transition_id, active_map_id,
+localized, fitness_score, inlier_ratio, driver_healthy, last_error
+```
+
+A 202 response from `POST /api/v1/maps/{id}/activate` means only that the runtime-mode transition was accepted; localization is not complete yet. The app must wait until `active_map_id` is correct and `driver_healthy=true`, and treat `nav.reloc_required.required=false` as the authoritative relocation-success signal. It must not send navigation goals or start a tour while `localized=false`.
 
 ### 5.4 BLE Control GATT
 
@@ -389,6 +460,14 @@ The app and RC should both reject navigation and tour actions until localization
 | CONTROL_STATUS | `00000013` | read/notify | 3-byte status frame |
 | CONTROL_MANIFEST | `00000014` | read/notify | Dynamic button manifest |
 | CONTROL_SM_STATE | `00000015` | read/notify | State-machine state |
+
+`CONTROL_MANIFEST` and `CONTROL_SM_STATE` use chunked transfer with chunks of approximately 180 bytes:
+
+```text
+[total_len:u16 little-endian][offset:u16 little-endian][chunk...]
+```
+
+Write each chunk into the receive buffer at `offset`, and parse the JSON only after all `total_len` bytes have arrived.
 
 Status frame:
 
@@ -518,7 +597,135 @@ Maintenance access:
 3. Authenticate WS, HTTP, or BLE using the maintenance UID, serial number, and key.
 4. Run `sudo /opt/bxi/bxi_rc_ros2/scripts/bxi_maintenance.sh disable` on the robot when service is complete.
 
-## 8. Security requirements
+## 8. Developer quick start
+
+The following example uses only the Python standard library for signing and HTTP calls. The same byte-level rules can be ported directly to Android, iOS, Flutter, or another platform. Use the platform's native WebSocket client for the WS connection.
+
+### 8.1 Generate a WS URL and call an HTTP JSON API
+
+```python
+import base64
+import hashlib
+import hmac
+import json
+import secrets
+import time
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+
+
+def hmac_b64(key: bytes, message: str) -> str:
+    return base64.b64encode(
+        hmac.new(key, message.encode("utf-8"), hashlib.sha256).digest()
+    ).decode("ascii")
+
+
+def ws_url(host: str, user_id: str, sn: str, key: bytes,
+           client_id: str = "my_app", path: str = "/",
+           share_token: str | None = None) -> str:
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    query = {
+        "user_id": user_id,
+        "client_id": client_id,
+        "sn": sn,
+        "ts": ts,
+        "nonce": nonce,
+        "sig": hmac_b64(key, f"ws|{user_id}|{sn}|{ts}|{nonce}"),
+    }
+    if share_token:
+        query["share_token"] = share_token
+    return f"ws://{host}:8081{path}?{urlencode(query)}"
+
+
+def http_json(host: str, method: str, path: str, payload,
+              user_id: str, sn: str, key: bytes,
+              share_token: str | None = None):
+    method = method.upper()
+    body = (b"" if payload is None else
+            json.dumps(payload, ensure_ascii=False,
+                       separators=(",", ":")).encode("utf-8"))
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    body_hash = hashlib.sha256(body).hexdigest()
+    canonical = (
+        f"http.v2|{method}|{path}|{body_hash}|{user_id}|{sn}|{ts}|{nonce}"
+    )
+    query = {
+        "auth_v": "2",
+        "user_id": user_id,
+        "sn": sn,
+        "ts": ts,
+        "nonce": nonce,
+        "sig": hmac_b64(key, canonical),
+    }
+    if share_token:
+        query["share_token"] = share_token
+    request = Request(
+        f"http://{host}:8082{path}?{urlencode(query)}",
+        data=body if payload is not None else None,
+        headers={"Content-Type": "application/json"},
+        method=method,
+    )
+    with urlopen(request, timeout=10) as response:
+        return json.loads(response.read())
+
+
+HOST = "192.168.88.162"
+UID = "2147483646"
+SN = "BXI-EXAMPLE-0001"
+KEY = bytes.fromhex("11" * 32)  # Example only; load production keys from secure storage
+
+print(ws_url(HOST, UID, SN, KEY))
+print(http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY))
+```
+
+The `body` used for signing is exactly the `body` that is sent. Do not reformat JSON after calculating the signature. For a guest call, pass the share token's `subkey` as `key` and also supply `share_token`.
+
+### 8.2 WS remote control and heartbeat
+
+After connecting with the URL generated in section 8.1, send a regular JSON text frame:
+
+```json
+{"type":"control.cmd_vel","ts":1780000000000,"seq":1,"payload":{"vx":0.2,"vy":0.0,"wz":0.1,"height":1.0,"mode":"manual","btn_1":0}}
+```
+
+Send velocity commands continuously while the joystick is moving. When idle, send a heartbeat at least once every 500 ms; it does not overwrite an autonomous navigation command:
+
+```json
+{"type":"control.heartbeat","ts":1780000000500,"seq":2,"payload":{}}
+```
+
+Do not send `mode:"estop"` or use `btn_1` for E-stop reset. Those gateway semantics have been removed.
+
+### 8.3 Map activation, relocation, and navigation
+
+Recommended sequence:
+
+```python
+maps = http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY)
+http_json(HOST, "POST", "/api/v1/maps/demo_map/activate", None,
+          UID, SN, KEY)
+
+# Continue consuming the control WS; do not use a fixed sleep(20):
+# 1. Wait for nav.runtime.status.payload.active_map_id == "demo_map"
+# 2. Wait for current_mode in {"localizing", "navigation"}
+# 3. Confirm driver_healthy == true and last_error is empty
+
+http_json(HOST, "POST", "/api/v1/nav/initial_pose",
+          {"x": 0.0, "y": 0.0, "yaw": 0.0, "frame_id": "map"},
+          UID, SN, KEY)
+
+# Wait for nav.reloc_required.payload.required == false and the latest
+# nav.runtime.status.payload.localized == true before sending a goal.
+http_json(HOST, "POST", "/api/v1/nav/goal",
+          {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"},
+          UID, SN, KEY)
+```
+
+Track navigation progress through `nav.status`. If map activation, initial pose, or localization fails, show `last_error` and stop the sequence instead of sending more goals that the server will reject.
+
+## 9. Security requirements
 
 - Never place robot cloud credentials or server-side keys in the app.
 - Store the `deviceKey` and maintenance key only in the app's system security storage and in the robot's local storage. Never write either value to logs or analytics.

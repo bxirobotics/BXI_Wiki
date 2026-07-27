@@ -239,6 +239,40 @@ frame = headerBytes + tag
 
 `auth`：`0` 无 tag、`1` HMAC4、`2` HMAC8。生产使用 `auth=2`。每个 BLE 连接维护递增的 u16 `seq`，RC 使用半窗 `0x8000` 处理回绕和防重放。
 
+### 4.4 离线分享访客鉴权
+
+Owner 可以在本地签发 `BXIS1.<base64url(JSON)>` 分享码，让访客在不知道 owner `deviceKey` 的情况下使用 WS、HTTP 和 BLE。载荷字段为：
+
+```json
+{
+  "v": 1,
+  "sn": "BXI-EXAMPLE-0001",
+  "role": "co_owner",
+  "iat": 1780000000,
+  "exp": 1780000120,
+  "epoch": 0,
+  "jti": "每张分享码的唯一随机值",
+  "k": "64位十六进制subkey",
+  "sig": "Base64 HMAC-SHA256签名",
+  "conn": {"i": "192.168.88.162", "p": 8081}
+}
+```
+
+`conn` 是可选的连接提示，不参与签名。`k` 是交付给访客的连接子密钥；机器人不信任该字段，而是用本机 owner key 独立派生并比较握手签名：
+
+```text
+shareKey = HMAC-SHA256(deviceKeyRaw, "bxi-share-key-v1|<epoch>")
+tokenSig = Base64(HMAC-SHA256(shareKey,
+           "bxishare.v1|<sn>|<role>|<iat>|<exp>|<epoch>|<jti>"))
+subkey   = HMAC-SHA256(shareKey, "bxi-share-tx-v1|<jti>")
+```
+
+- WS/HTTP 按第 4.1、4.2 节生成签名，但 key 改为 `subkey`，query 额外携带完整 `share_token`。
+- BLE 先向 `CONTROL_GUEST_AUTH` 写入 `{user_id,sn,ts,nonce,sig,share_token}` JSON proof；成功后该连接的 HMAC8 改用 `subkey`。
+- `epoch` 必须等于机器人 `binding.json` 中的 `share_epoch`；owner 增加 epoch 可一次吊销所有旧分享。
+- 首次在 `exp` 前成功连接后，机器人会登记该 `jti`。已加入访客之后可在滑动授权期内重连，当前默认 30 天，可由 `BXI_SHARE_GRANT_TTL_SEC` 调整；从未成功加入的过期分享码会被拒绝。
+- 分享码本身包含访客控制子密钥，应按密码处理，不得上传日志或 analytics。
+
 ## 5. RC ROS2 暴露的接口
 
 | 接口 | 地址 | 鉴权 | 用途 |
@@ -299,6 +333,7 @@ App → RC：
 | `offer` / `candidate` / `bye` | WebRTC 字段 | signaling |
 | `assist.request/cancel/status/extend` | 协助参数 | 远程协助 |
 | `logs.list/open/close` | `name/path/tail` | 日志查看 |
+| `peek.set_domain` / `peek.clear` | `domain_id` / 无 | 设置或清除跨 ROS domain 查看 |
 
 速度控制字段必须平铺：
 
@@ -317,15 +352,11 @@ App → RC：
 }
 ```
 
-没有 `control.acquire` 或 `control.release`。通过鉴权的客户端发送 `control.cmd_vel` 即成为活动控制者；控制连接断开会触发安全停车。客户端应以小于 500ms 的间隔发送控制帧或 heartbeat，默认约 1500ms 没有 ControlIntent 后超时归零。
+没有 `control.acquire` 或 `control.release`。通过鉴权的客户端发送 `control.cmd_vel` 即成为活动控制者；控制连接断开会触发安全停车。客户端应以小于 500ms 的间隔发送控制帧或 `control.heartbeat`。heartbeat 会生成 `heartbeat_only` ControlIntent，只刷新 deadman，不用零速覆盖正在运行的自主导航。
 
-软急停：
+网关不再实现软急停或锁存复位：`mode=2` 和 `safety_state=3` 永久空缺，急停/冻结完全由运控处理。网关只保留链路 deadman：默认 1500ms 无 ControlIntent 后进入 `STATE_TIMEOUT=2` 并归零；叠加 2-tick 抗抖和 slew 减速后，最坏停车约 2.1 秒。
 
-| 动作 | 发送内容 |
-|---|---|
-| 触发 | `mode:"estop"` 的零速 `control.cmd_vel` |
-| 保持 | 每约 200ms 重发 estop 零速帧 |
-| 复位 | `mode:"manual" + btn_1:1` 的零速帧 |
+`/ws/signaling` 只接受 `offer`、`candidate`、`bye`、`ping`。`logs.*`、`peek.*`、电源和控制命令必须走普通 `/` 控制通道。
 
 RC → App 常用消息：
 
@@ -337,14 +368,45 @@ RC → App 常用消息：
 | `control.manifest` | 动态按钮和状态机定义 |
 | `control.state` | 状态机实时状态 |
 | `control.authz_ack` | 授权列表更新结果 |
+| `control.preflight_conflict` | 启动前检测到的冲突进程 |
+| `control.controller_disconnected` | 当前控制者断开，通知其他客户端刷新控制状态 |
+| `system.reboot.ack` / `system.shutdown.ack` | 电源命令受理结果 |
+| `assist.status` | 远程协助隧道状态 |
+| `logs.list_response` / `logs.chunk` / `logs.error` | 日志列表、内容分片和错误 |
+| `peek.error` | 跨 ROS domain 查看启动失败 |
 | `pong` / `health` / `error` | 通用响应 |
-| `nav.*` | 地图、定位、路径、建图和巡游数据 |
+| `nav.*` | 地图、定位、路径、建图和巡游数据，详见下表 |
 | `offer/answer/candidate/peer_failed/stop` | WebRTC signaling |
 | `video.stats` / `video.degraded` | 视频状态 |
+
+`nav.*` 的完整类型：
+
+```text
+nav.map                 nav.scan
+nav.pose                nav.path.global
+nav.path.local          nav.costmap.global
+nav.costmap.local       nav.footprint
+nav.cloud               nav.status
+nav.tour.status         nav.mapping.status
+nav.runtime.status      nav.reloc_required
+```
+
+栅格和点云 payload 使用 gzip+base64。新控制连接建立时，网关会补发最近一份具有 latched 语义的导航状态。
+
+数字孪生遥测使用长度前缀二进制帧而不是 JSON，首字节 tag 为：
+
+| tag | 内容 |
+|---:|---|
+| `0xB0` | BMS |
+| `0xB1` | 关节温度 |
+| `0xB2` | 关节位置，约 20Hz |
+| `0xB3` | IMU 朝向 |
 
 ### 5.3 HTTP REST（端口 8082）
 
 除 CORS `OPTIONS` 外，以下业务路由均使用 HTTP v2 HMAC：
+
+请求 body 上限按路由区分：普通和 OTA 路由 64KB，地图与建图路由 8MB，gzip 栅格解压后最多 64MB。超过限制会被拒绝。
 
 | 方法 | 路径 | 用途 |
 |---|---|---|
@@ -358,14 +420,14 @@ RC → App 常用消息：
 | GET | `/api/v1/maps/{id}/thumbnail.png` | 缩略图 |
 | GET | `/api/v1/maps/{id}/tile/{z}/{x}/{y}.png` | 地图瓦片 |
 | GET/PUT | `/api/v1/maps/{id}/{waypoints\|regions\|topology}` | sidecar 读写 |
-| POST | `/api/v1/maps/{id}/activate` | 激活定位和导航 |
+| POST | `/api/v1/maps/{id}/activate` | 激活定位和导航；返回 202 时仍在 `localizing` |
 | POST | `/api/v1/maps/{id}/rename` | `{name}` |
 | DELETE | `/api/v1/maps/{id}` | 删除地图 |
 | POST | `/api/v1/nav/initial_pose` | `{x,y,yaw,frame_id?,cov?}` |
 | POST | `/api/v1/nav/goal` | `{x,y,yaw,frame_id?}` |
 | POST | `/api/v1/nav/cancel` | 取消导航 |
 | POST | `/api/v1/nav/pause` | `{data:bool}` |
-| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,loop?}` |
+| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,loop?,speed_scale?}`，速度比例 `[0.2,1.0]` |
 | POST | `/api/v1/tour/{pause\|resume\|stop\|skip}` | 巡游控制 |
 | GET | `/api/v1/tour/status` | 巡游状态 |
 | POST | `/api/v1/mapping/start` | `{base_map_id?}` |
@@ -377,7 +439,16 @@ RC → App 常用消息：
 | PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}` |
 | GET | `/api/v1/runtime/status` | 运行模式和定位质量 |
 
-定位未完成时，App 与 RC 都应拒绝导航和巡游动作。
+地图 bundle 固定包含 `manifest.json`、`map.pcd`、`map.pgm` 和 `map.yaml`。只有旧二维 PGM/YAML 的 `legacy_2d_only` 地图不能激活、导航或续建，必须重新完成三维建图。
+
+`GET /api/v1/runtime/status` 与 WS `nav.runtime.status` 的主要字段为：
+
+```text
+current_mode, desired_mode, transition_id, active_map_id,
+localized, fitness_score, inlier_ratio, driver_healthy, last_error
+```
+
+`POST /api/v1/maps/{id}/activate` 返回 202 只表示运行模式切换已接受，不表示定位完成。App 必须继续等待 `active_map_id` 正确、`driver_healthy=true`，并以 `nav.reloc_required.required=false` 作为重定位成功的权威信号；`localized=false` 时不得发送导航目标或启动巡游。
 
 ### 5.4 BLE Control GATT
 
@@ -389,6 +460,14 @@ RC → App 常用消息：
 | CONTROL_STATUS | `00000013` | read/notify | 3B 状态帧 |
 | CONTROL_MANIFEST | `00000014` | read/notify | 动态按钮 manifest |
 | CONTROL_SM_STATE | `00000015` | read/notify | 状态机状态 |
+
+`CONTROL_MANIFEST` 和 `CONTROL_SM_STATE` 使用分块传输，每块约 180B：
+
+```text
+[total_len:u16 little-endian][offset:u16 little-endian][chunk...]
+```
+
+接收端按 `offset` 写入缓冲区，累计到 `total_len` 后再解析完整 JSON。
 
 状态帧：
 
@@ -518,7 +597,135 @@ BLE 维修控制先向 `CONTROL_GUEST_AUTH` 写入 UTF-8 JSON，签名仍使用 
 3. 使用维修 UID、SN 和 key 建立 WS、HTTP 或 BLE 鉴权会话。
 4. 完成维修后在机器人上执行 `sudo /opt/bxi/bxi_rc_ros2/scripts/bxi_maintenance.sh disable`。
 
-## 8. 安全要求
+## 8. 开发者快速开始
+
+以下示例只使用 Python 标准库完成签名和 HTTP 调用。实际 App 可直接把相同字节规则移植到 Android、iOS、Flutter 或其他平台；WS 连接使用平台自带的 WebSocket 客户端即可。
+
+### 8.1 生成 WS URL 和调用 HTTP JSON API
+
+```python
+import base64
+import hashlib
+import hmac
+import json
+import secrets
+import time
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+
+
+def hmac_b64(key: bytes, message: str) -> str:
+    return base64.b64encode(
+        hmac.new(key, message.encode("utf-8"), hashlib.sha256).digest()
+    ).decode("ascii")
+
+
+def ws_url(host: str, user_id: str, sn: str, key: bytes,
+           client_id: str = "my_app", path: str = "/",
+           share_token: str | None = None) -> str:
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    query = {
+        "user_id": user_id,
+        "client_id": client_id,
+        "sn": sn,
+        "ts": ts,
+        "nonce": nonce,
+        "sig": hmac_b64(key, f"ws|{user_id}|{sn}|{ts}|{nonce}"),
+    }
+    if share_token:
+        query["share_token"] = share_token
+    return f"ws://{host}:8081{path}?{urlencode(query)}"
+
+
+def http_json(host: str, method: str, path: str, payload,
+              user_id: str, sn: str, key: bytes,
+              share_token: str | None = None):
+    method = method.upper()
+    body = (b"" if payload is None else
+            json.dumps(payload, ensure_ascii=False,
+                       separators=(",", ":")).encode("utf-8"))
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    body_hash = hashlib.sha256(body).hexdigest()
+    canonical = (
+        f"http.v2|{method}|{path}|{body_hash}|{user_id}|{sn}|{ts}|{nonce}"
+    )
+    query = {
+        "auth_v": "2",
+        "user_id": user_id,
+        "sn": sn,
+        "ts": ts,
+        "nonce": nonce,
+        "sig": hmac_b64(key, canonical),
+    }
+    if share_token:
+        query["share_token"] = share_token
+    request = Request(
+        f"http://{host}:8082{path}?{urlencode(query)}",
+        data=body if payload is not None else None,
+        headers={"Content-Type": "application/json"},
+        method=method,
+    )
+    with urlopen(request, timeout=10) as response:
+        return json.loads(response.read())
+
+
+HOST = "192.168.88.162"
+UID = "2147483646"
+SN = "BXI-EXAMPLE-0001"
+KEY = bytes.fromhex("11" * 32)  # 示例；生产从系统安全存储读取
+
+print(ws_url(HOST, UID, SN, KEY))
+print(http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY))
+```
+
+签名用的 `body` 就是最终发送的 `body`，不能签名后再格式化 JSON。访客调用相同函数时传入分享码中的 `subkey`，并同时传 `share_token`。
+
+### 8.2 WS 遥控和 heartbeat
+
+连接第 8.1 节生成的 URL 后发送普通 JSON 文本帧：
+
+```json
+{"type":"control.cmd_vel","ts":1780000000000,"seq":1,"payload":{"vx":0.2,"vy":0.0,"wz":0.1,"height":1.0,"mode":"manual","btn_1":0}}
+```
+
+摇杆移动时建议按界面刷新率持续发送；空闲时每 500ms 以内发送一次不会覆盖导航速度的心跳：
+
+```json
+{"type":"control.heartbeat","ts":1780000000500,"seq":2,"payload":{}}
+```
+
+不要发送 `mode:"estop"` 或用 `btn_1` 实现急停复位，这些网关语义已经删除。
+
+### 8.3 地图激活、重定位和导航
+
+推荐流程：
+
+```python
+maps = http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY)
+http_json(HOST, "POST", "/api/v1/maps/demo_map/activate", None,
+          UID, SN, KEY)
+
+# 继续消费控制 WS，不要固定 sleep 20 秒：
+# 1. 等 nav.runtime.status.payload.active_map_id == "demo_map"
+# 2. 等 current_mode in {"localizing", "navigation"}
+# 3. 确认 driver_healthy == true；last_error 为空
+
+http_json(HOST, "POST", "/api/v1/nav/initial_pose",
+          {"x": 0.0, "y": 0.0, "yaw": 0.0, "frame_id": "map"},
+          UID, SN, KEY)
+
+# 等 nav.reloc_required.payload.required == false，且最新
+# nav.runtime.status.payload.localized == true 后再发送目标。
+http_json(HOST, "POST", "/api/v1/nav/goal",
+          {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"},
+          UID, SN, KEY)
+```
+
+导航进度通过 `nav.status` 跟踪。地图激活、初始位姿和定位状态任一步失败时，应展示 `last_error` 并停止后续请求，而不是继续发目标让服务端重复拒绝。
+
+## 9. 安全要求
 
 - 不得把机器人云端凭据或任何服务端密钥放入 App。
 - `deviceKey` 和维修 key 只能保存在 App 系统安全存储和机器人本地，不得写入日志或 analytics。
