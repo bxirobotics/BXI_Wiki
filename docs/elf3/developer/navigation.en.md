@@ -1,7 +1,177 @@
-# Autonomous Navigation Algorithm Development
+# ELF3 Navigation App User Guide
 
-This document contains navigation algorithm development examples for the ELF3 robot.
+This guide explains how to configure a Livox MID-360s LiDAR for ELF3 and use `bxi_rc_app` to create maps, edit navigation data, and run guided tours.
 
----
+Reference project: [bxi_nav](https://github.com/Luckyt1/bxi_nav)
 
-## Pipeline Overview
+## Prerequisites
+
+- Install the latest version of `bxi_rc_app`.
+- Prepare an ELF3 robot equipped with a Livox MID-360s LiDAR.
+- Connect the computer directly to the LiDAR with an Ethernet cable.
+- Keep the operating area safe and the paths clear, with as little pedestrian traffic as possible.
+
+## 1. Configure the Livox MID-360s LiDAR
+
+If the LiDAR does not start, the network or device configuration is usually incorrect. First confirm that the computer and LiDAR are on the same subnet, then check the configuration file.
+
+### 1.1 Configure a Static IP Address
+
+Set the computer's Ethernet interface to a static IP address, such as `192.168.1.51`. A direct Ethernet connection is recommended. Changing network settings through a remote desktop session may cause permission issues.
+
+![Open the computer's network settings](../../assets/elf3/developer/navigation/network-settings.png)
+
+![Configure a static IP address for the Ethernet interface](../../assets/elf3/developer/navigation/static-ip-configuration.png)
+
+### 1.2 Update the LiDAR Configuration File
+
+Configuration file path:
+
+```text
+bxi_rc_slam/src/livox_ros_driver2/config/MID360s_config.json
+```
+
+Check the following fields:
+
+- `host_ip`: the static IP address of the computer's Ethernet interface, such as `192.168.1.51`.
+- `ip`: the LiDAR IP address. A MID-360s address is typically in the `192.168.1.1xx` range. The final two digits may be printed below the QR code on the LiDAR housing.
+
+If the label is difficult to read, place the computer and LiDAR on the same subnet and run:
+
+```bash
+ros2 launch livox_ros_driver2 msg_MID360s_launch.py
+```
+
+Identify the LiDAR IP address in the program output, then enter it in the configuration file.
+
+Example configuration:
+
+```json
+{
+  "lidar_summary_info": {
+    "lidar_type": 8
+  },
+  "Mid360s": {
+    "lidar_net_info": {
+      "cmd_data_port": 56100,
+      "push_msg_port": 56200,
+      "point_data_port": 56300,
+      "imu_data_port": 56400,
+      "log_data_port": 56500
+    },
+    "host_net_info": [
+      {
+        "host_ip": "192.168.1.51",
+        "cmd_data_port": 56101,
+        "push_msg_port": 56201,
+        "point_data_port": 56301,
+        "imu_data_port": 56401,
+        "log_data_port": 56501
+      }
+    ]
+  },
+  "lidar_configs": [
+    {
+      "ip": "192.168.1.128",
+      "pcl_data_type": 1,
+      "pattern_mode": 0,
+      "extrinsic_parameter": {
+        "roll": 0.0,
+        "pitch": 0.0,
+        "yaw": 0.0,
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    }
+  ]
+}
+```
+
+## 2. Use the Navigation App
+
+Connect to the robot in `bxi_rc_app`, then open the robot details page.
+
+![Open Map Management from the robot details page](../../assets/elf3/developer/navigation/open-map-management.jpg)
+
+### 2.1 Create a Map
+
+1. Open **Map Management (地图管理)** and select **New Map (新建地图)**.
+
+   ![Create a map from the Map Management page](../../assets/elf3/developer/navigation/create-map.jpg)
+
+2. Start the robot and keep it in walking mode. After confirming that the point cloud is displayed correctly, select **Start Mapping (开始建图)**.
+
+   ![Confirm the point cloud and start mapping](../../assets/elf3/developer/navigation/mapping-in-progress.jpg)
+
+3. Stand behind the robot and remotely drive it through the target area. Staying behind the robot prevents the operator from being captured in the map. Minimize pedestrian movement while mapping.
+
+4. After the map covers the target area, select **Save (保存)**. Wait for confirmation that the map has been saved before leaving the mapping page.
+
+   ![Complete mapping and save the map](../../assets/elf3/developer/navigation/mapping-complete.jpg)
+
+### 2.2 Edit the Map
+
+1. In **Map Management (地图管理)**, select the map you just saved.
+
+   ![Select the saved map from Map Management](../../assets/elf3/developer/navigation/select-map.jpg)
+
+2. Open the guided-tour editor, switch to **Waypoint (航点)**, and mark each destination on the map.
+
+   ![Add a waypoint to the map](../../assets/elf3/developer/navigation/add-waypoint.jpg)
+
+3. Set the robot's arrival heading for each waypoint. Add a waypoint name if needed.
+
+   ![Set the waypoint name and arrival heading](../../assets/elf3/developer/navigation/set-waypoint-heading.jpg)
+
+4. Switch to **Area (区域)** and select **Add Clearing Zone (添加清除区)**. Draw clearing zones over the robot's travel paths to remove obstacles that no longer exist in the physical environment.
+
+   ![Add a clearing zone over a travel path](../../assets/elf3/developer/navigation/add-clearing-zone.jpg)
+
+5. Verify the waypoints, headings, and clearing zones, then wait for the map to be saved successfully.
+
+### 2.3 Start a Guided Tour
+
+1. Return to the robot details page, open **Operating Mode (运行模式)**, and select guided-tour mode.
+
+   ![Open the robot's Operating Mode menu](../../assets/elf3/developer/navigation/open-operation-mode.jpg)
+
+2. Select the required map, then select **Start (开始)** on its card.
+
+   ![Select a map and start the guided tour](../../assets/elf3/developer/navigation/select-navigation-map.jpg)
+
+3. Select **Relocalize (重定位)**. Tap the robot's approximate position on the map, then drag the pose marker in the direction the robot is facing.
+
+4. Check whether the red point-cloud returns around the robot align with the walls on the map. If they align, select **Confirm (确认)**. If the offset is significant, adjust the position and heading again.
+
+   ![Adjust the robot position and heading to complete relocalization](../../assets/elf3/developer/navigation/relocalize-robot.jpg)
+
+5. Select **Navigate (导航)** to start the guided-tour task.
+
+   ![Start the navigation task](../../assets/elf3/developer/navigation/start-navigation.jpg)
+
+6. If a problem occurs during the tour, immediately select **Pause (暂停)** or **Stop (终止)**. You can also use the on-screen joystick to take manual control and prevent the robot from continuing off course.
+
+   ![Pause, stop, or manually control the navigation task](../../assets/elf3/developer/navigation/navigation-controls.jpg)
+
+7. When the tour is complete, stop navigation before leaving the page.
+
+## Troubleshooting
+
+### The LiDAR Does Not Start
+
+- Confirm that the computer and LiDAR are connected by Ethernet and are on the same subnet.
+- Confirm that `host_ip` matches the static IP address of the computer's Ethernet interface.
+- Confirm that `ip` matches the actual LiDAR IP address.
+
+### People or Dynamic Obstacles Appear on the Map
+
+- Keep the mapping operator behind the robot.
+- Minimize pedestrian movement during mapping.
+- Add clearing zones in the map editor for obstacles that no longer exist.
+
+### The Point Cloud Does Not Align with the Walls After Relocalization
+
+- Select the robot's position on the map again.
+- Adjust the pose marker to match the robot's actual heading.
+- Start navigation only after the red point-cloud returns are reasonably aligned with the walls.
