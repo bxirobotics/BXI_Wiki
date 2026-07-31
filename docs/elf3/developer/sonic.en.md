@@ -43,7 +43,7 @@ source /opt/ros/humble/setup.bash
 source /opt/bxi/bxi_ros2_pkg/setup.bash
 cd /home/bxi/bxi_ws/bxi_rl_controller_ros2_example
 bash build.sh
-source install/setup.bash
+sudo systemctl restart ros_elf_launch.service
 ```
 
 !!! tip "Note"
