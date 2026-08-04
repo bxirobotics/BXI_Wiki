@@ -8,6 +8,7 @@
 
 - 安装最新版 `bxi_rc_app`。
 - 准备一台已安装 Livox MID-360s 激光雷达的 ELF3 机器人。
+- 确保 `bxi_rc_slam` 包已更新至最新版本。
 - 使用网线连接电脑与雷达。
 - 确保作业区域安全、通道畅通，并尽量减少人员走动。
 
@@ -90,9 +91,17 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
 ## 2. 使用导航 App
 
-在 `bxi_rc_app` 中连接需要导航的机器人，然后进入机器人详情页。
+1. 打开 `bxi_rc_app`，点击 **我的设备**。
 
-![在机器人详情页进入地图管理](../../assets/elf3/developer/navigation/open-map-management.jpg)
+   ![在 bxi_rc_app 中打开我的设备](../../assets/elf3/developer/navigation/open-my-devices.jpg)
+
+2. 在设备列表中选择需要导航的机器人，进入机器人详情页。
+
+   ![在我的设备中选择需要导航的机器人](../../assets/elf3/developer/navigation/select-robot.jpg)
+
+3. 在机器人详情页中进入 **地图管理**。
+
+   ![在机器人详情页进入地图管理](../../assets/elf3/developer/navigation/open-map-management.jpg)
 
 ### 2.1 建图
 

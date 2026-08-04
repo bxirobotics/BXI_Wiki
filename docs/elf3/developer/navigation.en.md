@@ -8,6 +8,7 @@ Reference project: [bxi_nav](https://github.com/Luckyt1/bxi_nav)
 
 - Install the latest version of `bxi_rc_app`.
 - Prepare an ELF3 robot equipped with a Livox MID-360s LiDAR.
+- Make sure the `bxi_rc_slam` package is up to date.
 - Connect the computer directly to the LiDAR with an Ethernet cable.
 - Keep the operating area safe and the paths clear, with as little pedestrian traffic as possible.
 
@@ -90,9 +91,17 @@ Example configuration:
 
 ## 2. Use the Navigation App
 
-Connect to the robot in `bxi_rc_app`, then open the robot details page.
+1. Open `bxi_rc_app` and select **My Devices (我的设备)**.
 
-![Open Map Management from the robot details page](../../assets/elf3/developer/navigation/open-map-management.jpg)
+   ![Open My Devices in bxi_rc_app](../../assets/elf3/developer/navigation/open-my-devices.jpg)
+
+2. Select the robot you want to navigate from the device list to open its details page.
+
+   ![Select the robot from My Devices](../../assets/elf3/developer/navigation/select-robot.jpg)
+
+3. Open **Map Management (地图管理)** from the robot details page.
+
+   ![Open Map Management from the robot details page](../../assets/elf3/developer/navigation/open-map-management.jpg)
 
 ### 2.1 Create a Map
 
