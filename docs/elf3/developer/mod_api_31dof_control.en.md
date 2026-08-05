@@ -64,7 +64,13 @@ Overrides are disabled in zero-torque mode by default. After starting the robot 
 ```bash
 ros2 topic pub --once /motion_commands \
   communication/msg/MotionCommands "{btn_4: 1}"
+
+ros2 topic pub --once /motion_commands \
+  communication/msg/MotionCommands "{btn_4: 0}"
 ```
+
+!!! warning "Reset every button event to 0"
+    `MotionCommands` button events use rising-edge detection, and the program retains the last value received for each event. After manually publishing any nonzero button value over ROS, publish `0` to the same button slot to return it to the released state. Otherwise, the next action using that button slot may not produce a new rising edge.
 
 The command below overrides both head joints at 20 Hz. The targets for `head_z_joint` and `head_y_joint` are `0.20 rad` and `-0.10 rad`, respectively:
 
@@ -264,7 +270,7 @@ runtime_requirements:
 events:
   activate:
     slot: btn_10
-    value: 10
+    value: 99
 
 states:
   formula_31dof:
@@ -288,7 +294,7 @@ routes:
 
 Both routes intentionally omit `transition`. The project's `elf3_state_machine.yaml` sets `default_transition` to `instant`, so the state changes immediately and the target state's `on_update()` starts on the next control cycle. This is what “no transition” means in this example. If the system default has been changed, add `transition: instant` explicitly to both routes.
 
-The example can only be entered from `com.bxi.basic_actions/initial_pos` (zero-position mode), reducing the target discontinuity during an instant switch. Send `btn_10=10` to enter and use the zero-position-mode command to return.
+The example can only be entered from `com.bxi.basic_actions/initial_pos` (zero-position mode), reducing the target discontinuity during an instant switch. Send `btn_10=99` to enter and use the zero-position-mode command to return. This example does not use `btn_10=10` because that binding is already owned by `com.bxi.any_motion/activate`.
 
 ## 6. Build and run
 
@@ -309,14 +315,23 @@ First send the zero-position-mode command:
 ```bash
 ros2 topic pub --once /motion_commands \
   communication/msg/MotionCommands "{btn_4: 1}"
+
+ros2 topic pub --once /motion_commands \
+  communication/msg/MotionCommands "{btn_4: 0}"
 ```
 
-After the robot enters zero-position mode, send `btn_10=10` to enter the formula-trajectory state:
+After the robot enters zero-position mode, send `btn_10=99` to enter the formula-trajectory state:
 
 ```bash
 ros2 topic pub --once /motion_commands \
-  communication/msg/MotionCommands "{btn_10: 10}"
+  communication/msg/MotionCommands "{btn_10: 99}"
+
+# Releasing btn_10 is required so later btn_10 actions can trigger
+ros2 topic pub --once /motion_commands \
+  communication/msg/MotionCommands "{btn_10: 0}"
 ```
+
+Publishing `btn_10=0` only restores the released button state; it does not exit the formula-trajectory state that was just entered.
 
 A successful load includes this log entry:
 

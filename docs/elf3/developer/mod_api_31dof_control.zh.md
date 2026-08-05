@@ -64,7 +64,13 @@ modules:
 ```bash
 ros2 topic pub --once /motion_commands \
   communication/msg/MotionCommands "{btn_4: 1}"
+
+ros2 topic pub --once /motion_commands \
+  communication/msg/MotionCommands "{btn_4: 0}"
 ```
+
+!!! warning "按钮事件触发后必须复位为 0"
+    `MotionCommands` 的按钮事件采用上升沿检测，程序会保存每个事件上一次收到的值。通过 ROS 手工发送任意非零按钮值后，必须再向同一按钮槽位发送 `0`，使其回到释放状态。否则下一次使用该按钮槽位时可能无法产生新的上升沿。
 
 以下命令以 20 Hz 覆盖两个头部关节。`head_z_joint` 和 `head_y_joint` 的目标位置分别为 `0.20 rad` 和 `-0.10 rad`：
 
@@ -263,7 +269,7 @@ runtime_requirements:
 events:
   activate:
     slot: btn_10
-    value: 10
+    value: 99
 
 states:
   formula_31dof:
@@ -287,7 +293,7 @@ routes:
 
 两条 route 都故意不写 `transition`。项目的 `elf3_state_machine.yaml` 将 `default_transition` 配置为 `instant`，所以状态会立即切换，并从下一个控制周期开始执行目标状态的 `on_update()`。这就是本例“不用过渡”的含义；如果项目修改了系统默认值，可在两条 route 上显式写 `transition: instant`。
 
-示例只允许从 `com.bxi.basic_actions/initial_pos`（零位模式）进入，以减小即时切换时的目标差异。`btn_10=10` 用于进入本状态；按零位模式键可返回。
+示例只允许从 `com.bxi.basic_actions/initial_pos`（零位模式）进入，以减小即时切换时的目标差异。`btn_10=99` 用于进入本状态；按零位模式键可返回。这里不使用 `btn_10=10`，因为该组合已经由 `com.bxi.any_motion/activate` 占用。
 
 ## 6. 构建和运行
 
@@ -308,14 +314,23 @@ ros2 launch bxi_example_py_elf3 example_demo.launch.py
 ```bash
 ros2 topic pub --once /motion_commands \
   communication/msg/MotionCommands "{btn_4: 1}"
+
+ros2 topic pub --once /motion_commands \
+  communication/msg/MotionCommands "{btn_4: 0}"
 ```
 
-机器人进入零位模式后，发送 `btn_10=10` 进入公式轨迹状态：
+机器人进入零位模式后，发送 `btn_10=99` 进入公式轨迹状态：
 
 ```bash
 ros2 topic pub --once /motion_commands \
-  communication/msg/MotionCommands "{btn_10: 10}"
+  communication/msg/MotionCommands "{btn_10: 99}"
+
+# 必须释放 btn_10，否则后续 btn_10 动作可能无法触发
+ros2 topic pub --once /motion_commands \
+  communication/msg/MotionCommands "{btn_10: 0}"
 ```
+
+发送 `btn_10=0` 只负责恢复按钮的释放状态，不会退出已经进入的公式轨迹状态。
 
 加载成功时日志中应出现：
 
