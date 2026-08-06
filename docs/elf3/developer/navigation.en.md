@@ -12,6 +12,25 @@ Reference project: [bxi_nav](https://github.com/Luckyt1/bxi_nav)
 - Connect the computer directly to the LiDAR with an Ethernet cable.
 - Keep the operating area safe and the paths clear, with as little pedestrian traffic as possible.
 
+## Environment Setup
+
+This guide assumes Ubuntu 22.04 and ROS 2 Humble. Before continuing, source a ROS 2 environment with Navigation2 installed, then install the point-cloud-to-laser-scan tool:
+
+```bash
+source /opt/ros/humble/setup.bash
+sudo apt update
+sudo apt install -y ros-humble-pointcloud-to-laserscan
+```
+
+After installation, verify that the required packages are available:
+
+```bash
+ros2 pkg prefix nav2_bringup
+ros2 pkg prefix pointcloud_to_laserscan
+```
+
+If both commands print their package installation paths, the environment is ready.
+
 ## 1. Configure the Livox MID-360s LiDAR
 
 If the LiDAR does not start, the network or device configuration is usually incorrect. First confirm that the computer and LiDAR are on the same subnet, then check the configuration file.
@@ -88,6 +107,14 @@ Example configuration:
   ]
 }
 ```
+
+!!! warning "Rebuild after changing the configuration"
+
+    After saving the configuration, enter the project directory containing `install.sh` and rebuild the installation with root privileges:
+
+    ```bash
+    sudo ./install.sh
+    ```
 
 ## 2. Use the Navigation App
 

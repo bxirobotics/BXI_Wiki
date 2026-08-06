@@ -12,6 +12,25 @@
 - 使用网线连接电脑与雷达。
 - 确保作业区域安全、通道畅通，并尽量减少人员走动。
 
+## 环境准备
+
+本教程基于 Ubuntu 22.04 和 ROS 2 Humble。开始配置前，请先加载已安装 Navigation2 的 ROS 2 环境，并安装点云转激光扫描工具：
+
+```bash
+source /opt/ros/humble/setup.bash
+sudo apt update
+sudo apt install -y ros-humble-pointcloud-to-laserscan
+```
+
+安装完成后，可运行以下命令确认相关软件包已正确安装：
+
+```bash
+ros2 pkg prefix nav2_bringup
+ros2 pkg prefix pointcloud_to_laserscan
+```
+
+如果命令能输出软件包的安装路径，说明环境准备完成。
+
 ## 1. 配置 Livox MID-360s 雷达
 
 雷达无法启动时，通常是网络或雷达配置不正确。请先确认电脑与雷达处于同一网段，再检查配置文件。
@@ -88,6 +107,14 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
   ]
 }
 ```
+
+!!! warning "修改配置后需要重新编译"
+
+    保存配置后，请进入包含 `install.sh` 的工程目录，并使用 root 权限重新编译安装：
+
+    ```bash
+    sudo ./install.sh
+    ```
 
 ## 2. 使用导航 App
 
