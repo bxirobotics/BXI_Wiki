@@ -1,4 +1,4 @@
-# Minimal 31-DoF ELF3 Control with the Mod API
+# Minimal 31-DoF ELF3 Control
 
 This guide presents two joint-control paths. To control only the head, publish named joint commands directly to `actuators_cmds_override` without writing code. For complete 31-DoF control, create a Mod containing only `state.py` and `mod.yaml` and generate the trajectory directly in `on_update()`.
 
@@ -45,12 +45,17 @@ In 29-DoF mode, the runtime joint layout does not contain `head_z_joint` or `hea
 !!! note "Manual overrides are for debugging"
     The hardware launch also accepts `enable_head:=true` or `enable_head:=false` to override automatic detection. Standard deployments should use `/opt/bxi/robot_config.yaml` so the software configuration cannot silently disagree with the physical hardware.
 
-!!! danger "Validate in simulation first"
-    Both joint overrides and custom Mods produce motor commands directly. Before testing on hardware, suspend the robot, clear all people and obstacles from its surroundings, and keep the emergency stop ready. Validate joint directions with small angles and low gains first.
+!!! danger "Validate in simulation and choose the correct test setup"
+    Both joint overrides and custom Mods produce motor commands directly. Before testing on hardware, clear all people and obstacles, keep the emergency stop ready, and validate joint directions with small angles and low gains.
+
+    When the robot is standing on the ground, arm or hand overrides require a model that does not rely on the arms for balance, such as `com.bxi.basic_actions/hello` or `com.bxi.basic_actions/applause`. The alternative is to suspend the robot securely. During a suspended `actuators_cmds_override` test, the underlying state may be only zero-position mode (`initial_pos`) or PD mode (`pd_brake`); do not enter walking, hello, applause, dance, or any other mode.
 
 ## 1. No-code head-joint override
 
 At the final output stage, the controller reads override commands of type `communication/msg/ActuatorCmds` and replaces only the joints listed in `actuators_name`. All other joints remain controlled by the current state or policy, so head-only control does not require a Mod or a complete 31-element command.
+
+!!! warning "Prepare the underlying model before overriding an arm or hand"
+    `actuators_cmds_override` replaces only the selected joints; it cannot make the original balance model adapt automatically to a new arm motion. With the robot standing on the ground, enter the arm-independent `hello` or `applause` state before publishing arm or hand overrides. When the robot is suspended, do not enter those actions; remain in `initial_pos` or `pd_brake` only.
 
 The override topic includes the launch-time `topic_prefix`:
 
@@ -141,6 +146,11 @@ The `qpos`, `kp`, and `kd` arrays in a `MotorFrame` must use the same joint layo
 The example explicitly binds this layout to its `MotorFrame`. The runtime layout may use a different order as long as it contains the same 31 named joints; the framework maps commands to the actual order by joint name.
 
 ## 3. Create the Mod
+
+!!! danger "This Mod has no balance capability"
+    The example `on_update()` produces only joint positions and gains. It does not use the IMU, foot contacts, or a balance policy, and it provides no standing stabilization, disturbance rejection, or fall protection. It can only move joints according to the hard-coded formulas; it cannot keep the robot standing.
+
+    To avoid mixing an unbalanced state with the rule that a suspended robot must remain in zero-position or PD mode, this tutorial runs the formula Mod in simulation only. To verify joint motion on hardware, use `actuators_cmds_override` from the previous section, suspend the robot, and keep the underlying state in `initial_pos` or `pd_brake` throughout the test.
 
 ```bash
 cd ~/bxi_ws/bxi_rl_controller_ros2_example
@@ -280,7 +290,7 @@ states:
     group: Customer
     icon: waves
     confirm: true
-    confirm_message: Suspend the robot and confirm the area is clear
+    confirm_message: This unbalanced example is for simulation only
 
 routes:
   - from: com.bxi.basic_actions/initial_pos
@@ -294,7 +304,7 @@ routes:
 
 Both routes intentionally omit `transition`. The project's `elf3_state_machine.yaml` sets `default_transition` to `instant`, so the state changes immediately and the target state's `on_update()` starts on the next control cycle. This is what “no transition” means in this example. If the system default has been changed, add `transition: instant` explicitly to both routes.
 
-The example can only be entered from `com.bxi.basic_actions/initial_pos` (zero-position mode), reducing the target discontinuity during an instant switch. Send `btn_10=99` to enter and use the zero-position-mode command to return. This example does not use `btn_10=10` because that binding is already owned by `com.bxi.any_motion/activate`.
+The example can only be entered from `com.bxi.basic_actions/initial_pos` (zero-position mode). This both reduces the target discontinuity during an instant switch and reflects the fact that the formula trajectory has no balance capability. Do not add routes from `normal`, walking, or other action states. Send `btn_10=99` to enter and use the zero-position-mode command to return. This example does not use `btn_10=10` because that binding is already owned by `com.bxi.any_motion/activate`.
 
 ## 6. Build and run
 
@@ -341,7 +351,7 @@ A successful load includes this log entry:
 
 The fully qualified state name is `com.example.elf3_31dof/formula_31dof`.
 
-Only after the joint directions, amplitudes, and gains are correct in simulation should you follow the hardware procedure in the [Motion Control Development Guide](motioncontrol.md#launching-the-robot-program). Hardware control requires root privileges. Stop the background autostart service first so two controllers cannot command the motors concurrently.
+The formula-trajectory Mod in this tutorial is for simulation only and must not be treated as a hardware standing controller. To verify joint motion on hardware, use `actuators_cmds_override`; after suspension, keep the underlying state in `initial_pos` or `pd_brake` only. Hardware control requires root privileges. Stop the background autostart service first so two controllers cannot command the motors concurrently. See the [Motion Control Development Guide](motioncontrol.md#launching-the-robot-program) for startup instructions.
 
 ## Troubleshooting
 

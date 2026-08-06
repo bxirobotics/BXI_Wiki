@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<robot name="elf3">
+  <link name="base_link"/>
+  <link name="r_shoulder_y_link">
+    <inertial>
+      <origin xyz="-0.0194828193209974 0.00304195230333162 0.000460380062494548" rpy="0 0 0"/>
+      <mass value="0.938482977205647"/>
+      <inertia ixx="0.00101079" ixy="-5.609e-05" ixz="-9.12e-06" iyy="0.00073439" iyz="-1.143e-05" izz="0.00081619"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_shoulder_y_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_shoulder_y_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_shoulder_y_joint" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="r_shoulder_y_link"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.8798" upper="2.8798" effort="50" velocity="20"/>
+  </joint>
+  <link name="r_shoulder_x_link">
+    <inertial>
+      <origin xyz="0.00939873056050159 1.86335671892301E-09 -0.0272170618019573" rpy="0 0 0"/>
+      <mass value="0.130650985436178"/>
+      <inertia ixx="0.00013666" ixy="0" ixz="-1.604e-05" iyy="0.00011597" iyz="0" izz="6.211e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_shoulder_x_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_shoulder_x_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_shoulder_x_joint" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="r_shoulder_y_link"/>
+    <child link="r_shoulder_x_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-3.0543" upper="0.34907" effort="50" velocity="20"/>
+  </joint>
+  <link name="r_shoulder_z_link">
+    <inertial>
+      <origin xyz="-0.000936875996645872 0.0026727346729955 -0.207892367996904" rpy="0 0 0"/>
+      <mass value="1.29694127388881"/>
+      <inertia ixx="0.00776351" ixy="-2.397e-05" ixz="1.308e-05" iyy="0.00803301" iyz="0.00031762" izz="0.00099996"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_shoulder_z_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_shoulder_z_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_shoulder_z_joint" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="r_shoulder_x_link"/>
+    <child link="r_shoulder_z_link"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.8798" upper="2.8798" effort="25" velocity="20"/>
+  </joint>
+  <link name="r_elbow_y_link">
+    <inertial>
+      <origin xyz="0.0294655735523084 -0.0164097671383606 -6.9434552552039E-10" rpy="0 0 0"/>
+      <mass value="0.0938669107317605"/>
+      <inertia ixx="4.361e-05" ixy="-1.857e-05" ixz="0" iyy="8.534e-05" iyz="0" izz="8.443e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_elbow_y_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_elbow_y_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_elbow_y_joint" type="revolute">
+    <origin xyz="0 0 -0.256" rpy="0 0 0"/>
+    <parent link="r_shoulder_z_link"/>
+    <child link="r_elbow_y_link"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.95993" upper="1.6581" effort="50" velocity="20"/>
+  </joint>
+  <link name="r_wrist_x_link">
+    <inertial>
+      <origin xyz="-0.124486484606996 0.00109278555236017 3.4282161115895E-05" rpy="0 0 0"/>
+      <mass value="0.658674935909524"/>
+      <inertia ixx="0.00054606" ixy="-4.474e-05" ixz="-1.8e-07" iyy="0.00183383" iyz="3.7e-07" izz="0.0020829"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_wrist_x_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_wrist_x_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_wrist_x_joint" type="revolute">
+    <origin xyz="0.256 0 0" rpy="0 0 0"/>
+    <parent link="r_elbow_y_link"/>
+    <child link="r_wrist_x_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-2.8798" upper="2.8798" effort="25" velocity="20"/>
+  </joint>
+  <link name="r_wrist_y_link">
+    <inertial>
+      <origin xyz="-7.93970759316309E-06 3.73153816448646E-05 -0.00298555590877839" rpy="0 0 0"/>
+      <mass value="0.243805170389875"/>
+      <inertia ixx="0.00018369" ixy="-1e-08" ixz="-8e-08" iyy="0.00018676" iyz="-3.9e-07" izz="0.00014174"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_wrist_y_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_wrist_y_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_wrist_y_joint" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="r_wrist_x_link"/>
+    <child link="r_wrist_y_link"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.309" upper="1.309" effort="25" velocity="20"/>
+  </joint>
+  <link name="r_wrist_z_link">
+    <inertial>
+      <origin xyz="0.0308694728635014 1.1197196503332E-09 0.0141752234659371" rpy="0 0 0"/>
+      <mass value="0.106560859874613"/>
+      <inertia ixx="7.12e-05" ixy="0" ixz="2.562e-05" iyy="8.685e-05" iyz="0" izz="7.068e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_wrist_z_link.STL"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.752941176470588 0.752941176470588 0.752941176470588 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://elf3_arm_description/meshes/r_wrist_z_link.STL"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="r_wrist_z_joint" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="r_wrist_y_link"/>
+    <child link="r_wrist_z_link"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-0.7854" upper="0.7854" effort="25" velocity="20"/>
+  </joint>
+</robot>

@@ -2,6 +2,7 @@ nav:
   - overview.md
   - motioncontrol.md
   - mod_api_31dof_control.md
+  - arm_ik.md
   - topscreen.md
   - dexterous_hand.md
   - upper_body_teleop.md

@@ -1,4 +1,4 @@
-# 使用 Mod API 最简控制 ELF3 的 31 自由度
+# 最简控制 ELF3 的 31 自由度
 
 本文提供两种关节控制方式：只控制头部时，直接向 `actuators_cmds_override` 发布具名关节命令，不需要写代码；需要完整控制 31 自由度时，再创建一个只有 `state.py` 和 `mod.yaml` 的 Mod，在 `on_update()` 中直接生成轨迹。
 
@@ -45,12 +45,17 @@ modules:
 !!! note "手动覆盖仅用于调试"
     硬件 launch 也支持 `enable_head:=true` 或 `enable_head:=false` 强制覆盖自动判定，但标准部署应以 `/opt/bxi/robot_config.yaml` 为准，避免软件配置与实际硬件不一致。
 
-!!! danger "先在仿真中验证"
-    关节覆盖和自定义 Mod 都会直接生成电机命令。真机测试前必须吊装机器人、清空周围人员和障碍物，并准备急停。先使用小角度和较低增益验证关节方向。
+!!! danger "先在仿真中验证并选择正确的测试方式"
+    关节覆盖和自定义 Mod 都会直接生成电机命令。真机测试前必须清空周围人员和障碍物、准备急停，并先使用小角度和较低增益验证关节方向。
+
+    机器人落地承重时，如需覆盖手臂或手部关节，必须先进入不依赖手臂维持平衡的模型，例如 `com.bxi.basic_actions/hello`（挥手）或 `com.bxi.basic_actions/applause`（鼓掌）。另一种方式是将机器人可靠吊装；使用 `actuators_cmds_override` 吊装测试时，底层状态只允许使用零位模式 `initial_pos` 或 PD 模式 `pd_brake`，禁止进入走路、挥手、鼓掌、跳舞等其他任何模式。
 
 ## 1. 无需写代码：覆盖头部关节
 
 控制程序会在最终输出阶段读取 `communication/msg/ActuatorCmds` 类型的覆盖命令，并根据 `actuators_name` 只替换指定关节。其他关节仍由当前状态或策略控制，因此仅控制头部时不必创建 Mod，也不必发送完整的 31 维数组。
+
+!!! warning "覆盖手臂或手部前先处理底层模型"
+    `actuators_cmds_override` 只替换指定关节，不能让原有平衡模型自动适应新的手臂动作。机器人落地时，应先切换到不依赖手臂的 `hello` 或 `applause`，再开始发布手臂/手部覆盖命令。机器人吊装时不要进入这两个动作，只能停留在 `initial_pos` 或 `pd_brake`。
 
 覆盖话题带有启动时的 `topic_prefix`：
 
@@ -141,6 +146,11 @@ ros2 topic pub --once \
 示例会给 `MotorFrame` 显式绑定这个布局。运行时布局只要包含相同的 31 个具名关节，顺序可以不同；框架会按关节名把命令映射到实际顺序。
 
 ## 3. 创建 Mod
+
+!!! danger "此 Mod 没有平衡能力"
+    本例的 `on_update()` 只生成各关节的目标位置和增益，没有使用 IMU、足底接触或平衡策略，也不具备站立平衡、抗扰动或跌倒保护能力。它只能让关节按照写死的公式运动，不能让机器人自行站稳。
+
+    为避免把“无平衡状态”和“吊装时只能保持零位或 PD”的规则混在一起，本教程只要求在仿真中运行该公式 Mod。真机只想验证关节动作时，使用上一节的 `actuators_cmds_override`：吊装机器人，并让底层状态始终保持 `initial_pos` 或 `pd_brake`。
 
 ```bash
 cd ~/bxi_ws/bxi_rl_controller_ros2_example
@@ -279,7 +289,7 @@ states:
     group: Customer
     icon: waves
     confirm: true
-    confirm_message: 请先吊装机器人并确认周围安全
+    confirm_message: 此示例没有平衡能力，仅限仿真运行
 
 routes:
   - from: com.bxi.basic_actions/initial_pos
@@ -293,7 +303,7 @@ routes:
 
 两条 route 都故意不写 `transition`。项目的 `elf3_state_machine.yaml` 将 `default_transition` 配置为 `instant`，所以状态会立即切换，并从下一个控制周期开始执行目标状态的 `on_update()`。这就是本例“不用过渡”的含义；如果项目修改了系统默认值，可在两条 route 上显式写 `transition: instant`。
 
-示例只允许从 `com.bxi.basic_actions/initial_pos`（零位模式）进入，以减小即时切换时的目标差异。`btn_10=99` 用于进入本状态；按零位模式键可返回。这里不使用 `btn_10=10`，因为该组合已经由 `com.bxi.any_motion/activate` 占用。
+示例只允许从 `com.bxi.basic_actions/initial_pos`（零位模式）进入。这不仅用于减小即时切换时的目标差异，也是因为该公式轨迹没有平衡能力；不要为它增加从 `normal`、走路或其他动作状态进入的 route。`btn_10=99` 用于进入本状态；按零位模式键可返回。这里不使用 `btn_10=10`，因为该组合已经由 `com.bxi.any_motion/activate` 占用。
 
 ## 6. 构建和运行
 
@@ -340,7 +350,7 @@ ros2 topic pub --once /motion_commands \
 
 状态完整名为 `com.example.elf3_31dof/formula_31dof`。
 
-确认仿真中的关节方向、幅值和增益均正确后，才可按[运动控制开发指南](motioncontrol.md#启动机器人程序)中的真机流程测试。真机程序需要 root 权限，并应先停止后台自启动服务，避免两个控制程序同时向电机发送命令。
+本教程中的公式轨迹 Mod 仅用于仿真演示，不应作为真机站立控制器。真机只需验证关节动作时，请改用 `actuators_cmds_override`；机器人吊装后底层状态只能保持 `initial_pos` 或 `pd_brake`。真机程序需要 root 权限，并应先停止后台自启动服务，避免两个控制程序同时向电机发送命令。启动方法见[运动控制开发指南](motioncontrol.md#启动机器人程序)。
 
 ## 常见问题
 
