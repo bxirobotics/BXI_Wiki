@@ -1,4 +1,5 @@
 nav:
-  - app_guide.md
+  - 新版 App 使用指南: app_guide_v2.md
+  - 旧版 App 使用指南: app_guide.md
   - new_backend_api.md
   - tool_guide.md
