@@ -10,29 +10,22 @@ BXI Control is used to add, connect to, control, and maintain BXI robots. This g
 
     Remote control, mapping, touring, firmware upgrades, and remote assistance can affect robot state. Before starting, make sure the area around the robot is clear, the robot is in a safe pose, and power and network connections are stable. Screenshots in this guide are from a test environment; device names, addresses, and identifiers have been redacted.
 
-## What's new compared with the previous version
+## Before you use a robot for the first time
 
-While retaining device onboarding, connection, teleoperation, and maintenance features, the new BXI Control unifies its page structure, connection workflow, and security capabilities. The usual flow is **Home → My Devices → Connection Method → Device Home → Operation Mode**. Firmware management, diagnostics, and Profile also have clear, dedicated entries.
+If this is your first robot, complete onboarding, Wi-Fi provisioning, and the first start with guidance from an experienced on-site operator. In this guide, the **controller** is the phone, tablet, or PC running the App; the **robot** is the physical device being added and controlled; **binding** saves that robot to the current account or controller so it can be connected again later.
 
-- **Better performance:** control, video, and device-state features load on demand for the active connection method, reducing repeated initialization and unnecessary waits.
-- **Less redundant code:** common device, connection, control, and settings logic has been consolidated, making future maintenance and troubleshooting clearer.
-- **Greater stability:** connection state, control input, video refresh, and session recovery have explicit boundaries, reducing residual state after page changes, network switches, or short interruptions.
-- **Centralized device management:** Home, Device Home, and Profile group features by task. Wi-Fi/Bluetooth connection, upgrades, and diagnostics are no longer scattered across separate areas.
-- **Improved security:** together with updated robot firmware, the new App enables encryption and new features such as device sharing. Encryption does not replace physical safety procedures; treat accounts, passwords, device addresses, logs, and session information as sensitive data.
+For first-time use, follow this order:
 
-### Legacy robots must complete a firmware upgrade first
+1. Place the robot in a level, clear area without people, loose items, or objects that could be knocked over.
+2. Open BXI Control on the controller and choose sign-in or Local mode.
+3. Use **Add Device** to scan and bind the robot, then complete Wi-Fi provisioning as prompted.
+4. Connect by **Wi-Fi** and open Device Home; check battery and Diagnostics first.
+5. If the App reports legacy firmware, complete the firmware upgrade first.
+6. Enter Remote Control and start the robot only when you understand the controls, the site is safe, and you are authorized to operate it.
 
-When the new App detects a robot with legacy, unencrypted firmware, it displays an upgrade prompt and routes the user to the firmware upgrade flow. Complete the robot firmware upgrade before using the new App's connection, encryption, and sharing features. Do not bypass or interrupt the upgrade.
+!!! tip "When unsure, do not start the robot"
 
-![Firmware upgrade prompt for a legacy robot (device list redacted)](../assets/control/app-guide-2026/firmware-upgrade-required-redacted.png)
-
-!!! warning "Encryption and credential protection"
-
-    Even after encryption is enabled by a firmware upgrade, never expose Wi-Fi passwords, SSH passwords, device or Bluetooth addresses, tokens, or session identifiers in screenshots, tickets, logs, or chat. Use the App's authorization and sharing workflow and grant only the minimum access required.
-
-!!! note "Using the new version"
-
-    Names and locations of pages can differ from the previous App. Follow the functions shown in the new App and do not skip firmware upgrades, provisioning, connection checks, or pre-start safety checks based on prior experience.
+    If the robot cannot be found, a prompt is unclear, the network is unstable, or the robot pose looks abnormal, stop and contact the on-site owner or technical support. Opening pages, viewing state, and refreshing lists normally do not move the robot. Starting the robot, operating joysticks, upgrading firmware, and requesting remote assistance can change robot state.
 
 ## Page map
 
@@ -55,7 +48,7 @@ When the new App detects a robot with legacy, unencrypted firmware, it displays 
 
 ### 1.1 First launch
 
-The welcome page is shown on first launch. Enter a mobile number, accept the Terms of Service and Privacy Policy, and request a verification code to sign in. For offline deployment, field maintenance, or use without an account, select **Enter Local Mode** at the bottom. Local mode does not create a cloud account automatically.
+The welcome page is shown on first launch. If you already have a BXI account, enter a mobile number, accept the Terms of Service and Privacy Policy, and request a verification code. For first on-site use without an account, select **Enter Local Mode** at the bottom. Local mode does not create a cloud account automatically, but it can connect to robots already bound on this controller.
 
 ![First-launch welcome page](../assets/control/app-guide-2026/home-initial.png)
 
@@ -81,7 +74,7 @@ Local mode suits offline and field maintenance. Cloud mode suits multi-device co
 
 ### 2.1 Add Device guidance
 
-Select **Add Device** on Home, then:
+Select **Add Device** on Home. This lets the controller recognize and save the robot, and must be completed for first use. Before starting:
 
 1. Turn on the robot controller and place the robot safely.
 2. Enable Bluetooth and location permission on the phone or tablet.
@@ -102,7 +95,7 @@ The scan page lists discoverable BXI robots and their signal strength. Select **
 
 ### 2.3 Provisioning and binding
 
-After Bluetooth connection, confirm the target robot, enter or select Wi-Fi information, and wait for the robot to join the network. Once binding is complete, the robot appears in **My Devices**.
+After Bluetooth connection, confirm the target robot, enter or select Wi-Fi information, and wait for the robot to join the network. Think of this as finding the robot over Bluetooth first, then telling it which Wi-Fi network to join. Once binding is complete, the robot appears in **My Devices**.
 
 !!! warning "Do not leave during provisioning"
 
@@ -142,7 +135,7 @@ To move a robot to another Wi-Fi network:
 
 ### 3.4 Device Home
 
-After a successful connection, Device Home provides these entries:
+After a successful connection, Device Home provides entries for the current robot. On your first successful connection, check **Firmware Management** first, then learn Remote Control:
 
 - **Operation Mode:** choose Remote Control or Touring mode;
 - **Diagnostics:** view robot diagnostic data;
@@ -151,18 +144,20 @@ After a successful connection, Device Home provides these entries:
 
 ![Device Home](../assets/control/app-guide-2026/device-home.png)
 
-## 4. Operation modes and remote control
+## 4. Selecting an operation mode and the remote-control interface
 
-### 4.1 Select an operation mode
+### 4.1 Operation modes
 
-- **Remote Control:** operate the robot with virtual joysticks or an external gamepad.
+Select **Operation Mode** from Device Home to open the mode picker:
+
+- **Remote Control:** operate the robot with virtual joysticks or an external gamepad. Read the Remote-control interface section below before first use.
 - **Touring:** follow a prepared route. Core functionality is complete and is undergoing internal testing and optimization; it will be made generally available later.
 
 ![Operation mode picker](../assets/control/app-guide-2026/mode-picker.png)
 
-### 4.2 Remote-control screen
+### 4.2 Remote-control interface
 
-Before enabling the robot, verify that the video/model view, network, and battery state are normal. Opening this screen does not enable the robot or issue movement commands.
+After entering **Remote Control**, do not operate the joysticks yet. First verify that the video or model view, network, and battery are normal, then enable the robot if required. Opening this screen does not enable the robot or issue movement commands.
 
 | Area | Description |
 | --- | --- |
@@ -218,7 +213,7 @@ Use **Import**, **Export**, and **Reset** at lower left to manage local settings
 
 ## 6. Diagnostics
 
-Diagnostics reads robot runtime data over Wi-Fi. On first entry, confirm **DOMAIN_ID**; it must match the ROS 2 communication domain used by the robot.
+Diagnostics reads robot runtime data over Wi-Fi. Use it after the first connection, before remote control, or when something appears abnormal. On first entry, confirm **DOMAIN_ID**; it is the identifier used for internal robot communication and must match the robot's ROS 2 communication domain. If you do not know this value, ask the on-site technical team rather than changing it.
 
 ![Set DOMAIN_ID](../assets/control/app-guide-2026/status-domain.png)
 
@@ -256,7 +251,7 @@ Select **Logs** to choose a current log file and view runtime records. Logs help
 
 ### 6.4 SSH Command Line
 
-Selecting **Command Line** first shows the SSH credentials page. Enter an authorized username and password to create a secure terminal session; select **Save this robot's password** only if it should be retained on this controller. Opening the page neither connects nor runs a command.
+Selecting **Command Line** first shows the SSH credentials page. Enter an authorized username and password to create a secure terminal session; select **Save this robot's password** only if it should be retained on this controller. Opening the page neither connects nor runs a command. First-time users normally do not need this feature.
 
 !!! danger "Maintenance personnel only"
 
@@ -266,15 +261,25 @@ Selecting **Command Line** first shows the SSH credentials page. Enter an author
 
 ## 7. Firmware management and upgrade
 
-**Firmware Management** is available from Device Home. **Firmware Upgrade** on Home provides a multi-device batch-upgrade entry.
+**Firmware Management** on Device Home maintains the current robot. **Firmware Upgrade** on Home provides a batch-upgrade entry for multiple devices.
 
-### 7.1 Review upgrade packages
+### 7.1 Firmware version and encryption requirement
+
+When the new App detects a robot with legacy, unencrypted firmware, it shows an upgrade prompt and requires the firmware upgrade flow first. Complete the robot firmware upgrade before using connection, encryption, and sharing functions. Do not close the App, disconnect the network, or remove robot power during the upgrade.
+
+![Firmware upgrade prompt for a legacy robot (device list redacted)](../assets/control/app-guide-2026/firmware-upgrade-required-redacted.png)
+
+!!! warning "Encryption and credential protection"
+
+    Even after encryption is enabled by a firmware upgrade, never expose Wi-Fi passwords, SSH passwords, device or Bluetooth addresses, tokens, or session identifiers in screenshots, tickets, logs, or chat. Use the App's authorization and sharing workflow and grant only the access required for the task.
+
+### 7.2 Review upgrade packages
 
 The page reads each package's current version, target version, and download size. Packages with an update indication can be upgraded separately or added to **Upgrade Selected**.
 
 ![Firmware management](../assets/control/app-guide-2026/firmware-management.png)
 
-### 7.2 Confirm an upgrade
+### 7.3 Confirm an upgrade
 
 After selecting an individual package or Upgrade Selected, verify the packages, versions, and sizes. **Start Upgrade** submits a real upgrade task to the robot.
 
