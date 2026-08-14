@@ -160,11 +160,17 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
    ![设置航点名称和朝向](../../assets/elf3/developer/navigation/set-waypoint-heading.jpg)
 
-4. 切换到 **区域**，点击 **添加清除区**。让清除区覆盖机器人的行走通道，用于清除地图中实际已不存在的障碍物。
+4. （可选）如需机器人到达航点后执行指定行为，点击 **添加动作**，选择 **语音**、**动作** 或 **延迟**，完成配置后点击 **添加**。可根据任务需要为同一航点添加多个行为。
+
+   ![为航点添加到达动作](../../assets/elf3/developer/navigation/waypoint-add-arrival-action.jpg)
+
+   ![配置航点到达后的语音、动作或延迟](../../assets/elf3/developer/navigation/waypoint-configure-arrival-action.jpg)
+
+5. 切换到 **区域**，点击 **添加清除区**。让清除区覆盖机器人的行走通道，用于清除地图中实际已不存在的障碍物。
 
    ![为行走通道添加清除区](../../assets/elf3/developer/navigation/add-clearing-zone.jpg)
 
-5. 确认航点、方向和清除区设置无误，并等待地图保存成功。
+6. 确认航点、朝向、到达行为和清除区设置无误，并等待地图保存成功。
 
 ### 2.3 开始导览
 
@@ -177,6 +183,8 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
    ![选择地图并开始导览](../../assets/elf3/developer/navigation/select-navigation-map.jpg)
 
 3. 点击 **重定位**。在地图上点击机器人的大致位置，并沿机器人当前朝向拖动定位标记。
+
+   ![type:video](../../assets/elf3/developer/navigation/relocalize-robot-demo.mp4 "机器人重定位操作演示")
 
 4. 检查机器人周围的红色点云是否与地图墙壁重合。重合后点击 **确认**；如果偏差明显，请重新调整位置和方向。
 
@@ -193,6 +201,21 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 7. 导览完成后，先停止导航，再退出当前页面。
 
 ## 常见问题
+
+### 如何调整遥控速度
+
+1. 进入机器人遥控页面，点击右上角的 **设置** 图标。
+
+   ![在遥控页面打开设置](../../assets/elf3/developer/navigation/remote-speed-settings-entry.jpg)
+
+2. 在设置页面中选择 **控制**，根据需要调整以下参数：
+
+   - **速度输出范围**：限制前进和后退的线速度，同时作用于屏幕虚拟摇杆和外接手柄。
+   - **旋转输出范围**：限制左右转向的旋转速度，同时作用于屏幕虚拟摇杆和外接手柄。
+
+   ![调整速度和旋转输出范围](../../assets/elf3/developer/navigation/remote-speed-output-range.jpg)
+
+调整后先在空旷、安全的区域低速测试，确认机器人运动符合预期后再逐步提高速度。
 
 ### 雷达无法启动
 

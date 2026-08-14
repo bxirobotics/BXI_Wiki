@@ -160,11 +160,17 @@ Example configuration:
 
    ![Set the waypoint name and arrival heading](../../assets/elf3/developer/navigation/set-waypoint-heading.jpg)
 
-4. Switch to **Area (区域)** and select **Add Clearing Zone (添加清除区)**. Draw clearing zones over the robot's travel paths to remove obstacles that no longer exist in the physical environment.
+4. Optional: To make the robot perform a specific behavior after reaching the waypoint, select **Add Action (添加动作)**, choose **Voice (语音)**, **Action (动作)**, or **Delay (延迟)**, configure it, and then select **Add (添加)**. You can add multiple behaviors to the same waypoint if needed.
+
+   ![Add an arrival action to the waypoint](../../assets/elf3/developer/navigation/waypoint-add-arrival-action.jpg)
+
+   ![Configure a voice, action, or delay after arrival](../../assets/elf3/developer/navigation/waypoint-configure-arrival-action.jpg)
+
+5. Switch to **Area (区域)** and select **Add Clearing Zone (添加清除区)**. Draw clearing zones over the robot's travel paths to remove obstacles that no longer exist in the physical environment.
 
    ![Add a clearing zone over a travel path](../../assets/elf3/developer/navigation/add-clearing-zone.jpg)
 
-5. Verify the waypoints, headings, and clearing zones, then wait for the map to be saved successfully.
+6. Verify the waypoints, headings, arrival behaviors, and clearing zones, then wait for the map to be saved successfully.
 
 ### 2.3 Start a Guided Tour
 
@@ -178,7 +184,9 @@ Example configuration:
 
 3. Select **Relocalize (重定位)**. Tap the robot's approximate position on the map, then drag the pose marker in the direction the robot is facing.
 
-4. Check whether the red point-cloud returns around the robot align with the walls on the map. If they align, select **Confirm (确认)**. If the offset is significant, adjust the position and heading again.
+   ![type:video](../../assets/elf3/developer/navigation/relocalize-robot-demo.mp4 "Robot relocalization demo")
+
+4. Check whether the red point cloud around the robot aligns with the walls on the map. If they align, select **Confirm (确认)**. If the offset is significant, adjust the position and heading again.
 
    ![Adjust the robot position and heading to complete relocalization](../../assets/elf3/developer/navigation/relocalize-robot.jpg)
 
@@ -193,6 +201,21 @@ Example configuration:
 7. When the tour is complete, stop navigation before leaving the page.
 
 ## Troubleshooting
+
+### How to Adjust the Remote-Control Speed
+
+1. Open the robot remote-control page and select the **Settings** icon in the upper-right corner.
+
+   ![Open Settings from the remote-control page](../../assets/elf3/developer/navigation/remote-speed-settings-entry.jpg)
+
+2. Select **Control (控制)** on the Settings page, then adjust the following parameters as needed:
+
+   - **Speed Output Range (速度输出范围)**: limits the forward and reverse linear speed for both the on-screen virtual joystick and an external gamepad.
+   - **Rotation Output Range (旋转输出范围)**: limits the left and right turning speed for both the on-screen virtual joystick and an external gamepad.
+
+   ![Adjust the speed and rotation output ranges](../../assets/elf3/developer/navigation/remote-speed-output-range.jpg)
+
+After changing the ranges, test the robot at low speed in a clear, safe area. Increase the limits gradually only after confirming that the robot moves as expected.
 
 ### The LiDAR Does Not Start
 

@@ -62,7 +62,11 @@ plugins:
       links_attr_map:
         target: _blank
   - redirects
-  - mkdocs-video
+  - mkdocs-video:
+      is_video: true
+      css_style:
+        width: "100%"
+        height: auto
   - glightbox
   - git-authors
   - minify:
