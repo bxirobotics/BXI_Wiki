@@ -68,6 +68,11 @@ The table below lists the joint index, joint name, CAN bus, and CAN ID for every
 | 29 | neck_z_joint | 0 | 4 |
 | 30 | neck_y_joint | 0 | 5 |
 
+<div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+  <img src="../../../assets/elf3/developer/overview/joint_motor_index.jpg" alt="Joint indices and motor models" style="width:300px; max-width:100%; height:auto;" />
+  <img src="../../../assets/elf3/developer/overview/joint_can_id.jpg" alt="CAN ID allocation" style="width:300px; max-width:100%; height:auto;" />
+</div>
+
 ## Domain ID
 
 ### Purpose

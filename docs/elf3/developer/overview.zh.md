@@ -68,6 +68,11 @@ title: 系统设置说明
 | 29 | neck_z_joint | 0 | 4 |
 | 30 | neck_y_joint | 0 | 5 |
 
+<div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+  <img src="../../../assets/elf3/developer/overview/joint_motor_index.jpg" alt="关节索引与电机型号" style="width:300px; max-width:100%; height:auto;" />
+  <img src="../../../assets/elf3/developer/overview/joint_can_id.jpg" alt="CAN ID 分配" style="width:300px; max-width:100%; height:auto;" />
+</div>
+
 ## Domain ID
 
 ### 作用
