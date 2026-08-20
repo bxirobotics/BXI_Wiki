@@ -7,6 +7,7 @@ title: Upper-Body Teleoperation
 This page is intended for customer-side deployment of ELF3 upper-body teleoperation. It focuses on Pico 4 Ultra setup, video streaming, simulation validation, real-robot startup, calibration, and operation. For node implementation, controller extension, and development details, refer to the example repository:
 
 - Upper-body teleoperation example: [bxi_teleop_v2](https://github.com/konodoki/bxi_teleop_v2)
+- ELF3 upper-body teleoperation Mod: [com.bxi.upper_body_teleop](https://github.com/konodoki/com.bxi.upper_body_teleop)
 
 !!! warning "Safety"
     In the current example, the lower-body locomotion model does not directly output arm joint commands. Arm commands are generated from Pico controller poses through IK and then merged into the control pipeline. Real-robot operation may affect standing stability. Validate in simulation first, keep a safety operator nearby, and make sure the emergency stop is available.
@@ -37,7 +38,39 @@ The included `BxiPicoApp-release.apk` has currently been tested on Pico 4 Ultra.
 | Video port | MediaMTX RTSP `2212` |
 | Example repository | `bxi_teleop_v2` |
 
+## Choose the ELF3 Project Directory
+
+Use the project path that matches how the robot is started. Install the upper-body Mod in the independent `/opt/bxi/mods` directory rather than inside the App project; this directory is outside the App download and survives App updates.
+
+!!! warning "Migrating an older project"
+    Some older project versions already contain the upper-body Mod in the built-in project directory or `private_git_mods`. If that copy and `/opt/bxi/mods/com.bxi.upper_body_teleop` are both scanned, the runtime finds a duplicate Mod ID and refuses to start. Back up and move the old copy out of the scanned directories, keeping only `/opt/bxi/mods/com.bxi.upper_body_teleop`; do not leave two scannable copies.
+
+| Startup method | Project directory | Build requirement |
+|---|---|---|
+| Robot remote controller | `~/bxi_ws/bxi_rl_controller_ros2_example` | Source tree; install the Mod in `/opt/bxi/mods` and rebuild after updating it. |
+| App | `/opt/bxi/bxi_rl_controller_ros2_example` | App-downloaded prebuilt deployment; the Mod is loaded from `/opt/bxi/mods`, with no manual rebuild required. |
+
+Clone the Mod into the independent `/opt/bxi/mods` directory.
+
 ## Quick Deployment
+
+### 0. Clone the ELF3 Upper-Body Teleoperation Mod
+
+The Mod is maintained in a separate repository and must be cloned manually before building the motion-control project:
+
+```bash
+sudo mkdir -p /opt/bxi/mods
+sudo git clone https://github.com/konodoki/com.bxi.upper_body_teleop.git /opt/bxi/mods/com.bxi.upper_body_teleop
+```
+
+If it is already present, update it separately:
+
+```bash
+cd /opt/bxi/mods/com.bxi.upper_body_teleop
+git pull --ff-only
+```
+
+The parent project does not track this directory. At runtime, the configured `/opt/bxi/mods` root is scanned recursively, so the Mod remains available after an App update.
 
 ### 1. Get The Example Project
 

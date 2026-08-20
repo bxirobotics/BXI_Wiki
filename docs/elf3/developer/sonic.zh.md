@@ -7,6 +7,7 @@ title: Sonic 全身遥操
 本文档介绍如何在 ELF3 上部署和使用 Sonic 全身遥操功能，包括机器人端依赖安装、PICO 体感追踪器校准、XRoboToolkit 网络配置，以及全身动作跟随和退出流程。
 
 - 运动控制仓库：[bxi_rl_controller_ros2_example](https://github.com/bxirobotics/bxi_rl_controller_ros2_example)
+- Sonic Mod 仓库：[com.bxi.sonic](https://github.com/konodoki/com.bxi.sonic)
 - PICO 客户端：[XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases/download/v1.1.1/XRoboToolkit-PICO-1.1.1.apk)
 
 !!! warning "安全提示"
@@ -19,13 +20,52 @@ title: Sonic 全身遥操
 | 项目 | 要求 |
 |---|---|
 | 机器人 | ELF3，已正常启动运动控制程序 |
-| 机器人端工程 | `/home/bxi/bxi_ws/bxi_rl_controller_ros2_example` |
+| 机器人端工程 | 手柄启动：`~/bxi_ws/bxi_rl_controller_ros2_example`；App 启动：`/opt/bxi/bxi_rl_controller_ros2_example` |
 | 输入设备 | 机器人遥控器、PICO 头显及左右手柄 |
 | 体感设备 | 2 个腿部体感追踪器 |
 | PICO 应用 | XRoboToolkit-PICO 1.1.1 |
 | 网络 | PICO 与机器人位于同一局域网，且可相互通信 |
 
+## 选择工程目录
+
+请根据机器人的启动方式选择对应工程目录。Sonic Mod 不要放入 App 工程目录或其 `private_git_mods`，而应安装到独立目录 `/opt/bxi/mods`；该目录不属于 App 下载包，App 更新时不会被覆盖。
+
+!!! warning "旧项目迁移"
+    部分旧版本工程已经在 `src/bxi_example_py_elf3/mods` 或 `private_git_mods` 内置了 Sonic。如果该旧副本和 `/opt/bxi/mods/com.bxi.sonic` 同时被扫描，运行时会发现重复的 Mod ID `com.bxi.sonic` 并拒绝启动。迁移前请先确认旧副本位置；建议先备份，再将旧副本移出扫描目录，然后只保留 `/opt/bxi/mods/com.bxi.sonic`：
+
+    ```bash
+    mv ~/bxi_ws/bxi_rl_controller_ros2_example/src/bxi_example_py_elf3/mods/private_git_mods/com.bxi.sonic \
+      ~/bxi_ws/bxi_rl_controller_ros2_example/com.bxi.sonic.backup
+    ```
+
+    App 工程中的旧副本也应采用同样方式处理。不要在两个位置各保留一份可扫描的 Sonic。
+
+| 启动方式 | 工程目录 | 编译要求 |
+|---|---|---|
+| 机器人手柄启动 | `~/bxi_ws/bxi_rl_controller_ros2_example` | 源码目录；Mod 安装到 `/opt/bxi/mods`，更新 Mod 后重新编译。 |
+| App 启动 | `/opt/bxi/bxi_rl_controller_ros2_example` | App 自动下载的预编译目录；Mod 仍从 `/opt/bxi/mods` 加载，不需要手动重新编译。 |
+
+下面命令中的工程路径应替换为与你的启动方式对应的目录。Sonic Mod 必须克隆到独立目录 `/opt/bxi/mods/com.bxi.sonic`。
+
 ## 机器人端准备
+
+### 0. 克隆 Sonic Mod
+
+Sonic Mod 独立维护在单独的仓库中。编译运动控制工程前，需要客户手动将其克隆到工程的私有 Mod 目录：
+
+```bash
+sudo mkdir -p /opt/bxi/mods
+sudo git clone https://github.com/konodoki/com.bxi.sonic.git /opt/bxi/mods/com.bxi.sonic
+```
+
+如果目录已经存在，应单独更新该仓库：
+
+```bash
+cd /opt/bxi/mods/com.bxi.sonic
+git pull --ff-only
+```
+
+主工程不会跟踪该目录。运行时会从配置的 `/opt/bxi/mods` 递归发现其中的 Mod；因此 App 更新工程后该 Mod 仍会保留。
 
 ### 1. 更新运动控制工程
 
@@ -55,7 +95,7 @@ sudo systemctl restart ros_elf_launch.service
 
 ```bash
 sudo su
-python3 -m pip install -r /home/bxi/bxi_ws/bxi_rl_controller_ros2_example/src/bxi_example_py_elf3/mods/com.bxi.sonic/requirements-pico.txt
+python3 -m pip install -r /opt/bxi/mods/com.bxi.sonic/requirements-pico.txt
 ```
 
 依赖只需安装一次；更新工程后如果 `requirements-pico.txt` 发生变化，应重新执行该命令。
@@ -204,5 +244,5 @@ python3 -m pip install -r /home/bxi/bxi_ws/bxi_rl_controller_ros2_example/src/bx
 ## 参考资料
 
 - [bxi_rl_controller_ros2_example](https://github.com/bxirobotics/bxi_rl_controller_ros2_example)
-- [Sonic ELF3 部署与验收说明](https://github.com/bxirobotics/bxi_rl_controller_ros2_example/blob/main/src/bxi_example_py_elf3/mods/com.bxi.sonic/SONIC_ELF3.md)
+- [Sonic Mod 仓库](https://github.com/konodoki/com.bxi.sonic)
 - [XRoboToolkit Unity Client](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client)

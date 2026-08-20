@@ -91,7 +91,21 @@ source install/setup.bash
 
 ## Run And Validate
 
-### 1. Start The Robot Hardware Node
+### 1. Set The CANFD ROS 2 Environment
+
+The hand demo communicates with the robot hardware node through `/canfd_packet/rx` and `/canfd_packet/tx`. Because the hardware node normally runs as root, set the same ROS 2 Domain and CycloneDDS network configuration in a root shell, and run the demo from that shell:
+
+```bash
+sudo su
+export ROS_DOMAIN_ID=ROBOT_DOMAIN_ID
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export ROS_LOCALHOST_ONLY=0
+export CYCLONEDDS_URI='<CycloneDDS><Domain Id="any"><General><Interfaces><NetworkInterface name="lo" multicast="true"/></Interfaces><AllowMulticast>true</AllowMulticast></General></Domain></CycloneDDS>'
+```
+
+Replace `ROBOT_DOMAIN_ID` with the numeric Domain ID used by the robot. Do not set the variables only in a normal-user shell and then switch to root; `sudo su` does not reliably preserve the ROS environment.
+
+### 2. Start The Robot Hardware Node
 
 Start ELF3 using the normal robot startup flow. See [Motion Control Development Guide](motioncontrol.md#launching-the-robot-program) if needed.
 
@@ -110,7 +124,7 @@ Expected topics:
 /canfd_packet/tx
 ```
 
-### 2. Run The Demo
+### 3. Run The Demo
 
 Run the C++ demo:
 

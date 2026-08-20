@@ -7,6 +7,7 @@ title: 半身遥操
 本文档面向需要快速部署 ELF3 半身遥操功能的客户，重点说明 Pico 4 Ultra、图传、仿真验证、真机启动和现场操作流程。算法、节点实现、遥控器扩展和更多开发说明请进入示例仓库查看：
 
 - 半身遥操示例仓库：[bxi_teleop_v2](https://github.com/konodoki/bxi_teleop_v2)
+- ELF3 半身遥操 Mod 仓库：[com.bxi.upper_body_teleop](https://github.com/konodoki/com.bxi.upper_body_teleop)
 
 !!! warning "安全提示"
     当前示例的下半身 locomotion 模型不直接输出手臂关节控制量，手臂关节由 Pico 手柄姿态经 IK 解算后拼接到控制链路。真机运行时存在站立稳定性风险，必须先完成仿真验证；真机测试时请安排人员在旁保护，并确保急停装置可用。
@@ -37,7 +38,39 @@ title: 半身遥操
 | 图传端口 | MediaMTX RTSP `2212` |
 | 示例仓库 | `bxi_teleop_v2` |
 
+## 选择 ELF3 工程目录
+
+请根据机器人的启动方式选择对应工程目录。半身遥操 Mod 应安装到独立目录 `/opt/bxi/mods`，不要放在 App 工程目录中；该目录不属于 App 下载包，App 更新时不会被覆盖。
+
+!!! warning "旧项目迁移"
+    部分旧版本工程已经在工程内置目录或 `private_git_mods` 中包含半身遥操 Mod。如果旧副本和 `/opt/bxi/mods/com.bxi.upper_body_teleop` 同时被扫描，运行时会发现重复的 Mod ID 并拒绝启动。迁移前请备份并移出旧副本，只保留 `/opt/bxi/mods/com.bxi.upper_body_teleop`；不要在两个位置各保留一份可扫描的 Mod。
+
+| 启动方式 | 工程目录 | 编译要求 |
+|---|---|---|
+| 机器人手柄启动 | `~/bxi_ws/bxi_rl_controller_ros2_example` | 源码目录；Mod 安装到 `/opt/bxi/mods`，更新 Mod 后重新编译。 |
+| App 启动 | `/opt/bxi/bxi_rl_controller_ros2_example` | App 自动下载的预编译目录；Mod 从 `/opt/bxi/mods` 加载，不需要手动重新编译。 |
+
+请将 Mod 克隆到独立目录 `/opt/bxi/mods`，不要克隆到工程目录下的 `private_git_mods`。
+
 ## 快速部署
+
+### 0. 克隆 ELF3 半身遥操 Mod
+
+该 Mod 独立维护在单独的仓库中。编译运动控制工程前，客户必须手动将其克隆到私有 Mod 目录：
+
+```bash
+sudo mkdir -p /opt/bxi/mods
+sudo git clone https://github.com/konodoki/com.bxi.upper_body_teleop.git /opt/bxi/mods/com.bxi.upper_body_teleop
+```
+
+如果目录已经存在，应单独更新该仓库：
+
+```bash
+cd /opt/bxi/mods/com.bxi.upper_body_teleop
+git pull --ff-only
+```
+
+主工程不会跟踪该目录。运行时会从 `/opt/bxi/mods` 递归发现 Mod，因此 App 更新工程后该 Mod 仍会保留。
 
 ### 1. 获取示例工程
 

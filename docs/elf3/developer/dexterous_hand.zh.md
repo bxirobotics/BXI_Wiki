@@ -91,7 +91,21 @@ source install/setup.bash
 
 ## 启动与验收
 
-### 1. 启动机器人硬件节点
+### 1. 设置 CANFD 通信环境
+
+灵巧手示例通过 `/canfd_packet/rx` 和 `/canfd_packet/tx` 与机器人硬件节点通信。由于硬件节点通常在 root 用户下运行，必须在 root shell 中设置相同的 ROS 2 Domain 和 CycloneDDS 网络配置，并在同一个 shell 中启动示例程序：
+
+```bash
+sudo su
+export ROS_DOMAIN_ID=机器人的DOMAIN_ID
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export ROS_LOCALHOST_ONLY=0
+export CYCLONEDDS_URI='<CycloneDDS><Domain Id="any"><General><Interfaces><NetworkInterface name="lo" multicast="true"/></Interfaces><AllowMulticast>true</AllowMulticast></General></Domain></CycloneDDS>'
+```
+
+将 `机器人的DOMAIN_ID` 替换为机器人实际使用的数字。不要只在普通用户终端设置这些变量后再切换到 root；`sudo su` 不会自动继承所有 ROS 环境变量。
+
+### 2. 启动机器人硬件节点
 
 先按 ELF3 正常流程启动机器人。可参考[运动控制开发指南](motioncontrol.md#启动机器人程序)中的启动方式。
 
@@ -110,7 +124,7 @@ ros2 topic list | grep canfd_packet
 /canfd_packet/tx
 ```
 
-### 2. 运行示例程序
+### 3. 运行示例程序
 
 运行 C++ 示例：
 

@@ -7,6 +7,7 @@ title: Sonic Full-Body Teleoperation
 This guide explains how to deploy and use Sonic full-body teleoperation on ELF3, including robot-side dependency installation, PICO Motion Tracker calibration, XRoboToolkit network configuration, full-body motion following, and the exit procedure.
 
 - Motion-control repository: [bxi_rl_controller_ros2_example](https://github.com/bxirobotics/bxi_rl_controller_ros2_example)
+- Sonic Mod repository: [com.bxi.sonic](https://github.com/konodoki/com.bxi.sonic)
 - PICO client: [XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client/releases/download/v1.1.1/XRoboToolkit-PICO-1.1.1.apk)
 
 !!! warning "Safety"
@@ -19,13 +20,52 @@ This guide explains how to deploy and use Sonic full-body teleoperation on ELF3,
 | Item | Requirement |
 |---|---|
 | Robot | ELF3 with the motion-control program running normally |
-| Robot-side project | `/home/bxi/bxi_ws/bxi_rl_controller_ros2_example` |
+| Robot-side project | Remote-controller startup: `~/bxi_ws/bxi_rl_controller_ros2_example`; App startup: `/opt/bxi/bxi_rl_controller_ros2_example` |
 | Input devices | Robot remote controller, PICO headset, and left and right PICO controllers |
 | Motion tracking | 2 leg-mounted PICO Motion Trackers |
 | PICO application | XRoboToolkit-PICO 1.1.1 |
 | Network | PICO and the robot are on the same LAN and can communicate with each other |
 
+## Choose the Project Directory
+
+Use the project path that matches how the robot is started. Do not place the Sonic Mod inside the App project or its `private_git_mods`; install it in the independent `/opt/bxi/mods` directory, which is outside the App download and survives App updates.
+
+!!! warning "Migrating an older project"
+    Some older project versions already contain Sonic under `src/bxi_example_py_elf3/mods` or `private_git_mods`. If that copy and `/opt/bxi/mods/com.bxi.sonic` are both scanned, the runtime finds the duplicate Mod ID `com.bxi.sonic` and refuses to start. Before migrating, locate the old copy, make a backup, and move it outside the scanned directories so that only `/opt/bxi/mods/com.bxi.sonic` remains:
+
+    ```bash
+    mv ~/bxi_ws/bxi_rl_controller_ros2_example/src/bxi_example_py_elf3/mods/private_git_mods/com.bxi.sonic \
+      ~/bxi_ws/bxi_rl_controller_ros2_example/com.bxi.sonic.backup
+    ```
+
+    Apply the same procedure to an old copy inside the App project. Do not leave two scannable Sonic copies in place.
+
+| Startup method | Project directory | Build requirement |
+|---|---|---|
+| Robot remote controller | `~/bxi_ws/bxi_rl_controller_ros2_example` | Source tree; install the Mod in `/opt/bxi/mods` and rebuild after updating it. |
+| App | `/opt/bxi/bxi_rl_controller_ros2_example` | App-downloaded prebuilt deployment; the Mod is loaded from `/opt/bxi/mods`, with no manual rebuild required. |
+
+When following the commands below, use the project path for your startup method. Clone the Sonic Mod into the independent `/opt/bxi/mods/com.bxi.sonic` directory.
+
 ## Prepare the Robot
+
+### 0. Clone the Sonic Mod
+
+The Sonic Mod is maintained in a separate repository. Clone it manually into the motion-control project's private Mod directory before building:
+
+```bash
+sudo mkdir -p /opt/bxi/mods
+sudo git clone https://github.com/konodoki/com.bxi.sonic.git /opt/bxi/mods/com.bxi.sonic
+```
+
+If the directory already exists, update that repository separately:
+
+```bash
+cd /opt/bxi/mods/com.bxi.sonic
+git pull --ff-only
+```
+
+The parent project does not track this directory. At runtime, the configured `/opt/bxi/mods` root is scanned recursively, so the Mod remains available after an App update.
 
 ### 1. Update the Motion-Control Project
 
@@ -55,7 +95,7 @@ Before using Sonic for the first time, switch to the root user on the robot and 
 
 ```bash
 sudo su
-python3 -m pip install -r /home/bxi/bxi_ws/bxi_rl_controller_ros2_example/src/bxi_example_py_elf3/mods/com.bxi.sonic/requirements-pico.txt
+python3 -m pip install -r /opt/bxi/mods/com.bxi.sonic/requirements-pico.txt
 ```
 
 The dependencies normally need to be installed only once. Run the command again after an update if `requirements-pico.txt` has changed.
@@ -204,5 +244,5 @@ Stop large movements and check the wireless network quality between PICO and the
 ## References
 
 - [bxi_rl_controller_ros2_example](https://github.com/bxirobotics/bxi_rl_controller_ros2_example)
-- [Sonic ELF3 Deployment and Acceptance Guide](https://github.com/bxirobotics/bxi_rl_controller_ros2_example/blob/main/src/bxi_example_py_elf3/mods/com.bxi.sonic/SONIC_ELF3.md)
+- [Sonic Mod repository](https://github.com/konodoki/com.bxi.sonic)
 - [XRoboToolkit Unity Client](https://github.com/XR-Robotics/XRoboToolkit-Unity-Client)
