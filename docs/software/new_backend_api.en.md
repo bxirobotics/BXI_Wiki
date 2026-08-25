@@ -327,7 +327,7 @@ App → RC:
 | `control.heartbeat` | None | Keep the control connection active |
 | `control.authz_set` | `authorized_users[]` | Owner updates the authorization list |
 | `control.preflight_abort` | None | Cancel a conflicting startup operation |
-| `video.client_stats` | Video quality fields | Report receive quality |
+| `video.client_stats` | `fps,loss_percent,rtt_ms,bitrate_kbps,width,height` | Report receiver quality once per second for robot-side adaptive bitrate |
 | `ping` / `health` | `ts?` / None | RTT and health checks |
 | `system.reboot` / `system.shutdown` | None | Privileged power operations |
 | `offer` / `candidate` / `bye` | WebRTC fields | Signaling |
@@ -419,16 +419,23 @@ Request-body limits depend on the route: 64 KB for regular and OTA routes, 8 MB 
 | GET | `/api/v1/maps/{id}` | Complete map |
 | GET | `/api/v1/maps/{id}/thumbnail.png` | Thumbnail |
 | GET | `/api/v1/maps/{id}/tile/{z}/{x}/{y}.png` | Map tile |
-| GET/PUT | `/api/v1/maps/{id}/{waypoints\|regions\|topology}` | Read or write sidecar data |
+| GET/PUT | `/api/v1/maps/{id}/{waypoints\|regions\|topology}` | Read or write sidecar data; `waypoints` is the default route |
+| GET | `/api/v1/maps/{id}/routes` | List routes as `{routes:[{id,name,updated_sec,waypoint_count}]}` |
+| POST | `/api/v1/maps/{id}/routes` | Copy a route with `{name,source_route_id?}`; the source defaults to `default`; each map allows at most 64 custom routes and returns 409 `route_limit_reached` at the limit |
+| GET | `/api/v1/maps/{id}/routes/{route_id}` | Read `{id,name,updated_sec,waypoints,segments}` |
+| PUT | `/api/v1/maps/{id}/routes/{route_id}` | Write `{name?,waypoints,segments?}`; returns 204 |
+| POST | `/api/v1/maps/{id}/routes/{route_id}/rename` | Rename a route with `{name}` |
+| DELETE | `/api/v1/maps/{id}/routes/{route_id}` | Delete a custom route; `default` returns 409 |
 | POST | `/api/v1/maps/{id}/activate` | Activate localization and navigation; a 202 response may still be `localizing` |
 | POST | `/api/v1/maps/{id}/rename` | `{name}` |
-| DELETE | `/api/v1/maps/{id}` | Delete a map |
+| DELETE | `/api/v1/maps/{id}` | Delete a map; returns 409 for the active version or a map with child versions |
 | POST | `/api/v1/nav/initial_pose` | `{x,y,yaw,frame_id?,cov?}` |
 | POST | `/api/v1/nav/goal` | `{x,y,yaw,frame_id?}` |
 | POST | `/api/v1/nav/cancel` | Cancel navigation |
 | POST | `/api/v1/nav/pause` | `{data:bool}` |
-| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,loop?,speed_scale?}` with a speed scale in `[0.2,1.0]` |
-| POST | `/api/v1/tour/{pause\|resume\|stop\|skip}` | Tour control |
+| POST | `/api/v1/nav/retry` | Cancel the old goal, clear global/local costmaps, and resend the last direct goal |
+| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,route_id?,loop?,speed_scale?}`; `route_id` defaults to `default`; speed scale is `[0.2,1.0]` |
+| POST | `/api/v1/tour/{pause\|resume\|stop\|skip\|retry}` | Tour control; `retry` keeps the current waypoint and replans after clearing costmaps |
 | GET | `/api/v1/tour/status` | Tour status |
 | POST | `/api/v1/mapping/start` | `{base_map_id?}` |
 | POST | `/api/v1/mapping/stop` | Stop mapping |
@@ -439,7 +446,9 @@ Request-body limits depend on the route: 64 KB for regular and OTA routes, 8 MB 
 | PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}` |
 | GET | `/api/v1/runtime/status` | Runtime mode and localization quality |
 
-A map bundle always contains `manifest.json`, `map.pcd`, `map.pgm`, and `map.yaml`. A `legacy_2d_only` map containing only the old PGM/YAML format cannot be activated, used for navigation, or extended; it must be rebuilt with the 3D mapping flow.
+A map bundle always contains `manifest.json`, `map.pcd`, `map.pgm`, and `map.yaml`. A `legacy_2d_only` map containing only the old PGM/YAML format cannot be activated, used for navigation, or extended; it must be rebuilt with the 3D mapping flow. Extending a map creates an immutable child version and inherits the parent waypoints, regions, topology, and custom-route snapshots.
+
+Route IDs must match `[A-Za-z0-9_-]{1,64}`. The `default` route continues to use the legacy `/maps/{id}/waypoints` endpoint; custom routes are stored under `<id>.routes/<route_id>.json`. The default route may be renamed but not deleted. Both `tour/status` and WS `nav.tour.status` include `route_id`; clients treat a missing field from old status payloads as `default`. When an old firmware returns 404 for the routes API, the new App uses only the default route.
 
 The main fields returned by `GET /api/v1/runtime/status` and WS `nav.runtime.status` are:
 

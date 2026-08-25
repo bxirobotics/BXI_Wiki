@@ -327,7 +327,7 @@ App → RC：
 | `control.heartbeat` | 无 | 保持控制链活跃 |
 | `control.authz_set` | `authorized_users[]` | owner 更新授权列表 |
 | `control.preflight_abort` | 无 | 取消启动冲突操作 |
-| `video.client_stats` | 视频质量字段 | 上报接收质量 |
+| `video.client_stats` | `fps,loss_percent,rtt_ms,bitrate_kbps,width,height` | 每秒上报接收端视频质量，供机器人动态码率决策 |
 | `ping` / `health` | `ts?` / 无 | RTT 和健康检查 |
 | `system.reboot` / `system.shutdown` | 无 | 特权电源操作 |
 | `offer` / `candidate` / `bye` | WebRTC 字段 | signaling |
@@ -419,16 +419,23 @@ nav.runtime.status      nav.reloc_required
 | GET | `/api/v1/maps/{id}` | 完整地图 |
 | GET | `/api/v1/maps/{id}/thumbnail.png` | 缩略图 |
 | GET | `/api/v1/maps/{id}/tile/{z}/{x}/{y}.png` | 地图瓦片 |
-| GET/PUT | `/api/v1/maps/{id}/{waypoints\|regions\|topology}` | sidecar 读写 |
+| GET/PUT | `/api/v1/maps/{id}/{waypoints\|regions\|topology}` | sidecar 读写；`waypoints` 是默认路线 |
+| GET | `/api/v1/maps/{id}/routes` | 路线列表：`{routes:[{id,name,updated_sec,waypoint_count}]}` |
+| POST | `/api/v1/maps/{id}/routes` | `{name,source_route_id?}` 复制路线，源路线默认 `default`；每张地图最多 64 条自定义路线，超限返回 409 `route_limit_reached` |
+| GET | `/api/v1/maps/{id}/routes/{route_id}` | 读取 `{id,name,updated_sec,waypoints,segments}` |
+| PUT | `/api/v1/maps/{id}/routes/{route_id}` | `{name?,waypoints,segments?}` 写入路线，返回 204 |
+| POST | `/api/v1/maps/{id}/routes/{route_id}/rename` | `{name}` 重命名路线 |
+| DELETE | `/api/v1/maps/{id}/routes/{route_id}` | 删除自定义路线；`default` 返回 409 |
 | POST | `/api/v1/maps/{id}/activate` | 激活定位和导航；返回 202 时仍在 `localizing` |
 | POST | `/api/v1/maps/{id}/rename` | `{name}` |
-| DELETE | `/api/v1/maps/{id}` | 删除地图 |
+| DELETE | `/api/v1/maps/{id}` | 删除地图；活动版本或存在子版本时返回 409 |
 | POST | `/api/v1/nav/initial_pose` | `{x,y,yaw,frame_id?,cov?}` |
 | POST | `/api/v1/nav/goal` | `{x,y,yaw,frame_id?}` |
 | POST | `/api/v1/nav/cancel` | 取消导航 |
 | POST | `/api/v1/nav/pause` | `{data:bool}` |
-| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,loop?,speed_scale?}`，速度比例 `[0.2,1.0]` |
-| POST | `/api/v1/tour/{pause\|resume\|stop\|skip}` | 巡游控制 |
+| POST | `/api/v1/nav/retry` | 取消旧目标、清全局/局部 costmap，并重发最后一个单点导航目标 |
+| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,route_id?,loop?,speed_scale?}`；`route_id` 默认 `default`，速度比例 `[0.2,1.0]` |
+| POST | `/api/v1/tour/{pause\|resume\|stop\|skip\|retry}` | 巡游控制；`retry` 保留当前航点并清图重规划 |
 | GET | `/api/v1/tour/status` | 巡游状态 |
 | POST | `/api/v1/mapping/start` | `{base_map_id?}` |
 | POST | `/api/v1/mapping/stop` | 停止建图 |
@@ -439,7 +446,9 @@ nav.runtime.status      nav.reloc_required
 | PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}` |
 | GET | `/api/v1/runtime/status` | 运行模式和定位质量 |
 
-地图 bundle 固定包含 `manifest.json`、`map.pcd`、`map.pgm` 和 `map.yaml`。只有旧二维 PGM/YAML 的 `legacy_2d_only` 地图不能激活、导航或续建，必须重新完成三维建图。
+地图 bundle 固定包含 `manifest.json`、`map.pcd`、`map.pgm` 和 `map.yaml`。只有旧二维 PGM/YAML 的 `legacy_2d_only` 地图不能激活、导航或续建，必须重新完成三维建图。续建会生成不可变子版本，并继承父版本的 waypoints、regions、topology 和自定义路线快照。
+
+路线 ID 必须匹配 `[A-Za-z0-9_-]{1,64}`。默认路线 `default` 继续读写旧接口 `/maps/{id}/waypoints`，自定义路线保存在 `<id>.routes/<route_id>.json`；默认路线可重命名但不可删除。`tour/status` 和 WS `nav.tour.status` 都包含 `route_id`，旧状态缺少该字段时按 `default` 处理。新 App 遇到旧固件的 routes API 返回 404 时，只使用默认路线。
 
 `GET /api/v1/runtime/status` 与 WS `nav.runtime.status` 的主要字段为：
 
