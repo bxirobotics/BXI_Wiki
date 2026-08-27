@@ -283,6 +283,7 @@ subkey   = HMAC-SHA256(shareKey, "bxi-share-tx-v1|<jti>")
 | UDP discovery | UDP `:8083` | None | Discover IP address, ports, and serial number |
 | BLE Provisioning | GATT `…0001` | Proximity and claim conditions | Network provisioning, binding, and unbinding |
 | BLE Control | GATT `…0010` | HMAC8 | Proximity control |
+| ROS 2 offline TTS | `/tts/say`, `/tts/result` | ROS 2 domain | Submit speech requests and receive playback results |
 
 ### 5.1 UDP local network discovery
 
@@ -485,6 +486,35 @@ Status frame:
 ```
 
 `flags`: `0x01 RUNNING`, `0x02 LOCKED`, `0x04 FAILED`, `0x08 PENDING`, and `0x10 UNAUTHORIZED`.
+
+### 5.5 ROS 2 Offline TTS
+
+`bxi_offline_tts` subscribes to `/tts/say` using `std_msgs/msg/String`. Plain text uses the female voice by default. To select a voice explicitly, set `data` to a JSON string.
+
+| JSON field | Type | Description |
+|---|---|---|
+| `text` | string | Text to speak; required |
+| `voice` | string | `female` or `male`; defaults to `female` |
+| `speed` | number | Speech rate from `0.5` to `2.0`; defaults to `1.0` |
+
+```bash
+# Female voice (default)
+ros2 topic pub --once /tts/say std_msgs/msg/String "{data: 'Welcome to BXI Robotics.'}"
+
+# Female voice (explicit)
+ros2 topic pub --once /tts/say std_msgs/msg/String \
+  "data: '{\"text\":\"Welcome to BXI Robotics.\",\"voice\":\"female\",\"speed\":1.0}'"
+
+# Male voice
+ros2 topic pub --once /tts/say std_msgs/msg/String \
+  "data: '{\"text\":\"Welcome to BXI Robotics.\",\"voice\":\"male\",\"speed\":1.0}'"
+```
+
+After playback succeeds or fails, the node publishes a `std_msgs/msg/String` JSON result on `/tts/result`:
+
+```json
+{"text":"Welcome to BXI Robotics.","success":true,"message":""}
+```
 
 ## 6. Maintenance mode
 

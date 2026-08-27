@@ -283,6 +283,7 @@ subkey   = HMAC-SHA256(shareKey, "bxi-share-tx-v1|<jti>")
 | UDP 发现 | UDP `:8083` | 无 | 发现 IP、端口和 SN |
 | BLE Provisioning | GATT `…0001` | 近场认领条件 | 配网、绑定、解绑 |
 | BLE Control | GATT `…0010` | HMAC8 | 近场遥控 |
+| ROS 2 离线 TTS | `/tts/say`、`/tts/result` | ROS 2 Domain | 提交播报请求并接收播放结果 |
 
 ### 5.1 UDP 局域网发现
 
@@ -485,6 +486,35 @@ localized, fitness_score, inlier_ratio, driver_healthy, last_error
 ```
 
 `flags`：`0x01 RUNNING`、`0x02 LOCKED`、`0x04 FAILED`、`0x08 PENDING`、`0x10 UNAUTHORIZED`。
+
+### 5.5 ROS 2 离线 TTS
+
+`bxi_offline_tts` 订阅 `/tts/say`，消息类型为 `std_msgs/msg/String`。直接发送文本时默认使用女声；如需显式选择音色，请将 `data` 设置为 JSON 字符串。
+
+| JSON 字段 | 类型 | 说明 |
+|---|---|---|
+| `text` | string | 要播报的文本，必填 |
+| `voice` | string | `female`（女声）或 `male`（男声）；默认 `female` |
+| `speed` | number | 语速范围 `0.5`～`2.0`；默认 `1.0` |
+
+```bash
+# 女声（默认）
+ros2 topic pub --once /tts/say std_msgs/msg/String "{data: '欢迎参观'}"
+
+# 显式指定女声
+ros2 topic pub --once /tts/say std_msgs/msg/String \
+  "data: '{\"text\":\"欢迎参观\",\"voice\":\"female\",\"speed\":1.0}'"
+
+# 指定男声
+ros2 topic pub --once /tts/say std_msgs/msg/String \
+  "data: '{\"text\":\"欢迎参观\",\"voice\":\"male\",\"speed\":1.0}'"
+```
+
+实际播放结束或失败后，节点通过 `/tts/result` 发布 `std_msgs/msg/String` JSON 结果：
+
+```json
+{"text":"欢迎参观","success":true,"message":""}
+```
 
 ## 6. 维修模式
 
