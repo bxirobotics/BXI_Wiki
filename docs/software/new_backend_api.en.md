@@ -280,6 +280,7 @@ subkey   = HMAC-SHA256(shareKey, "bxi-share-tx-v1|<jti>")
 | Control WebSocket | `ws://<robot>:8081/` | WS HMAC | Control, telemetry, and status |
 | WebRTC signaling | `ws://<robot>:8081/ws/signaling` | WS HMAC | Video negotiation |
 | HTTP REST | `http://<robot>:8082` | HTTP v2 HMAC | OTA, maps, navigation, mapping, and tours |
+| Encrypted Wi-Fi pairing | `http://<robot>:8082/api/v1/pairing/*` | X25519 + AES-256-GCM | Create pairing sessions, bind, and unbind |
 | UDP discovery | UDP `:8083` | None | Discover IP address, ports, and serial number |
 | BLE Provisioning | GATT `…0001` | Proximity and claim conditions | Network provisioning, binding, and unbinding |
 | BLE Control | GATT `…0010` | HMAC8 | Proximity control |
@@ -301,11 +302,14 @@ RC broadcasts a beacon every two seconds and sends a unicast reply to discovery 
   "hostname": "robot_elf3_02",
   "port": 8081,
   "seq": 42,
-  "sn": "BXI-EXAMPLE-0001"
+  "sn": "BXI-EXAMPLE-0001",
+  "pairing_protocol": 1
 }
 ```
 
 The beacon is for discovery only and does not prove the device's identity. Subsequent connections must still pass HMAC authentication.
+
+`pairing_protocol=1` means that the robot supports the encrypted Wi-Fi pairing protocol in section 5.3.1. LAN discovery may also open an unauthenticated one-shot probe at `ws://<robot>:8081/?user_id=probe`; RC returns `{type:"welcome",user_id:"probe",session_id,hostname}` and immediately closes the connection. A probe cannot send control commands.
 
 ### 5.2 WebSocket control
 
@@ -385,11 +389,11 @@ The complete set of `nav.*` message types is:
 ```text
 nav.map                 nav.scan
 nav.pose                nav.path.global
-nav.path.local          nav.costmap.global
-nav.costmap.local       nav.footprint
-nav.cloud               nav.status
-nav.tour.status         nav.mapping.status
-nav.runtime.status      nav.reloc_required
+nav.costmap.global      nav.costmap.local
+nav.footprint           nav.cloud
+nav.status              nav.tour.status
+nav.mapping.status      nav.runtime.status
+nav.reloc_required
 ```
 
 Grid and point-cloud payloads use gzip+base64. When a new control connection is established, the gateway replays the most recent navigation states that have latched semantics.
@@ -405,12 +409,15 @@ Digital-twin telemetry uses length-prefixed binary frames rather than JSON. The 
 
 ### 5.3 HTTP REST (port 8082)
 
-Except for CORS `OPTIONS`, all business routes below use HTTP v2 HMAC:
+Except for CORS `OPTIONS` and the three exact `/api/v1/pairing/*` routes below, business routes use HTTP v2 HMAC. Pairing cannot use HTTP HMAC before a `deviceKey` exists, so section 5.3.1 protects it with an X25519 session and AES-256-GCM payloads:
 
 Request-body limits depend on the route: 64 KB for regular and OTA routes, 8 MB for map and mapping routes, and 64 MB after decompressing a gzip grid. Oversized requests are rejected.
 
 | Method | Path | Purpose |
 |---|---|---|
+| POST | `/api/v1/pairing/session` | Create a 60-second encrypted pairing session; no HTTP HMAC |
+| POST | `/api/v1/pairing/bind` | Submit an encrypted binding payload within the session |
+| DELETE | `/api/v1/pairing/binding` | Submit an encrypted owner unbinding proof within the session |
 | GET | `/api/v1/ota/releases?robot=ELF3` | OTA catalog |
 | GET | `/api/v1/ota/status` | OTA status |
 | POST | `/api/v1/ota/start` | `{robot,version,reboot_after,package_names?}` |
@@ -431,20 +438,21 @@ Request-body limits depend on the route: 64 KB for regular and OTA routes, 8 MB 
 | POST | `/api/v1/maps/{id}/rename` | `{name}` |
 | DELETE | `/api/v1/maps/{id}` | Delete a map; returns 409 for the active version or a map with child versions |
 | POST | `/api/v1/nav/initial_pose` | `{x,y,yaw,frame_id?,cov?}` |
-| POST | `/api/v1/nav/goal` | `{x,y,yaw,frame_id?}` |
+| POST | `/api/v1/nav/goal` | `{x,y,yaw?,frame_id?}` |
 | POST | `/api/v1/nav/cancel` | Cancel navigation |
 | POST | `/api/v1/nav/pause` | `{data:bool}` |
 | POST | `/api/v1/nav/retry` | Cancel the old goal, clear global/local costmaps, and resend the last direct goal |
-| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,route_id?,loop?,speed_scale?}`; `route_id` defaults to `default`; speed scale is `[0.2,1.0]` |
+| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,route_id?,loop?,speed_scale?,waypoint_headings?}`; `route_id` defaults to `default`, speed scale is `[0.2,1.0]`, and `waypoint_headings` maps selected waypoint IDs to finite angles in radians |
 | POST | `/api/v1/tour/{pause\|resume\|stop\|skip\|retry}` | Tour control; `retry` keeps the current waypoint and replans after clearing costmaps |
 | GET | `/api/v1/tour/status` | Tour status |
+| GET | `/api/v1/tour/actions` | Navigation action catalog derived from the current `control.manifest` |
 | POST | `/api/v1/mapping/start` | `{base_map_id?}` |
 | POST | `/api/v1/mapping/stop` | Stop mapping |
 | POST | `/api/v1/mapping/save` | `{name,base_map_id?}` |
 | POST | `/api/v1/mapping/pause` | `{data:bool}` |
-| POST | `/api/v1/mapping/clear_terrain` | Clear terrain |
+| POST | `/api/v1/mapping/clear_terrain` | `{radius}`; `radius` must be a positive finite number |
 | GET | `/api/v1/mapping/status` | Mapping status |
-| PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}` |
+| PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}`; `mode` is `idle`, `new_mapping`, `navigation`, or `extend_mapping`, and the last two require `map_id` |
 | GET | `/api/v1/runtime/status` | Runtime mode and localization quality |
 
 A map bundle always contains `manifest.json`, `map.pcd`, `map.pgm`, and `map.yaml`. A `legacy_2d_only` map containing only the old PGM/YAML format cannot be activated, used for navigation, or extended; it must be rebuilt with the 3D mapping flow. Extending a map creates an immutable child version and inherits the parent waypoints, regions, topology, and custom-route snapshots.
@@ -460,16 +468,88 @@ localized, fitness_score, inlier_ratio, driver_healthy, last_error
 
 A 202 response from `POST /api/v1/maps/{id}/activate` means only that the runtime-mode transition was accepted; localization is not complete yet. The app must wait until `active_map_id` is correct and `driver_healthy=true`, and treat `nav.reloc_required.required=false` as the authoritative relocation-success signal. It must not send navigation goals or start a tour while `localized=false`.
 
+#### 5.3.1 Encrypted Wi-Fi pairing
+
+Only the three exact method-and-path combinations below bypass HTTP v2 HMAC; other `/api/v1/pairing/*` requests do not receive the pairing exemption. Application payloads remain encrypted and authenticated.
+
+Plaintext body for `POST /api/v1/pairing/session`:
+
+| Field | Description |
+|---|---|
+| `protocol` | Must be `1` |
+| `mode` | `cloud` or `local` |
+| `client_public_key` | Base64-encoded 32-byte X25519 public key |
+| `client_nonce` | Base64-encoded 16-byte random value |
+| `capability_payload` | Required for `cloud` mode on an unbound robot; payload part of the cloud binding token |
+| `auth` | Required for a bound, non-recovery session; HMAC defined below |
+| `recover` | May be `true` only to read local-binding recovery status; this session cannot bind or unbind |
+
+For a bound session, `auth` is the lowercase hexadecimal HMAC-SHA256 result:
+
+```text
+HMAC(deviceKey, "wifi-session-v1|" || mode || "|" ||
+     client_public_key_bytes || "|" || client_nonce_bytes)
+```
+
+A successful response contains `protocol`, a 32-hex-character `session_id`, Base64 `robot_public_key`, Base64 `robot_nonce`, `expires_at`, a Base64 12-byte `nonce`, and `ciphertext`. Derive the session key as follows:
+
+```text
+shared = X25519(client_private_key, robot_public_key)
+session_key = HKDF-SHA256(
+  IKM  = shared || PSK,
+  salt = client_nonce || robot_nonce,
+  info = "bxi-wifi-pairing-v1|" || hex_decode(session_id),
+  len  = 32
+)
+```
+
+Choose `PSK` as follows: use `deviceKey` for a bound non-recovery session; use the Base64-decoded signature bytes from the binding token for an unbound `cloud` session; use an empty value for an unbound `local` or read-only recovery session.
+
+Requests and responses for `POST /api/v1/pairing/bind` and `DELETE /api/v1/pairing/binding` use this envelope:
+
+```json
+{"session_id":"32 hex characters","nonce":"Base64 12 bytes","ciphertext":"Base64 AES-GCM ciphertext and tag"}
+```
+
+The AES-256-GCM plaintext must be a UTF-8 JSON object. RC serializes responses as compact canonical JSON with sorted keys. AAD must match these bytes exactly:
+
+```text
+bxi.pairing.v1|<HTTP_METHOD>|<PATH>|<session_id>
+```
+
+Decrypted `bind` payloads:
+
+- `cloud`: `sn`, `credential_id`, a 32-byte hexadecimal `owner_key`, and the complete `token`;
+- `local`: `sn`, `owner_uid`, `credential_id`, a 32-byte hexadecimal `owner_key`, `kdf_salt`, `kdf_iterations`, and `kdf_id`.
+
+The decrypted unbinding payload contains `proof`, the hexadecimal result of:
+
+```text
+HMAC(deviceKey, "wifi-unbind-v1|" || session_id || "|" || sn)
+```
+
+Sessions expire after 60 seconds. A `bind` or `binding` request consumes the session, preventing replay.
+
 ### 5.4 BLE Control GATT
 
 | Service/characteristic | UUID suffix | Properties | Purpose |
 |---|---:|---|---|
 | Control Service | `00000010` | service | BLE control |
-| CONTROL_CMD | `00000011` | write | HMAC control frame |
+| CONTROL_CMD | `00000011` | write/write-without-response | HMAC control frame |
 | CONTROL_GUEST_AUTH | `00000012` | write | Guest authorization proof |
 | CONTROL_STATUS | `00000013` | read/notify | 3-byte status frame |
 | CONTROL_MANIFEST | `00000014` | read/notify | Dynamic button manifest |
 | CONTROL_SM_STATE | `00000015` | read/notify | State-machine state |
+
+Send a 24-byte extended header to `CONTROL_CMD`. RC accepts the legacy 22-byte header without `btn_slot` and `btn_val` only for backward compatibility:
+
+```text
+[ver u8=0x03][auth u8][seq u16 LE]
+[vx f32 LE][vy f32 LE][wz f32 LE][height f32 LE]
+[buttons u16 LE][btn_slot u8][btn_val u8][HMAC tag]
+```
+
+`auth=0/1/2` means no tag, a 4-byte truncated HMAC-SHA256, or an 8-byte truncated HMAC-SHA256. The HMAC covers the complete 22- or 24-byte header. A bound robot requires `auth=2` by default; an unbound factory-state robot accepts only `auth=0`. `seq` is a monotonically increasing u16 used for replay rejection. Use the `buttons` bitmap for regular buttons and `btn_slot` plus `btn_val` for multivalue actions.
 
 `CONTROL_MANIFEST` and `CONTROL_SM_STATE` use chunked transfer with chunks of approximately 180 bytes:
 
@@ -485,7 +565,7 @@ Status frame:
 [ver u8=0x03][flags u8][safety u8]
 ```
 
-`flags`: `0x01 RUNNING`, `0x02 LOCKED`, `0x04 FAILED`, `0x08 PENDING`, and `0x10 UNAUTHORIZED`.
+`flags`: `0x01 RUNNING`, `0x02 LOCKED`, `0x04 FAILED`, `0x08 PENDING`, `0x10 UNAUTHORIZED`, and `0x20 PREFLIGHT_CONFLICT`. `PREFLIGHT_CONFLICT` means that RC found leftover robot processes before startup; the app should confirm with the user before resending a forced start action.
 
 ### 5.5 ROS 2 Offline TTS
 
@@ -515,6 +595,14 @@ After playback succeeds or fails, the node publishes a `std_msgs/msg/String` JSO
 ```json
 {"text":"Welcome to BXI Robotics.","success":true,"message":""}
 ```
+
+A tour waypoint `actions` entry can also select the voice:
+
+```json
+{"id":"say-welcome","type":"voice","content":"Welcome to BXI Robotics.","voice":"male"}
+```
+
+Omitting `voice` selects `female`. Tour voice actions currently use a fixed `speed=1.0`.
 
 ## 6. Maintenance mode
 

@@ -280,6 +280,7 @@ subkey   = HMAC-SHA256(shareKey, "bxi-share-tx-v1|<jti>")
 | 控制 WebSocket | `ws://<robot>:8081/` | WS HMAC | 控制、遥测、状态 |
 | WebRTC signaling | `ws://<robot>:8081/ws/signaling` | WS HMAC | 视频协商 |
 | HTTP REST | `http://<robot>:8082` | HTTP v2 HMAC | OTA、地图、导航、建图、巡游 |
+| 加密 Wi-Fi 配对 | `http://<robot>:8082/api/v1/pairing/*` | X25519 + AES-256-GCM | 建立配对会话、绑定、解绑 |
 | UDP 发现 | UDP `:8083` | 无 | 发现 IP、端口和 SN |
 | BLE Provisioning | GATT `…0001` | 近场认领条件 | 配网、绑定、解绑 |
 | BLE Control | GATT `…0010` | HMAC8 | 近场遥控 |
@@ -301,11 +302,14 @@ RC 每 2 秒广播，并对 discover 单播回复：
   "hostname": "robot_elf3_02",
   "port": 8081,
   "seq": 42,
-  "sn": "BXI-EXAMPLE-0001"
+  "sn": "BXI-EXAMPLE-0001",
+  "pairing_protocol": 1
 }
 ```
 
 beacon 只用于发现，不能证明设备身份；后续连接仍必须验证 HMAC。
+
+`pairing_protocol=1` 表示机器人支持第 5.3.1 节的加密 Wi-Fi 配对。局域网扫描还可建立一次无需 HMAC 的 `ws://<robot>:8081/?user_id=probe` 探测连接；RC 返回 `{type:"welcome",user_id:"probe",session_id,hostname}` 后立即关闭。该连接只能探测设备，不能发送控制命令。
 
 ### 5.2 WebSocket 控制
 
@@ -385,11 +389,11 @@ RC → App 常用消息：
 ```text
 nav.map                 nav.scan
 nav.pose                nav.path.global
-nav.path.local          nav.costmap.global
-nav.costmap.local       nav.footprint
-nav.cloud               nav.status
-nav.tour.status         nav.mapping.status
-nav.runtime.status      nav.reloc_required
+nav.costmap.global      nav.costmap.local
+nav.footprint           nav.cloud
+nav.status              nav.tour.status
+nav.mapping.status      nav.runtime.status
+nav.reloc_required
 ```
 
 栅格和点云 payload 使用 gzip+base64。新控制连接建立时，网关会补发最近一份具有 latched 语义的导航状态。
@@ -405,12 +409,15 @@ nav.runtime.status      nav.reloc_required
 
 ### 5.3 HTTP REST（端口 8082）
 
-除 CORS `OPTIONS` 外，以下业务路由均使用 HTTP v2 HMAC：
+除 CORS `OPTIONS` 和下表三条 `/api/v1/pairing/*` 精确路由外，业务路由均使用 HTTP v2 HMAC。配对路由在尚无 `deviceKey` 时无法使用 HTTP HMAC，因此改用第 5.3.1 节的 X25519 会话和 AES-256-GCM 载荷保护：
 
 请求 body 上限按路由区分：普通和 OTA 路由 64KB，地图与建图路由 8MB，gzip 栅格解压后最多 64MB。超过限制会被拒绝。
 
 | 方法 | 路径 | 用途 |
 |---|---|---|
+| POST | `/api/v1/pairing/session` | 创建 60 秒加密配对会话；无需 HTTP HMAC |
+| POST | `/api/v1/pairing/bind` | 在配对会话内提交加密绑定载荷 |
+| DELETE | `/api/v1/pairing/binding` | 在配对会话内提交加密 owner 解绑证明 |
 | GET | `/api/v1/ota/releases?robot=ELF3` | OTA 目录 |
 | GET | `/api/v1/ota/status` | OTA 状态 |
 | POST | `/api/v1/ota/start` | `{robot,version,reboot_after,package_names?}` |
@@ -431,20 +438,21 @@ nav.runtime.status      nav.reloc_required
 | POST | `/api/v1/maps/{id}/rename` | `{name}` |
 | DELETE | `/api/v1/maps/{id}` | 删除地图；活动版本或存在子版本时返回 409 |
 | POST | `/api/v1/nav/initial_pose` | `{x,y,yaw,frame_id?,cov?}` |
-| POST | `/api/v1/nav/goal` | `{x,y,yaw,frame_id?}` |
+| POST | `/api/v1/nav/goal` | `{x,y,yaw?,frame_id?}` |
 | POST | `/api/v1/nav/cancel` | 取消导航 |
 | POST | `/api/v1/nav/pause` | `{data:bool}` |
 | POST | `/api/v1/nav/retry` | 取消旧目标、清全局/局部 costmap，并重发最后一个单点导航目标 |
-| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,route_id?,loop?,speed_scale?}`；`route_id` 默认 `default`，速度比例 `[0.2,1.0]` |
+| POST | `/api/v1/tour/start` | `{map_id,waypoint_ids,route_id?,loop?,speed_scale?,waypoint_headings?}`；`route_id` 默认 `default`，速度比例 `[0.2,1.0]`，`waypoint_headings` 将选中航点 ID 映射到有限弧度值 |
 | POST | `/api/v1/tour/{pause\|resume\|stop\|skip\|retry}` | 巡游控制；`retry` 保留当前航点并清图重规划 |
 | GET | `/api/v1/tour/status` | 巡游状态 |
+| GET | `/api/v1/tour/actions` | 当前 `control.manifest` 派生的导航动作目录 |
 | POST | `/api/v1/mapping/start` | `{base_map_id?}` |
 | POST | `/api/v1/mapping/stop` | 停止建图 |
 | POST | `/api/v1/mapping/save` | `{name,base_map_id?}` |
 | POST | `/api/v1/mapping/pause` | `{data:bool}` |
-| POST | `/api/v1/mapping/clear_terrain` | 清除地形 |
+| POST | `/api/v1/mapping/clear_terrain` | `{radius}`；`radius` 必须为正有限数 |
 | GET | `/api/v1/mapping/status` | 建图状态 |
-| PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}` |
+| PUT | `/api/v1/runtime/mode` | `{mode,map_id?,request_id?}`；`mode` 为 `idle`、`new_mapping`、`navigation` 或 `extend_mapping`，后两者必须提供 `map_id` |
 | GET | `/api/v1/runtime/status` | 运行模式和定位质量 |
 
 地图 bundle 固定包含 `manifest.json`、`map.pcd`、`map.pgm` 和 `map.yaml`。只有旧二维 PGM/YAML 的 `legacy_2d_only` 地图不能激活、导航或续建，必须重新完成三维建图。续建会生成不可变子版本，并继承父版本的 waypoints、regions、topology 和自定义路线快照。
@@ -460,16 +468,88 @@ localized, fitness_score, inlier_ratio, driver_healthy, last_error
 
 `POST /api/v1/maps/{id}/activate` 返回 202 只表示运行模式切换已接受，不表示定位完成。App 必须继续等待 `active_map_id` 正确、`driver_healthy=true`，并以 `nav.reloc_required.required=false` 作为重定位成功的权威信号；`localized=false` 时不得发送导航目标或启动巡游。
 
+#### 5.3.1 加密 Wi-Fi 配对
+
+只有下列三个精确的方法与路径绕过 HTTP v2 HMAC；其他 `/api/v1/pairing/*` 请求不会获得配对旁路。应用层载荷仍经过加密和认证。
+
+`POST /api/v1/pairing/session` 的明文握手 body：
+
+| 字段 | 说明 |
+|---|---|
+| `protocol` | 固定为 `1` |
+| `mode` | `cloud` 或 `local` |
+| `client_public_key` | Base64 编码的 32B X25519 公钥 |
+| `client_nonce` | Base64 编码的 16B 随机数 |
+| `capability_payload` | 未绑定机器人使用 `cloud` 模式时必填；云端绑定 token 的 payload 部分 |
+| `auth` | 已绑定且非恢复会话时必填；见下方 HMAC |
+| `recover` | 仅本地绑定恢复读取时可设为 `true`；该会话不能绑定或解绑 |
+
+已绑定会话的 `auth` 为小写十六进制 HMAC-SHA256：
+
+```text
+HMAC(deviceKey, "wifi-session-v1|" || mode || "|" ||
+     client_public_key_bytes || "|" || client_nonce_bytes)
+```
+
+成功响应包含 `protocol`、32 位十六进制 `session_id`、Base64 `robot_public_key`、Base64 `robot_nonce`、`expires_at`、Base64 12B `nonce` 和 `ciphertext`。会话密钥按以下规则派生：
+
+```text
+shared = X25519(client_private_key, robot_public_key)
+session_key = HKDF-SHA256(
+  IKM  = shared || PSK,
+  salt = client_nonce || robot_nonce,
+  info = "bxi-wifi-pairing-v1|" || hex_decode(session_id),
+  len  = 32
+)
+```
+
+`PSK` 取值：已绑定且非恢复会话使用 `deviceKey`；未绑定 `cloud` 会话使用绑定 token 的 Base64 签名字节；未绑定 `local` 或只读恢复会话为空。
+
+`POST /api/v1/pairing/bind` 和 `DELETE /api/v1/pairing/binding` 的请求与响应均使用以下信封：
+
+```json
+{"session_id":"32位十六进制","nonce":"Base64 12B","ciphertext":"Base64 AES-GCM 密文与 tag"}
+```
+
+AES-256-GCM 的明文必须是 UTF-8 JSON 对象；RC 生成响应时使用无空白、键排序的规范 JSON。AAD 必须逐字节为：
+
+```text
+bxi.pairing.v1|<HTTP_METHOD>|<PATH>|<session_id>
+```
+
+`bind` 解密后的载荷：
+
+- `cloud`：`sn`、`credential_id`、32B 十六进制 `owner_key`、完整 `token`；
+- `local`：`sn`、`owner_uid`、`credential_id`、32B 十六进制 `owner_key`、`kdf_salt`、`kdf_iterations`、`kdf_id`。
+
+`binding` 解绑载荷为 `proof`，其值是以下 HMAC-SHA256 的十六进制结果：
+
+```text
+HMAC(deviceKey, "wifi-unbind-v1|" || session_id || "|" || sn)
+```
+
+会话有效期为 60 秒；执行一次 `bind` 或 `binding` 请求后即被消费，不能重放。
+
 ### 5.4 BLE Control GATT
 
 | 服务/特征 | UUID 尾号 | 属性 | 用途 |
 |---|---:|---|---|
 | Control Service | `00000010` | service | BLE 控制 |
-| CONTROL_CMD | `00000011` | write | HMAC 控制帧 |
+| CONTROL_CMD | `00000011` | write/write-without-response | HMAC 控制帧 |
 | CONTROL_GUEST_AUTH | `00000012` | write | 访客授权证明 |
 | CONTROL_STATUS | `00000013` | read/notify | 3B 状态帧 |
 | CONTROL_MANIFEST | `00000014` | read/notify | 动态按钮 manifest |
 | CONTROL_SM_STATE | `00000015` | read/notify | 状态机状态 |
+
+`CONTROL_CMD` 推荐发送 24B 扩展头；RC 仅为兼容旧 App 继续接受没有 `btn_slot`、`btn_val` 的 22B 基础头：
+
+```text
+[ver u8=0x03][auth u8][seq u16 LE]
+[vx f32 LE][vy f32 LE][wz f32 LE][height f32 LE]
+[buttons u16 LE][btn_slot u8][btn_val u8][HMAC tag]
+```
+
+`auth=0/1/2` 分别表示无 tag、HMAC-SHA256 截断 4B、截断 8B；HMAC 覆盖完整的 22B 或 24B 头。默认已绑定机器人要求 `auth=2`，未绑定出厂态只接受 `auth=0`。`seq` 为防重放的单调 u16；普通按钮使用 `buttons` 位图，多值动作使用 `btn_slot` 和 `btn_val`。
 
 `CONTROL_MANIFEST` 和 `CONTROL_SM_STATE` 使用分块传输，每块约 180B：
 
@@ -485,7 +565,7 @@ localized, fitness_score, inlier_ratio, driver_healthy, last_error
 [ver u8=0x03][flags u8][safety u8]
 ```
 
-`flags`：`0x01 RUNNING`、`0x02 LOCKED`、`0x04 FAILED`、`0x08 PENDING`、`0x10 UNAUTHORIZED`。
+`flags`：`0x01 RUNNING`、`0x02 LOCKED`、`0x04 FAILED`、`0x08 PENDING`、`0x10 UNAUTHORIZED`、`0x20 PREFLIGHT_CONFLICT`。`PREFLIGHT_CONFLICT` 表示启动前检测到残留机器人进程，App 应先确认，再重发强制启动动作。
 
 ### 5.5 ROS 2 离线 TTS
 
@@ -515,6 +595,14 @@ ros2 topic pub --once /tts/say std_msgs/msg/String \
 ```json
 {"text":"欢迎参观","success":true,"message":""}
 ```
+
+导览路线的 waypoint `actions` 也可选择音色：
+
+```json
+{"id":"say-welcome","type":"voice","content":"欢迎参观","voice":"male"}
+```
+
+`voice` 省略时按 `female` 处理；导览语音动作当前固定使用 `speed=1.0`。
 
 ## 6. 维修模式
 
