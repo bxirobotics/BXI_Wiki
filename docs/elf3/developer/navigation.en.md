@@ -132,6 +132,10 @@ Example configuration:
 
 ### 2.1 Create a Map
 
+!!! warning "Keep the robot stable before mapping"
+
+    Position the robot's head upright and keep its body stable. Avoid large movements that could interfere with IMU initialization.
+
 1. Open **Map Management (地图管理)** and select **New Map (新建地图)**.
 
    ![Create a map from the Map Management page](../../assets/elf3/developer/navigation/create-map.jpg)
@@ -173,6 +177,10 @@ Example configuration:
 6. Verify the waypoints, headings, arrival behaviors, and clearing zones, then wait for the map to be saved successfully.
 
 ### 2.3 Start a Guided Tour
+
+!!! warning "Keep the robot stable before starting the tour"
+
+    Position the robot's head upright and keep its body stable. Avoid large movements that could interfere with IMU initialization.
 
 1. Return to the robot details page, open **Operating Mode (运行模式)**, and select guided-tour mode.
 

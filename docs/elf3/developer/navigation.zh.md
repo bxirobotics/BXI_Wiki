@@ -132,6 +132,10 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
 ### 2.1 建图
 
+!!! warning "启动建图前保持机器人稳定"
+
+    请将机器人头部摆正并保持机身稳定，避免大幅晃动导致 IMU 初始化异常。
+
 1. 进入 **地图管理**，点击 **新建地图**。
 
    ![在地图管理页新建地图](../../assets/elf3/developer/navigation/create-map.jpg)
@@ -173,6 +177,10 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 6. 确认航点、朝向、到达行为和清除区设置无误，并等待地图保存成功。
 
 ### 2.3 开始导览
+
+!!! warning "启动导览前保持机器人稳定"
+
+    请将机器人头部摆正并保持机身稳定，避免大幅晃动导致 IMU 初始化异常。
 
 1. 返回机器人详情页，进入 **运行模式**，选择导览模式。
 
