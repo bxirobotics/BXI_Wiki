@@ -30,15 +30,21 @@ modules:
 - 配置中没有 `modules.head.enabled`；
 - `modules.head.enabled` 为 `false`。
 
-启动日志可以确认最终模式：
+当前实现无论是否启用头部都使用同一个 `hardware_elf3` 包。启动日志中的
+`motor_disable` 掩码可以确认头部电机是否启用：
 
 ```text
-# 31 自由度
-[bxi hardware config] package=hardware_elf3_head, ...
+# 启用头部；未叠加其他电机禁用位时
+[bxi hardware config] package=hardware_elf3, motor_disable=0x00000000, ...
 
-# 默认 29 自由度
-[bxi hardware config] package=hardware_elf3, ...
+# 禁用头部；未叠加其他电机禁用位时
+[bxi hardware config] package=hardware_elf3, motor_disable=0x60000000, ...
 ```
+
+如果配置还禁用了其他电机，`motor_disable` 可能不是上面的完整示例值。判断头部状态时
+只检查对应掩码：`motor_disable & 0x60000000 == 0` 表示头部启用，
+`motor_disable & 0x60000000 == 0x60000000` 表示头部禁用。不要再根据
+`hardware_elf3_head` 与 `hardware_elf3` 的包名区别判断自由度模式。
 
 29 自由度模式下，运行时关节布局中没有 `head_z_joint` 和 `head_y_joint`，因此下面的头部覆盖命令会因关节名未知而被拒绝。需要先生成正确的 `/opt/bxi/robot_config.yaml`，再重新启动真机程序。仿真使用的 ELF3 模型本身包含两个头部关节，不受这项真机硬件配置限制。
 

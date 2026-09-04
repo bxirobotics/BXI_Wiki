@@ -30,15 +30,24 @@ Any of the following cases falls back to the built-in 29-DoF configuration witho
 - `modules.head.enabled` is absent;
 - `modules.head.enabled` is `false`.
 
-The startup log reports the selected mode:
+The current implementation uses the same `hardware_elf3` package whether or
+not the head is enabled. Inspect the `motor_disable` mask in the startup log to
+determine whether the head motors are enabled:
 
 ```text
-# 31 DoF
-[bxi hardware config] package=hardware_elf3_head, ...
+# Head enabled; no other motor-disable bits are set in this example
+[bxi hardware config] package=hardware_elf3, motor_disable=0x00000000, ...
 
-# Default 29 DoF
-[bxi hardware config] package=hardware_elf3, ...
+# Head disabled; no other motor-disable bits are set in this example
+[bxi hardware config] package=hardware_elf3, motor_disable=0x60000000, ...
 ```
+
+If other motors are also disabled, the complete `motor_disable` value may
+differ from the examples above. Check only the head mask:
+`motor_disable & 0x60000000 == 0` means that the head is enabled, while
+`motor_disable & 0x60000000 == 0x60000000` means that it is disabled. Do not
+infer the DoF mode from `hardware_elf3_head` versus `hardware_elf3` package
+names.
 
 In 29-DoF mode, the runtime joint layout does not contain `head_z_joint` or `head_y_joint`, so the head-override command below is rejected as containing unknown joint names. Generate a valid `/opt/bxi/robot_config.yaml` and restart the hardware program first. The simulation ELF3 model already contains both head joints and is not controlled by this hardware configuration.
 
