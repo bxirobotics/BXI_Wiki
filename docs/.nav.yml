@@ -1,7 +1,6 @@
 use_index_title: true
 
 nav:
-  - index.md
   - elf3
   - software
   - Demo: https://demo.bxirobotics.cn/

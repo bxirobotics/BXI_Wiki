@@ -10,6 +10,8 @@ No configuration needed — adding a new section with the same empty-index
 pattern will automatically be redirected.
 """
 
+from pathlib import Path
+
 _ZERO_WIDTH_SPACE = "\u200b"
 
 # Maps section directory (e.g. "elf3") to the URL of the first nav page
@@ -85,3 +87,15 @@ def on_page_content(html, page, config, files, **kwargs):
         f'<script>window.location.replace("{target}");</script>\n'
         f'<noscript><meta http-equiv="refresh" content="0; url={target}"></noscript>\n'
     )
+
+
+def on_post_build(config, **kwargs):
+    """Make each locale root redirect to its ELF3 overview."""
+    for alternate in config.extra["alternate"]:
+        target = Path(config.site_dir, alternate["link"].strip("/"), "index.html")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            '<script>window.location.replace("elf3/overview/");</script>\n'
+            '<noscript><meta http-equiv="refresh" content="0; url=elf3/overview/"></noscript>\n',
+            encoding="utf-8",
+        )
