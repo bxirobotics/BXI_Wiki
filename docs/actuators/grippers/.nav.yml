@@ -1,0 +1,5 @@
+use_index_title: true
+
+nav:
+  - introduction.md
+  - communication.md
