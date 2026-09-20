@@ -20,7 +20,7 @@ The gripper module uses the BXI gripper motor firmware for gripping, opening, cl
 | --- | --- | ---: | --- |
 | Position | `0 mm` when closed, approximately `70 mm` when open | — | Actual position depends on the gripper mechanism |
 | Protocol encoding range | `0–90 mm` | — | Firmware protocol mapping range |
-| Maximum force | 50: approximately `16.37 N`; 50L: approximately `24.03 N` | — | Positive force opens; negative force closes |
+| Maximum force | 50: approximately `16.37 N`; 50L: approximately `24.03 N` | — | Positive force closes; negative force opens |
 | `kp` | `0–5` | `2` | Position stiffness |
 | `kd` | `0–1` | `0.05` | Velocity damping |
 | MIT control frame | 8 bytes | — | Standard 11-bit CAN ID |

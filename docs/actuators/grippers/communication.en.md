@@ -177,8 +177,8 @@ The theoretical default ranges are:
 
 Sign convention:
 
-- Positive force/positive torque opens the gripper.
-- Negative force/negative torque closes the gripper.
+- Positive force/positive torque closes the gripper.
+- Negative force/negative torque opens the gripper.
 - Maximum force magnitude: approximately `16.37 N` for the 50 gripper and `24.03 N` for the 50L gripper.
 
 The actual usable gripping force is affected by the mechanism, friction, supply voltage, temperature, and current derating.
