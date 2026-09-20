@@ -32,6 +32,23 @@ def _is_empty_body(source: str) -> bool:
     return not body.replace(_ZERO_WIDTH_SPACE, "").strip()
 
 
+def on_page_markdown(markdown, page, config, files, **kwargs):
+    """Guarantee every page renders non-empty HTML.
+
+    An empty body renders to an empty string, which crashes plugins that parse
+    the rendered HTML (mkdocs-video does `lxml.html.fromstring(html)`).  This
+    runs *before* `page.render` and before any `page_content` plugin, so the
+    placeholder below is what those plugins see.
+
+    Without this, every section index has to hand-carry an invisible
+    zero-width space in its markdown — which is easy to forget when adding a
+    new section (that is exactly what broke the grippers section).
+    """
+    if _is_empty_body(markdown):
+        return f"{_ZERO_WIDTH_SPACE}\n"
+    return markdown
+
+
 def on_nav(nav, config, files, **kwargs):
     """Walk the nav tree and record the first page URL for each directory."""
     _section_redirects.clear()
