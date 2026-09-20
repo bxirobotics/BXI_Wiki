@@ -6,6 +6,17 @@ title: 新版软件后端接口
 
 本文说明自研 App 如何直接连接并控制 RC ROS2，以及 RC 在局域网和 BLE 上暴露的接口。本地控制方案不依赖账号登录、短信验证或 App 云服务。
 
+## 阅读顺序
+
+如果只是先把控制链路跑通，按下面顺序实现即可：
+
+1. **拿到 owner 凭据**：有客户后端时调用凭据接口，拿到 `ownerKeyHex`；没有后端时使用本地密码派生 `deviceKey`。
+2. **完成一次绑定**：通过 BLE Provisioning，或使用第 5.3.1 节的加密 Wi-Fi 配对接口。
+3. **连接控制 WS**：用 `deviceKey` 生成 HMAC query，连接 `ws://<robot>:8081/`。
+4. **发送控制帧**：`control.cmd_vel` 的速度字段必须直接放在 `payload` 下；空闲时持续发送 `control.heartbeat`。
+
+完整的 Python 示例在第 8 节。HTTP 地图、导航、OTA 等接口只需要复用同一个 `deviceKey`，但签名格式与 WS 不同。
+
 !!! warning "安全边界"
 
     文档中的 UID、SN 和 key 都是示例。机器人云端凭据和服务端密钥不属于 App 控制接口，不得写入 App、源码或日志。
@@ -332,7 +343,7 @@ App → RC：
 | `control.heartbeat` | 无 | 保持控制链活跃 |
 | `control.authz_set` | `authorized_users[]` | owner 更新授权列表 |
 | `control.preflight_abort` | 无 | 取消启动冲突操作 |
-| `video.client_stats` | `fps,loss_percent,rtt_ms,bitrate_kbps,width,height` | 每秒上报接收端视频质量，供机器人动态码率决策 |
+| `video.client_stats` | `fps,loss_percent,rtt_ms,bitrate_kbps,width,height,freeze_count` | 每秒上报接收端视频质量，仅用于诊断和 `video.stats`；不会修改固定编码码率 |
 | `ping` / `health` | `ts?` / 无 | RTT 和健康检查 |
 | `system.reboot` / `system.shutdown` | 无 | 特权电源操作 |
 | `offer` / `candidate` / `bye` | WebRTC 字段 | signaling |
@@ -726,9 +737,38 @@ BLE 维修控制先向 `CONTROL_GUEST_AUTH` 写入 UTF-8 JSON，签名仍使用 
 
 ## 8. 开发者快速开始
 
-以下示例只使用 Python 标准库完成签名和 HTTP 调用。实际 App 可直接把相同字节规则移植到 Android、iOS、Flutter 或其他平台；WS 连接使用平台自带的 WebSocket 客户端即可。
+本节按“获取凭据 → 建立配对会话 → 连接 WS → 发送控制”展开。凭据接口属于 App 后端，不是机器人接口；机器人只接收绑定后的 `deviceKey` 派生签名。示例中的地址、UID、SN 和 key 都是占位值。
 
-### 8.1 生成 WS URL 和调用 HTTP JSON API
+### 8.1 从 App 后端获取 owner key
+
+客户可以自定义登录方式和域名，但响应字段应保持下面的关系。`accessToken` 只发给 App 后端，绝不能放进机器人请求：
+
+```http
+POST /api/app/binding/credential/issue
+Authorization: Bearer <app-access-token>
+Content-Type: application/json
+
+{"sn":"<BLE HELLO_ACK 返回的 SN>"}
+```
+
+推荐响应：
+
+```json
+{
+  "token": "<payload_b64>.<sig_b64>",
+  "credentialId": "<payload.cid>",
+  "ownerKeyHex": "<64 位小写 hex>",
+  "ownerUid": 42,
+  "fingerprint": "<16 位小写 hex>",
+  "issuedAt": 1780000000,
+  "expiresAt": 1780003600,
+  "ttlSeconds": 3600
+}
+```
+
+App 收到响应后应检查 `ownerUid`、`credentialId`、`fingerprint`、有效期和 SN，再把 `ownerKeyHex` 解码成 32 字节保存到系统安全存储。`fingerprint` 的计算是 `SHA256(UTF8(ownerKeyHex))[0:8].hex()`。首次绑定把完整 `token`、`credentialId`、SN 和 raw key 交给 BLE `BIND_START`，或按第 5.3.1 节交给 Wi-Fi `bind`；成功后机器人不会再次返回 key。
+
+后端签发逻辑（只放在服务端，不放进 App）可直接参考：
 
 ```python
 import base64
@@ -737,117 +777,333 @@ import hmac
 import json
 import secrets
 import time
+
+
+def issue_binding_credential(secret: str, uid: int, sn: str,
+                             ttl_seconds: int = 3600) -> dict:
+    if len(secret.encode("utf-8")) < 32:
+        raise ValueError("binding secret must be at least 32 UTF-8 bytes")
+    if type(uid) is not int or not 1 <= uid <= 2**63 - 1:
+        raise ValueError("uid must be in signed 64-bit positive range")
+    if not sn or ttl_seconds <= 120:
+        raise ValueError("invalid sn or ttl_seconds")
+    now = int(time.time())
+    owner_key_hex = secrets.token_hex(32)
+    payload = {
+        "v": 3, "uid": uid, "sn": sn,
+        "cid": secrets.token_urlsafe(24),
+        "fp": hashlib.sha256(owner_key_hex.encode()).digest()[:8].hex(),
+        "n": secrets.token_urlsafe(24),
+        "iat": now, "exp": now + ttl_seconds,
+    }
+    payload_b64 = base64.b64encode(
+        json.dumps(payload, separators=(",", ":")).encode()
+    ).decode("ascii")
+    sig_b64 = base64.b64encode(hmac.new(
+        secret.encode(), payload_b64.encode(), hashlib.sha256
+    ).digest()).decode("ascii")
+    return {
+        "token": f"{payload_b64}.{sig_b64}",
+        "credentialId": payload["cid"], "ownerKeyHex": owner_key_hex,
+        "ownerUid": uid, "fingerprint": payload["fp"],
+        "issuedAt": payload["iat"], "expiresAt": payload["exp"],
+        "ttlSeconds": ttl_seconds,
+    }
+```
+
+不要把 `secret` 交给 App。机器人端的 `BXI_BINDING_CREDENTIAL_SECRET` 必须与签发服务一致；泄露后需要同时轮换服务端和机器人配置。
+
+### 8.2 本地密码派生 key
+
+没有 App 后端时，使用固定的本地 owner UID 和 PBKDF2 参数。下面的函数同时用于首次本地绑定和重装后的恢复：
+
+```python
+# device_key_from_password
+import hashlib
+
+
+def device_key_from_password(password: str, salt_hex: str,
+                             iterations: int = 200_000) -> bytes:
+    raw = password.encode("utf-8")
+    if not 8 <= len(raw) <= 64 or any(b < 0x20 or b > 0x7E for b in raw):
+        raise ValueError("password must be 8..64 printable ASCII bytes")
+    salt = bytes.fromhex(salt_hex)
+    if len(salt) != 16 or iterations != 200_000:
+        raise ValueError("invalid local KDF parameters")
+    return hashlib.pbkdf2_hmac("sha256", raw, salt, iterations, 32)
+```
+
+### 8.3 加密 Wi-Fi 配对示例
+
+Wi-Fi 配对是机器人 `:8082` 上的三个精确路由，不走 HTTP v2 HMAC；其他 `/api/v1/pairing/*` 路径仍按普通鉴权处理。安装示例依赖：`pip install cryptography`。每个 session 60 秒有效，`bind` 或 `binding` 尝试后立即消费。
+
+```python
+# wifi_pairing.py
+import base64
+import hashlib
+import hmac
+import json
+import secrets
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric.x25519 import (
+    X25519PrivateKey, X25519PublicKey,
+)
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
-def hmac_b64(key: bytes, message: str) -> str:
-    return base64.b64encode(
-        hmac.new(key, message.encode("utf-8"), hashlib.sha256).digest()
-    ).decode("ascii")
-
-
-def ws_url(host: str, user_id: str, sn: str, key: bytes,
-           client_id: str = "my_app", path: str = "/",
-           share_token: str | None = None) -> str:
-    ts = str(int(time.time() * 1000))
-    nonce = secrets.token_urlsafe(18)
-    query = {
-        "user_id": user_id,
-        "client_id": client_id,
-        "sn": sn,
-        "ts": ts,
-        "nonce": nonce,
-        "sig": hmac_b64(key, f"ws|{user_id}|{sn}|{ts}|{nonce}"),
-    }
-    if share_token:
-        query["share_token"] = share_token
-    return f"ws://{host}:8081{path}?{urlencode(query)}"
+PATH_SESSION = "/api/v1/pairing/session"
+PATH_BIND = "/api/v1/pairing/bind"
+PATH_UNBIND = "/api/v1/pairing/binding"
+PAIRING_HOST = "192.168.88.162"
 
 
-def http_json(host: str, method: str, path: str, payload,
-              user_id: str, sn: str, key: bytes,
-              share_token: str | None = None):
-    method = method.upper()
-    body = (b"" if payload is None else
-            json.dumps(payload, ensure_ascii=False,
-                       separators=(",", ":")).encode("utf-8"))
-    ts = str(int(time.time() * 1000))
-    nonce = secrets.token_urlsafe(18)
-    body_hash = hashlib.sha256(body).hexdigest()
-    canonical = (
-        f"http.v2|{method}|{path}|{body_hash}|{user_id}|{sn}|{ts}|{nonce}"
-    )
-    query = {
-        "auth_v": "2",
-        "user_id": user_id,
-        "sn": sn,
-        "ts": ts,
-        "nonce": nonce,
-        "sig": hmac_b64(key, canonical),
-    }
-    if share_token:
-        query["share_token"] = share_token
-    request = Request(
-        f"http://{host}:8082{path}?{urlencode(query)}",
-        data=body if payload is not None else None,
-        headers={"Content-Type": "application/json"},
-        method=method,
-    )
+def _b64(raw: bytes) -> str:
+    return base64.b64encode(raw).decode("ascii")
+
+
+def _unb64(value: str, size: int | None = None) -> bytes:
+    raw = base64.b64decode(value, validate=True)
+    if size is not None and len(raw) != size:
+        raise ValueError("invalid byte length")
+    return raw
+
+
+def _aad(method: str, path: str, session_id: str) -> bytes:
+    return f"bxi.pairing.v1|{method}|{path}|{session_id}".encode("ascii")
+
+
+def _json(value: dict) -> bytes:
+    return json.dumps(value, ensure_ascii=False,
+                      separators=(",", ":"), sort_keys=True).encode()
+
+
+def post(path: str, body: dict) -> dict:
+    request = Request(f"http://{PAIRING_HOST}:8082{path}", data=_json(body),
+                      headers={"Content-Type": "application/json"},
+                      method="POST")
     with urlopen(request, timeout=10) as response:
         return json.loads(response.read())
 
 
+def open_session(mode: str, device_key: bytes | None = None,
+                 token: str | None = None,
+                 recover: bool = False):
+    private = X25519PrivateKey.generate()
+    public = private.public_key().public_bytes(
+        serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    client_nonce = secrets.token_bytes(16)
+    request = {
+        "protocol": 1, "mode": mode,
+        "client_public_key": _b64(public),
+        "client_nonce": _b64(client_nonce),
+    }
+    if recover:
+        request["recover"] = True
+    if token:
+        request["capability_payload"] = token.split(".", 1)[0]
+    if device_key is not None:
+        request["auth"] = hmac.new(
+            device_key,
+            b"wifi-session-v1|" + mode.encode() + b"|" + public + b"|" + client_nonce,
+            hashlib.sha256,
+        ).hexdigest()
+    response = post(PATH_SESSION, request)
+    robot_public = _unb64(response["robot_public_key"], 32)
+    robot_nonce = _unb64(response["robot_nonce"], 16)
+    if device_key is not None:
+        psk = device_key
+    elif token:
+        psk = base64.b64decode(token.rsplit(".", 1)[-1])
+    else:
+        psk = b""
+    key = HKDF(algorithm=hashes.SHA256(), length=32,
+               salt=client_nonce + robot_nonce,
+               info=b"bxi-wifi-pairing-v1|" +
+               bytes.fromhex(response["session_id"])).derive(
+                   private.exchange(X25519PublicKey.from_public_bytes(robot_public)) + psk
+               )
+    status = AESGCM(key).decrypt(
+        _unb64(response["nonce"], 12), _unb64(response["ciphertext"]),
+        _aad("POST", PATH_SESSION, response["session_id"]),
+    )
+    return key, response["session_id"], json.loads(status)
+
+
+def seal(key: bytes, method: str, path: str, session_id: str,
+         payload: dict) -> dict:
+    nonce = secrets.token_bytes(12)
+    return {
+        "session_id": session_id, "nonce": _b64(nonce),
+        "ciphertext": _b64(AESGCM(key).encrypt(
+            nonce, _json(payload), _aad(method, path, session_id)))
+    }
+
+
+def unseal(key: bytes, method: str, path: str, session_id: str,
+           response: dict) -> dict:
+    return json.loads(AESGCM(key).decrypt(
+        _unb64(response["nonce"], 12), _unb64(response["ciphertext"]),
+        _aad(method, path, session_id)).decode())
+```
+
+未绑定机器人：`local` 直接创建本地密码绑定；`cloud` 需要把 token 的 payload 段作为 `capability_payload`，并在 `bind` 密文中提交完整 token。已绑定机器人：必须用当前 `deviceKey` 计算 `auth`；本地绑定可用 `mode=local,recover=true` 创建只读恢复 session，读取 KDF 元数据后再回到 BLE 或正常鉴权流程。`recover` session 不能 bind 或 unbind。
+
+#### 未绑定机器人的完整 local bind
+
+下面这段代码接在上面的 `wifi_pairing.py` 后面即可运行。前提是机器人已经激活，并且 App 能访问机器人 `:8082`；如果机器人还没有 IP，先通过 BLE Provisioning 的 `WIFI_SCAN` / `WIFI_JOIN` 配置网络，再执行这里的 HTTP 绑定。
+
+```python
+import secrets
+
+SN = "BXI-EXAMPLE-0001"  # 必须来自 BLE HELLO_ACK，不要信任广播名
+PASSWORD = "my-robot-password"
+SALT = secrets.token_bytes(16)
+CREDENTIAL_ID = secrets.token_urlsafe(24)
+
+# 1. 本地密码 -> 32B owner key
+owner_key = device_key_from_password(PASSWORD, SALT.hex())
+
+# 2. 创建未绑定 local session；status 应为 bound=false
+session_key, session_id, status = open_session(mode="local")
+assert status == {
+    "bound": False, "sn": SN, "binding_mode": "unbound",
+}, status
+
+# 3. 将 local claim 放进 AES-GCM 信封并提交
+request = seal(session_key, "POST", PATH_BIND, session_id, {
+    "sn": SN,
+    "owner_uid": 2147483646,
+    "credential_id": CREDENTIAL_ID,
+    "owner_key": owner_key.hex(),
+    "kdf_salt": SALT.hex(),
+    "kdf_iterations": 200000,
+    "kdf_id": 1,
+})
+response = post(PATH_BIND, request)
+result = unseal(session_key, "POST", PATH_BIND, session_id, response)
+assert result["status"] == "bound"
+assert result["sn"] == SN
+
+# 4. 只有校验 result 后，才把 owner_key 写入系统安全存储
+print(result["credential_id"], result["fingerprint"])
+```
+
+`owner_key` 只在绑定请求中发送一次；RC 返回 `BIND_OK` 等价的结果时只回传 SN、UID、credential ID、绑定时间和 fingerprint，不回传 key。密码或 key 不要写日志。绑定成功后，使用同一个 `owner_key` 生成第 8.4 节的 WS HMAC query。
+
+### 8.4 连接 WS 并发送控制参数
+
+下面的 `ws_control.py` 只负责传输层签名和控制消息。`DEVICE_KEY_HEX` 应来自 8.1 的响应并安全保存；不要把示例 key 用于真实机器人。
+
+```python
+# ws_control.py
+import asyncio
+import base64
+import hashlib
+import hmac
+import json
+import secrets
+import time
+from urllib.parse import urlencode
+import urllib.request
+
+import websockets
+
 HOST = "192.168.88.162"
 UID = "2147483646"
 SN = "BXI-EXAMPLE-0001"
-KEY = bytes.fromhex("11" * 32)  # 示例；生产从系统安全存储读取
+DEVICE_KEY_HEX = "11" * 32
+DEVICE_KEY = bytes.fromhex(DEVICE_KEY_HEX)
 
-print(ws_url(HOST, UID, SN, KEY))
-print(http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY))
+
+def _hmac_b64(message: str) -> str:
+    return base64.b64encode(
+        hmac.new(DEVICE_KEY, message.encode(), hashlib.sha256).digest()
+    ).decode("ascii")
+
+
+def ws_url(path: str = "/", client_id: str = "py_demo") -> str:
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    query = {
+        "user_id": UID, "client_id": client_id, "sn": SN,
+        "ts": ts, "nonce": nonce,
+        "sig": _hmac_b64(f"ws|{UID}|{SN}|{ts}|{nonce}"),
+    }
+    return f"ws://{HOST}:8081{path}?{urlencode(query)}"
+
+
+def http_json(method: str, path: str, payload):
+    method = method.upper()
+    body = (b"" if payload is None else
+            json.dumps(payload, ensure_ascii=False,
+                       separators=(",", ":")).encode())
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    body_hash = hashlib.sha256(body).hexdigest()
+    message = f"http.v2|{method}|{path}|{body_hash}|{UID}|{SN}|{ts}|{nonce}"
+    query = {
+        "auth_v": "2", "user_id": UID, "sn": SN, "ts": ts,
+        "nonce": nonce, "sig": _hmac_b64(message),
+    }
+    request = urllib.request.Request(
+        f"http://{HOST}:8082{path}?{urlencode(query)}",
+        data=body if payload is not None else None,
+        headers={"Content-Type": "application/json"}, method=method,
+    )
+    with urllib.request.urlopen(request, timeout=10) as response:
+        return json.loads(response.read())
+
+
+async def control() -> None:
+    async with websockets.connect(ws_url()) as ws:
+        await ws.send(json.dumps({
+            "type": "control.cmd_vel",
+            "ts": int(time.time() * 1000), "seq": 1,
+            "payload": {
+                "vx": 0.2, "vy": 0.0, "wz": 0.1,
+                "height": 1.0, "mode": "manual",
+                "btn_1": 0, "btn_5": 1,
+            },
+        }))
+        await ws.send(json.dumps({
+            "type": "control.heartbeat",
+            "ts": int(time.time() * 1000), "seq": 2, "payload": {},
+        }))
+        print(await ws.recv())
+
+
+if __name__ == "__main__":
+    asyncio.run(control())
+    print(http_json("GET", "/api/v1/maps", None))
 ```
 
-签名用的 `body` 就是最终发送的 `body`，不能签名后再格式化 JSON。访客调用相同函数时传入分享码中的 `subkey`，并同时传 `share_token`。
+`vx`、`vy`、`wz`、`height` 和 `btn_1..btn_14` 必须平铺在 `payload` 中，不能再包一层 `cmd_vel`。发送 `control.cmd_vel` 会隐式取得控制权；连接断开或超过约 1.5 秒没有新的控制意图时，网关进入超时停车。移动时持续发送控制帧，空闲时每 500ms 内发送一次 heartbeat。网关没有 `control.acquire`、`control.release`、`mode:"estop"` 或急停复位语义。
 
-### 8.2 WS 遥控和 heartbeat
+HTTP v2 的签名要对最终发送的原始 body 计算 SHA-256；WS 和 HTTP 共用 key，但不能共用签名串。访客连接使用分享码派生的 `subkey`，并额外携带完整 `share_token`。
 
-连接第 8.1 节生成的 URL 后发送普通 JSON 文本帧：
-
-```json
-{"type":"control.cmd_vel","ts":1780000000000,"seq":1,"payload":{"vx":0.2,"vy":0.0,"wz":0.1,"height":1.0,"mode":"manual","btn_1":0}}
-```
-
-摇杆移动时建议按界面刷新率持续发送；空闲时每 500ms 以内发送一次不会覆盖导航速度的心跳：
-
-```json
-{"type":"control.heartbeat","ts":1780000000500,"seq":2,"payload":{}}
-```
-
-不要发送 `mode:"estop"` 或用 `btn_1` 实现急停复位，这些网关语义已经删除。
-
-### 8.3 地图激活、重定位和导航
+### 8.5 地图激活、重定位和导航
 
 推荐流程：
 
 ```python
-maps = http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY)
-http_json(HOST, "POST", "/api/v1/maps/demo_map/activate", None,
-          UID, SN, KEY)
+maps = http_json("GET", "/api/v1/maps", None)
+http_json("POST", "/api/v1/maps/demo_map/activate", None)
 
 # 继续消费控制 WS，不要固定 sleep 20 秒：
 # 1. 等 nav.runtime.status.payload.active_map_id == "demo_map"
 # 2. 等 current_mode in {"localizing", "navigation"}
 # 3. 确认 driver_healthy == true；last_error 为空
 
-http_json(HOST, "POST", "/api/v1/nav/initial_pose",
-          {"x": 0.0, "y": 0.0, "yaw": 0.0, "frame_id": "map"},
-          UID, SN, KEY)
+http_json("POST", "/api/v1/nav/initial_pose",
+          {"x": 0.0, "y": 0.0, "yaw": 0.0, "frame_id": "map"})
 
 # 等 nav.reloc_required.payload.required == false，且最新
 # nav.runtime.status.payload.localized == true 后再发送目标。
-http_json(HOST, "POST", "/api/v1/nav/goal",
-          {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"},
-          UID, SN, KEY)
+http_json("POST", "/api/v1/nav/goal",
+          {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"})
 ```
 
 导航进度通过 `nav.status` 跟踪。地图激活、初始位姿和定位状态任一步失败时，应展示 `last_error` 并停止后续请求，而不是继续发目标让服务端重复拒绝。

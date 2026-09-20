@@ -6,6 +6,17 @@ title: New Software Backend Interfaces
 
 This document explains how a custom app can connect to and control RC ROS2 directly, as well as the interfaces exposed by RC over the local network and BLE. Local control does not depend on account login, SMS verification, or an app cloud service.
 
+## Suggested reading order
+
+For the shortest path to a working controller:
+
+1. Derive a `deviceKey` from the local password, or obtain `ownerKeyHex` from your own credential service.
+2. Bind once through BLE Provisioning or the encrypted Wi-Fi API in section 5.3.1.
+3. Build the HMAC query and connect to `ws://<robot>:8081/`.
+4. Send `control.cmd_vel` with flat fields in `payload`, then keep the link alive with `control.heartbeat`.
+
+The Python walkthrough in section 8 follows this order. The HTTP map, navigation, and OTA APIs reuse the same key but use a different signature string.
+
 !!! warning "Security boundary"
 
     All UIDs, serial numbers, and keys in this document are examples. Robot cloud credentials and server-side keys are not part of the app control interface and must never be embedded in an app, source code, or logs.
@@ -332,7 +343,7 @@ App → RC:
 | `control.heartbeat` | None | Keep the control connection active |
 | `control.authz_set` | `authorized_users[]` | Owner updates the authorization list |
 | `control.preflight_abort` | None | Cancel a conflicting startup operation |
-| `video.client_stats` | `fps,loss_percent,rtt_ms,bitrate_kbps,width,height` | Report receiver quality once per second for robot-side adaptive bitrate |
+| `video.client_stats` | `fps,loss_percent,rtt_ms,bitrate_kbps,width,height,freeze_count` | Report receiver quality once per second for diagnostics and `video.stats`; it does not change the fixed encoder bitrate |
 | `ping` / `health` | `ts?` / None | RTT and health checks |
 | `system.reboot` / `system.shutdown` | None | Privileged power operations |
 | `offer` / `candidate` / `bye` | WebRTC fields | Signaling |
@@ -726,9 +737,70 @@ Maintenance access:
 
 ## 8. Developer quick start
 
-The following example uses only the Python standard library for signing and HTTP calls. The same byte-level rules can be ported directly to Android, iOS, Flutter, or another platform. Use the platform's native WebSocket client for the WS connection.
+The examples use Python 3.10+ and the standard library for KDF, HMAC, and HTTP. Install `websockets` for the control connection. The same byte-level rules can be moved to Android, iOS, Flutter, or another client.
 
-### 8.1 Generate a WS URL and call an HTTP JSON API
+### 8.1 Derive the local device key
+
+The local-password path does not call an App backend. The robot fixes the owner UID and KDF parameters; the app generates and stores the 16-byte salt with the binding record.
+
+```python
+import hashlib
+
+
+def device_key_from_password(password: str, salt_hex: str) -> bytes:
+    raw = password.encode("utf-8")
+    if not 8 <= len(raw) <= 64 or any(b < 0x20 or b > 0x7e for b in raw):
+        raise ValueError("password must be 8..64 printable ASCII bytes")
+    salt = bytes.fromhex(salt_hex)
+    if len(salt) != 16:
+        raise ValueError("salt must be 16 bytes")
+    return hashlib.pbkdf2_hmac("sha256", raw, salt, 200_000, 32)
+
+
+password = "my-robot-password"
+salt_hex = "22" * 16  # Generate with secrets.token_bytes(16) in production
+device_key = device_key_from_password(password, salt_hex)
+print(device_key.hex())  # Example only; never log the real key
+```
+
+Send the resulting raw 32-byte key in the local `BIND_START` request, together with UID `2147483646`, the salt, `kdf_iterations=200000`, and `kdf_id=1`. After `BIND_OK`, keep the key only in platform secure storage. The encrypted Wi-Fi flow can carry the same local-claim fields; see section 5.3.1. A `mode=local,recover=true` session is read-only and returns KDF metadata so a new client can verify the password before normal authentication.
+
+### 8.2 Complete local bind for an unbound robot
+
+Once the robot is activated and reachable on `:8082`, the local bind is just one encrypted `bind` request. If it has no IP yet, configure Wi-Fi first through BLE Provisioning (`WIFI_SCAN` / `WIFI_JOIN`). The following continues the Wi-Fi helper from section 5.3.1:
+
+```python
+import secrets
+
+# Uses open_session(), seal(), post(), and unseal() from your implementation
+# of the encrypted session in section 5.3.1.
+
+SN = "BXI-EXAMPLE-0001"  # Read from BLE HELLO_ACK
+PASSWORD = "my-robot-password"
+SALT = secrets.token_bytes(16)
+CREDENTIAL_ID = secrets.token_urlsafe(24)
+
+owner_key = device_key_from_password(PASSWORD, SALT.hex())
+session_key, session_id, status = open_session(mode="local")
+assert status == {"bound": False, "sn": SN, "binding_mode": "unbound"}
+
+request = seal(session_key, "POST", PATH_BIND, session_id, {
+    "sn": SN,
+    "owner_uid": 2147483646,
+    "credential_id": CREDENTIAL_ID,
+    "owner_key": owner_key.hex(),
+    "kdf_salt": SALT.hex(),
+    "kdf_iterations": 200000,
+    "kdf_id": 1,
+})
+result = unseal(session_key, "POST", PATH_BIND, session_id,
+                post(PATH_BIND, request))
+assert result["status"] == "bound" and result["sn"] == SN
+```
+
+Store `owner_key` only after checking the returned UID, serial number, credential ID, and fingerprint. The robot never returns the key. Do not log the password or key. Use this same key for the WS HMAC query in section 8.3.
+
+### 8.3 Build the WS URL and an HTTP request
 
 ```python
 import base64
@@ -737,117 +809,103 @@ import hmac
 import json
 import secrets
 import time
+import urllib.request
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
-
-
-def hmac_b64(key: bytes, message: str) -> str:
-    return base64.b64encode(
-        hmac.new(key, message.encode("utf-8"), hashlib.sha256).digest()
-    ).decode("ascii")
-
-
-def ws_url(host: str, user_id: str, sn: str, key: bytes,
-           client_id: str = "my_app", path: str = "/",
-           share_token: str | None = None) -> str:
-    ts = str(int(time.time() * 1000))
-    nonce = secrets.token_urlsafe(18)
-    query = {
-        "user_id": user_id,
-        "client_id": client_id,
-        "sn": sn,
-        "ts": ts,
-        "nonce": nonce,
-        "sig": hmac_b64(key, f"ws|{user_id}|{sn}|{ts}|{nonce}"),
-    }
-    if share_token:
-        query["share_token"] = share_token
-    return f"ws://{host}:8081{path}?{urlencode(query)}"
-
-
-def http_json(host: str, method: str, path: str, payload,
-              user_id: str, sn: str, key: bytes,
-              share_token: str | None = None):
-    method = method.upper()
-    body = (b"" if payload is None else
-            json.dumps(payload, ensure_ascii=False,
-                       separators=(",", ":")).encode("utf-8"))
-    ts = str(int(time.time() * 1000))
-    nonce = secrets.token_urlsafe(18)
-    body_hash = hashlib.sha256(body).hexdigest()
-    canonical = (
-        f"http.v2|{method}|{path}|{body_hash}|{user_id}|{sn}|{ts}|{nonce}"
-    )
-    query = {
-        "auth_v": "2",
-        "user_id": user_id,
-        "sn": sn,
-        "ts": ts,
-        "nonce": nonce,
-        "sig": hmac_b64(key, canonical),
-    }
-    if share_token:
-        query["share_token"] = share_token
-    request = Request(
-        f"http://{host}:8082{path}?{urlencode(query)}",
-        data=body if payload is not None else None,
-        headers={"Content-Type": "application/json"},
-        method=method,
-    )
-    with urlopen(request, timeout=10) as response:
-        return json.loads(response.read())
-
 
 HOST = "192.168.88.162"
 UID = "2147483646"
 SN = "BXI-EXAMPLE-0001"
-KEY = bytes.fromhex("11" * 32)  # Example only; load production keys from secure storage
+DEVICE_KEY = bytes.fromhex("11" * 32)  # Load from secure storage
 
-print(ws_url(HOST, UID, SN, KEY))
-print(http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY))
+
+def hmac_b64(message: str) -> str:
+    return base64.b64encode(
+        hmac.new(DEVICE_KEY, message.encode(), hashlib.sha256).digest()
+    ).decode("ascii")
+
+
+def ws_url(path: str = "/", client_id: str = "py_demo") -> str:
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    query = {"user_id": UID, "client_id": client_id, "sn": SN,
+             "ts": ts, "nonce": nonce,
+             "sig": hmac_b64(f"ws|{UID}|{SN}|{ts}|{nonce}")}
+    return f"ws://{HOST}:8081{path}?{urlencode(query)}"
+
+
+def http_json(method: str, path: str, payload):
+    method = method.upper()
+    body = (b"" if payload is None else
+            json.dumps(payload, ensure_ascii=False,
+                       separators=(",", ":")).encode())
+    ts = str(int(time.time() * 1000))
+    nonce = secrets.token_urlsafe(18)
+    digest = hashlib.sha256(body).hexdigest()
+    message = f"http.v2|{method}|{path}|{digest}|{UID}|{SN}|{ts}|{nonce}"
+    query = {"auth_v": "2", "user_id": UID, "sn": SN, "ts": ts,
+             "nonce": nonce, "sig": hmac_b64(message)}
+    request = urllib.request.Request(
+        f"http://{HOST}:8082{path}?{urlencode(query)}",
+        data=body if payload is not None else None,
+        headers={"Content-Type": "application/json"}, method=method)
+    with urllib.request.urlopen(request, timeout=10) as response:
+        return json.loads(response.read())
 ```
 
-The `body` used for signing is exactly the `body` that is sent. Do not reformat JSON after calculating the signature. For a guest call, pass the share token's `subkey` as `key` and also supply `share_token`.
+The HTTP signature must hash the exact body bytes sent on the wire. WS and HTTP share the key, but not the canonical message. For a guest connection, use the share token's `subkey` and add the complete `share_token` query field.
 
-### 8.2 WS remote control and heartbeat
+### 8.4 Send WS control parameters
 
-After connecting with the URL generated in section 8.1, send a regular JSON text frame:
+```python
+import asyncio
+import json
+import time
+import websockets
 
-```json
-{"type":"control.cmd_vel","ts":1780000000000,"seq":1,"payload":{"vx":0.2,"vy":0.0,"wz":0.1,"height":1.0,"mode":"manual","btn_1":0}}
+
+async def control() -> None:
+    async with websockets.connect(ws_url()) as ws:
+        await ws.send(json.dumps({
+            "type": "control.cmd_vel",
+            "ts": int(time.time() * 1000), "seq": 1,
+            "payload": {
+                "vx": 0.2, "vy": 0.0, "wz": 0.1,
+                "height": 1.0, "mode": "manual",
+                "btn_1": 0, "btn_5": 1,
+            },
+        }))
+        await ws.send(json.dumps({
+            "type": "control.heartbeat",
+            "ts": int(time.time() * 1000), "seq": 2, "payload": {},
+        }))
+        print(await ws.recv())
+
+
+asyncio.run(control())
 ```
 
-Send velocity commands continuously while the joystick is moving. When idle, send a heartbeat at least once every 500 ms; it does not overwrite an autonomous navigation command:
+`vx`, `vy`, `wz`, `height`, and `btn_1..btn_14` are flat fields under `payload`; do not add a nested `cmd_vel` object. Sending `control.cmd_vel` implicitly takes control. Send control frames while moving and a heartbeat at least every 500 ms while idle. A disconnected link or roughly 1.5 seconds without a fresh control intent triggers the gateway timeout stop. There is no `control.acquire`, `control.release`, `mode:"estop"`, or E-stop reset message.
 
-```json
-{"type":"control.heartbeat","ts":1780000000500,"seq":2,"payload":{}}
-```
-
-Do not send `mode:"estop"` or use `btn_1` for E-stop reset. Those gateway semantics have been removed.
-
-### 8.3 Map activation, relocation, and navigation
+### 8.5 Map activation, relocation, and navigation
 
 Recommended sequence:
 
 ```python
-maps = http_json(HOST, "GET", "/api/v1/maps", None, UID, SN, KEY)
-http_json(HOST, "POST", "/api/v1/maps/demo_map/activate", None,
-          UID, SN, KEY)
+maps = http_json("GET", "/api/v1/maps", None)
+http_json("POST", "/api/v1/maps/demo_map/activate", None)
 
 # Continue consuming the control WS; do not use a fixed sleep(20):
 # 1. Wait for nav.runtime.status.payload.active_map_id == "demo_map"
 # 2. Wait for current_mode in {"localizing", "navigation"}
 # 3. Confirm driver_healthy == true and last_error is empty
 
-http_json(HOST, "POST", "/api/v1/nav/initial_pose",
-          {"x": 0.0, "y": 0.0, "yaw": 0.0, "frame_id": "map"},
-          UID, SN, KEY)
+http_json("POST", "/api/v1/nav/initial_pose",
+          {"x": 0.0, "y": 0.0, "yaw": 0.0, "frame_id": "map"})
 
 # Wait for nav.reloc_required.payload.required == false and the latest
 # nav.runtime.status.payload.localized == true before sending a goal.
-http_json(HOST, "POST", "/api/v1/nav/goal",
-          {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"},
-          UID, SN, KEY)
+http_json("POST", "/api/v1/nav/goal",
+          {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"})
 ```
 
 Track navigation progress through `nav.status`. If map activation, initial pose, or localization fails, show `last_error` and stop the sequence instead of sending more goals that the server will reject.
