@@ -10,7 +10,7 @@ title: 新版软件后端接口
 
 如果只是先把控制链路跑通，按下面顺序实现即可：
 
-1. **拿到 owner 凭据**：有客户后端时调用凭据接口，拿到 `ownerKeyHex`；没有后端时使用本地密码派生 `deviceKey`。
+1. **拿到 owner 凭据**：有客户服务端时调用凭据接口，拿到 `ownerKeyHex`；不接入服务端时使用本地密码派生 `deviceKey`。
 2. **完成一次绑定**：通过 BLE Provisioning，或使用第 5.3.1 节的加密 Wi-Fi 配对接口。
 3. **连接控制 WS**：用 `deviceKey` 生成 HMAC query，连接 `ws://<robot>:8081/`。
 4. **发送控制帧**：`control.cmd_vel` 的速度字段必须直接放在 `payload` 下；空闲时持续发送 `control.heartbeat`。
@@ -25,15 +25,25 @@ title: 新版软件后端接口
 
 ```mermaid
 flowchart LR
-    A[自研 App] -->|BLE 本地密码绑定| R[RC ROS2]
-    A -->|局域网 WS 和 HTTP HMAC| R
-    A -->|BLE HMAC8 控制| R
-    M[维修凭证] -->|临时鉴权覆盖| R
-    R -.->|激活 心跳 日志| C[机器人云服务]
+    A[自研 App]
+    S[客户服务端<br/>登录与凭据签发]
+    R[RC ROS2<br/>本地网关]
+    C[机器人云服务<br/>激活/心跳/日志]
+    M[维修凭证]
+
+    A -->|access token| S
+    S -->|token + ownerKeyHex| A
+    A -->|BLE BIND_START<br/>或加密 Wi-Fi bind| R
+    A -->|WS/HTTP HMAC<br/>deviceKey| R
+    A -.->|无服务端模式：密码派生 deviceKey| R
+    M -->|临时鉴权覆盖| R
+    R -.->|robot_token| C
 ```
 
-- 自研 App 可以不登录账号、不请求短信验证码，也不调用 BXI App API，直接在局域网或 BLE 上控制 RC。
-- 机器人仍使用官方机器人 API 完成激活、心跳和日志上传。App 本地控制与机器人云链路彼此独立。
+- **服务端凭据模式**：App 登录客户服务端，服务端签发 `token`、`ownerKeyHex` 和 UID；App 只把绑定所需字段交给机器人。服务端的签名根密钥永远不下发。
+- **本地密码模式**：App 不登录、不请求短信，也不调用任何服务端；使用本地密码派生 `deviceKey`，直接在 BLE 或加密 Wi-Fi 上绑定。
+- 绑定完成后，日常 WS、HTTP 和 BLE 控制都在 App 与 RC 之间进行，不需要每次访问服务端。
+- 机器人仍可使用自己的 `robot_token` 调用机器人云服务完成激活、心跳和日志上传；这条链路与 App 控制链路独立。
 - 本地绑定不需要在 RC 上打开环境变量开关，也没有临时认领时间窗。
 - App access token 和机器人 `robot_token` 都不能用作 RC 控制签名。
 
@@ -42,7 +52,7 @@ RC 只有三种持久绑定状态：
 | 状态 | `binding_mode` | 含义 |
 |---|---|---|
 | 未绑定 | `unbound` | 可以进行首次云端绑定或本地密码绑定 |
-| 云端绑定 | `cloud` | 由官方后端签发 binding credential 完成绑定 |
+| 云端绑定 | `cloud` | 由官方服务端签发 binding credential 完成绑定 |
 | 本地绑定 | `local` | 由 App 和 RC 直接完成密码绑定，不创建云端用户关系 |
 
 维修模式不是第四种绑定。它是有有效期的临时鉴权覆盖层，可以在机器人处于 `unbound`、`cloud` 或 `local` 时使用，不修改原绑定；维修凭证失效后自动回到原绑定的鉴权状态。
@@ -737,11 +747,11 @@ BLE 维修控制先向 `CONTROL_GUEST_AUTH` 写入 UTF-8 JSON，签名仍使用 
 
 ## 8. 开发者快速开始
 
-本节按“获取凭据 → 建立配对会话 → 连接 WS → 发送控制”展开。凭据接口属于 App 后端，不是机器人接口；机器人只接收绑定后的 `deviceKey` 派生签名。示例中的地址、UID、SN 和 key 都是占位值。
+本节按“获取凭据 → 建立配对会话 → 连接 WS → 发送控制”展开。服务端凭据接口与机器人接口是两套接口；机器人只接收绑定后的 `deviceKey` 派生签名。示例中的地址、UID、SN 和 key 都是占位值。
 
-### 8.1 从 App 后端获取 owner key
+### 8.1 从服务端获取 owner key
 
-客户可以自定义登录方式和域名，但响应字段应保持下面的关系。`accessToken` 只发给 App 后端，绝不能放进机器人请求：
+客户可以自定义登录方式和域名，但响应字段应保持下面的关系。`accessToken` 只发给客户服务端，绝不能放进机器人请求：
 
 ```http
 POST /api/app/binding/credential/issue
@@ -768,7 +778,7 @@ Content-Type: application/json
 
 App 收到响应后应检查 `ownerUid`、`credentialId`、`fingerprint`、有效期和 SN，再把 `ownerKeyHex` 解码成 32 字节保存到系统安全存储。`fingerprint` 的计算是 `SHA256(UTF8(ownerKeyHex))[0:8].hex()`。首次绑定把完整 `token`、`credentialId`、SN 和 raw key 交给 BLE `BIND_START`，或按第 5.3.1 节交给 Wi-Fi `bind`；成功后机器人不会再次返回 key。
 
-后端签发逻辑（只放在服务端，不放进 App）可直接参考：
+服务端签发逻辑（只放在服务端，不放进 App）可直接参考：
 
 ```python
 import base64
@@ -815,7 +825,7 @@ def issue_binding_credential(secret: str, uid: int, sn: str,
 
 ### 8.2 本地密码派生 key
 
-没有 App 后端时，使用固定的本地 owner UID 和 PBKDF2 参数。下面的函数同时用于首次本地绑定和重装后的恢复：
+不接入服务端时，使用固定的本地 owner UID 和 PBKDF2 参数。下面的函数同时用于首次本地绑定和重装后的恢复：
 
 ```python
 # device_key_from_password

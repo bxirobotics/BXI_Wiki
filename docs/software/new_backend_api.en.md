@@ -10,7 +10,7 @@ This document explains how a custom app can connect to and control RC ROS2 direc
 
 For the shortest path to a working controller:
 
-1. Derive a `deviceKey` from the local password, or obtain `ownerKeyHex` from your own credential service.
+1. Derive a `deviceKey` from the local password, or obtain `ownerKeyHex` from your customer service.
 2. Bind once through BLE Provisioning or the encrypted Wi-Fi API in section 5.3.1.
 3. Build the HMAC query and connect to `ws://<robot>:8081/`.
 4. Send `control.cmd_vel` with flat fields in `payload`, then keep the link alive with `control.heartbeat`.
@@ -25,15 +25,25 @@ The Python walkthrough in section 8 follows this order. The HTTP map, navigation
 
 ```mermaid
 flowchart LR
-    A[Custom App] -->|BLE local password binding| R[RC ROS2]
-    A -->|LAN WS and HTTP HMAC| R
-    A -->|BLE HMAC8 control| R
-    M[Maintenance credential] -->|Temporary auth override| R
-    R -.->|Activation heartbeat logs| C[Robot Cloud Service]
+    A[Custom App]
+    S[Customer service<br/>login and credential issue]
+    R[RC ROS2<br/>local gateway]
+    C[Robot cloud service<br/>activation/heartbeat/logs]
+    M[Maintenance credential]
+
+    A -->|access token| S
+    S -->|token + ownerKeyHex| A
+    A -->|BLE BIND_START<br/>or encrypted Wi-Fi bind| R
+    A -->|WS/HTTP HMAC<br/>deviceKey| R
+    A -.->|No-service mode: derive deviceKey from password| R
+    M -->|Temporary auth override| R
+    R -.->|robot_token| C
 ```
 
-- A custom app can control RC over LAN or BLE without account login, SMS verification, or a BXI App API request.
-- The robot still uses the official robot API for activation, heartbeat, and log upload. This cloud connection is independent of local app control.
+- **Service credential mode:** the app logs in to the customer service; the service issues `token`, `ownerKeyHex`, and the UID. Only binding fields are sent to the robot; the service signing secret is never released.
+- **Local password mode:** the app does not log in or call any service. It derives the `deviceKey` locally and binds over BLE or encrypted Wi-Fi.
+- After binding, normal WS, HTTP, and BLE control runs between the app and RC; it does not call the customer service for every command.
+- The robot may still use its own `robot_token` for activation, heartbeat, and log upload. That cloud path is independent of app control.
 - Local binding does not require a robot-side environment switch and has no temporary claim window.
 - Neither an app access token nor the robot `robot_token` is accepted as an RC control signature.
 
@@ -741,7 +751,7 @@ The examples use Python 3.10+ and the standard library for KDF, HMAC, and HTTP. 
 
 ### 8.1 Derive the local device key
 
-The local-password path does not call an App backend. The robot fixes the owner UID and KDF parameters; the app generates and stores the 16-byte salt with the binding record.
+The local-password path does not call a customer service. The robot fixes the owner UID and KDF parameters; the app generates and stores the 16-byte salt with the binding record.
 
 ```python
 import hashlib
