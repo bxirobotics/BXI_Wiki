@@ -50,13 +50,13 @@ For first-time use, follow this order:
 
 The welcome page is shown on first launch. If you already have a BXI account, enter a mobile number, accept the Terms of Service and Privacy Policy, and request a verification code. For first on-site use without an account, select **Enter Local Mode** at the bottom. Local mode does not create a cloud account automatically, but it can connect to robots already bound on this controller.
 
-![First-launch welcome page](../assets/control/app-guide-2026/home-initial.png)
+![First-launch welcome page](../assets/control/app-guide-2026-en/home-initial.png)
 
 ### 1.2 Home entries
 
 After signing in or entering Local mode, the Home page provides **Add Device**, **My Devices**, **Firmware Upgrade**, **Diagnostics**, and **Profile**. The **Local Mode** label at top right means the App is using device bindings stored on this controller.
 
-![Home](../assets/control/app-guide-2026/07-home.png)
+![Home](../assets/control/app-guide-2026-en/07-home.png)
 
 ### Cloud mode and Local mode
 
@@ -81,7 +81,7 @@ Select **Add Device** on Home. This lets the controller recognize and save the r
 3. Connect the controller to usable Wi-Fi. For Wi-Fi control, the controller and robot should be on the same LAN.
 4. Select **Start Pairing** to scan for nearby robots.
 
-![Power-on and Bluetooth connection guidance](../assets/control/app-guide-2026/04-add-device.png)
+![Power-on and Bluetooth connection guidance](../assets/control/app-guide-2026-en/04-add-device.png)
 
 ### 2.2 Scan and select a Bluetooth device
 
@@ -91,7 +91,7 @@ The scan page lists discoverable BXI robots and their signal strength. Select **
 
     Check that the robot is powered on, Bluetooth and location are enabled on the controller, and then move closer and select **Search again**.
 
-![Select a robot to add](../assets/control/app-guide-2026/ble-scan.png)
+![Select a robot to add](../assets/control/app-guide-2026-en/ble-scan.png)
 
 ### 2.3 Provisioning and binding
 
@@ -107,7 +107,7 @@ After Bluetooth connection, confirm the target robot, enter or select Wi-Fi info
 
 **My Devices** shows bound robots as cards. Select a card to choose a connection method. It also provides entries such as pairing a new robot and scanning a maintenance credential. Online status only indicates discoverability; it is not a substitute for an on-site safety check.
 
-![My Devices](../assets/control/app-guide-2026/my-devices.png)
+![My Devices](../assets/control/app-guide-2026-en/my-devices.png)
 
 ### 3.2 Choose a connection method
 
@@ -116,7 +116,7 @@ After Bluetooth connection, confirm the target robot, enter or select Wi-Fi info
 | **Wi-Fi connection** | Controller and robot on the same LAN | Recommended; supports video, diagnostics, maps, and firmware management |
 | **Bluetooth direct connection** | No usable LAN or nearby basic control | Basic close-range control only; no video and some network features are unavailable |
 
-![Choose a connection method](../assets/control/app-guide-2026/connect-method.png)
+![Choose a connection method](../assets/control/app-guide-2026-en/connect-method.png)
 
 ### 3.3 Wi-Fi auto-discovery and network changes
 
@@ -142,7 +142,7 @@ After a successful connection, Device Home provides entries for the current robo
 - **Firmware Management:** review and install robot packages;
 - The top-right More menu can open Settings or Remote Assistance, depending on connection and permissions.
 
-![Device Home](../assets/control/app-guide-2026/device-home.png)
+![Device Home](../assets/control/app-guide-2026-en/device-home.png)
 
 ## 4. Selecting an operation mode and the remote-control interface
 
@@ -153,7 +153,7 @@ Select **Operation Mode** from Device Home to open the mode picker:
 - **Remote Control:** operate the robot with virtual joysticks or an external gamepad. Read the Remote-control interface section below before first use.
 - **Touring:** follow a prepared route. Core functionality is complete and is undergoing internal testing and optimization; it will be made generally available later.
 
-![Operation mode picker](../assets/control/app-guide-2026/mode-picker.png)
+![Operation mode picker](../assets/control/app-guide-2026-en/mode-picker.png)
 
 ### 4.2 Remote-control interface
 
@@ -167,7 +167,7 @@ After entering **Remote Control**, do not operate the joysticks yet. First verif
 | Bottom left and right | Virtual joysticks for translation, turning, height, and other motion; use only when the robot is enabled and the area is safe. |
 | Right-side function island | Common actions, control settings, and the gamepad-status overlay. |
 
-![Remote-control screen](../assets/control/app-guide-2026/12-remote-control.png)
+![Remote-control screen](../assets/control/app-guide-2026-en/12-remote-control.png)
 
 ### 4.3 Top-bar functions and view switching
 
@@ -209,13 +209,13 @@ Open **Settings** from the remote-control shortcut or Profile. Available tabs in
 
 Use **Import**, **Export**, and **Reset** at lower left to manage local settings. Import only configurations from trusted sources.
 
-![Control settings](../assets/control/app-guide-2026/13-settings-control.png)
+![Control settings](../assets/control/app-guide-2026-en/13-settings-control.png)
 
 ## 6. Diagnostics
 
 Diagnostics reads robot runtime data over Wi-Fi. Use it after the first connection, before remote control, or when something appears abnormal. On first entry, confirm **DOMAIN_ID**; it is the identifier used for internal robot communication and must match the robot's ROS 2 communication domain. If you do not know this value, ask the on-site technical team rather than changing it.
 
-![Set DOMAIN_ID](../assets/control/app-guide-2026/status-domain.png)
+![Set DOMAIN_ID](../assets/control/app-guide-2026-en/status-domain.png)
 
 | Page | Content | Recommendation |
 | --- | --- | --- |
@@ -225,13 +225,13 @@ Diagnostics reads robot runtime data over Wi-Fi. Use it after the first connecti
 | 3D Pose | Digital-twin pose view | Inspect pose and joint state |
 | Command Line | SSH terminal | Maintenance personnel only |
 
-![Battery diagnostics](../assets/control/app-guide-2026/17-status-battery.png)
+![Battery diagnostics](../assets/control/app-guide-2026-en/17-status-battery.png)
 
 ### 6.1 Diagnostics overview
 
 The left panel identifies the diagnostic target and data-stream state; the right panel groups pages under View and Tools. **Waiting for data** or **No data** normally means that the robot has not reported that diagnostic data. Check Wi-Fi, DOMAIN_ID, and robot services instead of repeatedly operating remote control.
 
-![Diagnostics overview (device details redacted)](../assets/control/app-guide-2026/status-overview-redacted.png)
+![Diagnostics overview (device details redacted)](../assets/control/app-guide-2026-en/status-overview-redacted.png)
 
 ### 6.2 Logs
 
@@ -241,13 +241,13 @@ Select **Logs** to choose a current log file and view runtime records. Logs help
 
     Logs can include robot names, IP addresses, directories, command parameters, or runtime identifiers. Confirm the recipient is authorized and redact unnecessary device and network information before sharing with support or third parties.
 
-![Logs (content redacted)](../assets/control/app-guide-2026/status-logs-redacted.png)
+![Logs (content redacted)](../assets/control/app-guide-2026-en/status-logs-redacted.png)
 
 ### 6.3 Joint Temperature
 
 **Joint Temperature** displays temperatures reported for each joint. Use filtering and paging controls to inspect the records. Stop high-load movement and follow maintenance procedures for sustained high temperature, abnormal fluctuations, or missing data. The test screenshot shows the normal empty state; actual values depend on robot reporting.
 
-![Joint Temperature](../assets/control/app-guide-2026/status-joint-temperature.png)
+![Joint Temperature](../assets/control/app-guide-2026-en/status-joint-temperature.png)
 
 ### 6.4 SSH Command Line
 
@@ -257,7 +257,7 @@ Selecting **Command Line** first shows the SSH credentials page. Enter an author
 
     SSH commands can change robot configuration, stop services, or affect operational safety. Use them only with maintenance authorization, full understanding of the command, and a safe robot state. Never share passwords, IP addresses, ports, or complete terminal output in documentation, tickets, or chat.
 
-![SSH command-line connection (device details redacted)](../assets/control/app-guide-2026/status-command-line-redacted.png)
+![SSH command-line connection (device details redacted)](../assets/control/app-guide-2026-en/status-command-line-redacted.png)
 
 ## 7. Firmware management and upgrade
 
@@ -267,7 +267,7 @@ Selecting **Command Line** first shows the SSH credentials page. Enter an author
 
 When the new App detects a robot with legacy, unencrypted firmware, it shows an upgrade prompt and requires the firmware upgrade flow first. Complete the robot firmware upgrade before using connection, encryption, and sharing functions. Do not close the App, disconnect the network, or remove robot power during the upgrade.
 
-![Firmware upgrade prompt for a legacy robot (device list redacted)](../assets/control/app-guide-2026/firmware-upgrade-required-redacted.png)
+![Firmware upgrade prompt for a legacy robot (device list redacted)](../assets/control/app-guide-2026-en/firmware-upgrade-required-redacted.png)
 
 !!! warning "Encryption and credential protection"
 
@@ -277,13 +277,13 @@ When the new App detects a robot with legacy, unencrypted firmware, it shows an 
 
 The page reads each package's current version, target version, and download size. Packages with an update indication can be upgraded separately or added to **Upgrade Selected**.
 
-![Firmware management](../assets/control/app-guide-2026/firmware-management.png)
+![Firmware management](../assets/control/app-guide-2026-en/firmware-management.png)
 
 ### 7.3 Confirm an upgrade
 
 After selecting an individual package or Upgrade Selected, verify the packages, versions, and sizes. **Start Upgrade** submits a real upgrade task to the robot.
 
-![Confirm firmware upgrade](../assets/control/app-guide-2026/firmware-package-detail.png)
+![Confirm firmware upgrade](../assets/control/app-guide-2026-en/firmware-package-detail.png)
 
 !!! warning "Pre-upgrade checklist"
 
@@ -304,7 +304,7 @@ Remote Assistance is available only when the robot is connected over **Wi-Fi**; 
 
 The App carries the current robot's address, display name, and serial number into the Remote Assistance page and tries to establish its network session. If no current robot is selected, the page shows LAN and historical device lists for selection.
 
-![Remote Assistance entry from Device Home](../assets/control/app-guide-2026/remote-assist-entry-redacted.png)
+![Remote Assistance entry from Device Home](../assets/control/app-guide-2026-en/remote-assist-entry-redacted.png)
 
 ### 8.2 Request assistance
 
@@ -314,11 +314,11 @@ The page has three stages:
 2. **Check Status:** show device identity, robot connection state, and network connectivity checks.
 3. **Request Assistance:** read and accept the authorization notice, select **Request Assistance**, and review requested, active, and closed state in the session panel.
 
-![Remote Assistance status checks](../assets/control/app-guide-2026/remote-assist-page-redacted.png)
+![Remote Assistance status checks](../assets/control/app-guide-2026-en/remote-assist-page-redacted.png)
 
 After selecting **Request Assistance**, the App displays an authorization notice. It can authorize support staff to communicate via a reverse SSH tunnel, read necessary diagnostic information such as system logs, control state, and sensor data, and start or stop robot services within the authorized scope. A session is created only after selecting **Agree and Request**.
 
-![Remote Assistance consent](../assets/control/app-guide-2026/remote-assist-consent-redacted.png)
+![Remote Assistance consent](../assets/control/app-guide-2026-en/remote-assist-consent-redacted.png)
 
 ### 8.3 The robot maintains the session
 
@@ -328,7 +328,7 @@ The controller does not need to remain on the Remote Assistance page after the s
 
 When ready, the panel shows remaining time and provides **Extend +30 minutes** and **Close Now**. Ports, remaining time, and connection IDs are dynamic session information and must not be shared publicly.
 
-![Remote Assistance session ready](../assets/control/app-guide-2026/remote-assist-session-redacted.png)
+![Remote Assistance session ready](../assets/control/app-guide-2026-en/remote-assist-session-redacted.png)
 
 !!! warning "Remote-assistance authorization"
 
