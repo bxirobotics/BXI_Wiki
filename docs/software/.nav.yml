@@ -1,4 +1,4 @@
 nav:
-  - 控制端APP: app_guide_v2.md
-  - 控制端软件API: new_backend_api.md
-  - 电机调试软件: tool_guide.md
+  - app_guide_v2.md
+  - new_backend_api.md
+  - tool_guide.md
