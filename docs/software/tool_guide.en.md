@@ -170,3 +170,10 @@ Used to upgrade motor firmware.
 
 ![Firmware Page](../assets/control/toolguide/firmware.png)
 
+### Firmware Update Procedure
+
+1. Select the firmware file path in the center of the page.
+2. Start the firmware update and wait for the progress bar to complete. Do not disconnect the power supply or communication connection during the update.
+3. After the update is complete, click the **Switch to APP** button to switch the motor to the APP.
+4. Return to the serial terminal and verify that the motor's power-on output is normal.
+
