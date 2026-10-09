@@ -113,7 +113,7 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
     保存配置后，请进入包含 `install.sh` 的工程目录，并使用 root 权限重新编译安装：
 
     ```bash
-    sudo ./install.sh
+    sudo /opt/bxi/bxi_rc_slam/install.sh
     ```
 
 ## 2. 使用导航 App

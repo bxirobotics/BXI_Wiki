@@ -98,6 +98,16 @@ sudo su
 python3 -m pip install -r /opt/bxi/mods/com.bxi.sonic/requirements-pico.txt
 ```
 
+如果未配置代理，或使用默认 PyPI 源时下载缓慢、超时，可在上述 root 终端中使用清华大学 PyPI 镜像重试。以下命令将超时时间设为 120 秒，并禁用缓存：
+
+```bash
+python3 -m pip install \
+  -r /opt/bxi/mods/com.bxi.sonic/requirements-pico.txt \
+  -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple \
+  --no-cache-dir \
+  --timeout 120
+```
+
 依赖只需安装一次；更新工程后如果 `requirements-pico.txt` 发生变化，应重新执行该命令。
 
 ### 3. 安装 PICO 应用

@@ -98,6 +98,16 @@ sudo su
 python3 -m pip install -r /opt/bxi/mods/com.bxi.sonic/requirements-pico.txt
 ```
 
+If no proxy is configured, or downloads from the default PyPI index are slow or time out, retry with the Tsinghua University PyPI mirror in the same root shell. The following command sets the timeout to 120 seconds and disables caching:
+
+```bash
+python3 -m pip install \
+  -r /opt/bxi/mods/com.bxi.sonic/requirements-pico.txt \
+  -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple \
+  --no-cache-dir \
+  --timeout 120
+```
+
 The dependencies normally need to be installed only once. Run the command again after an update if `requirements-pico.txt` has changed.
 
 ### 3. Install the PICO Application

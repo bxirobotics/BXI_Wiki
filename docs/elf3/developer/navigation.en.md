@@ -113,7 +113,7 @@ Example configuration:
     After saving the configuration, enter the project directory containing `install.sh` and rebuild the installation with root privileges:
 
     ```bash
-    sudo ./install.sh
+      sudo /opt/bxi/bxi_rc_slam/install.sh
     ```
 
 ## 2. Use the Navigation App
