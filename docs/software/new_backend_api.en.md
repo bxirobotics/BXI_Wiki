@@ -491,6 +491,8 @@ Nav2 accumulates the actual blocked intervals. Alternating blocked and clear sig
 
 While waiting for user-requested cancellation, the state may be `paused`. If goal acceptance is still unconfirmed after five seconds, navigation also enters `paused` and retains its slot. A goal accepted late is canceled first, and `failed` is reported only after the goal has ended.
 
+The task stop is released on a terminal `succeeded`, `canceled`, or `failed` status, allowing subsequent navigation directly from RViz without first triggering the App's `pursuing` state. Laser-data validation and collision checks remain active. `starting` does not release an existing task stop.
+
 Upgrade `bxi_rc_slam`, `bxi_rc_ros2`, and the App together when using these new states. The new gateway and App still accept legacy `navigating` and `succeeded` values. The App must treat `starting`, `pursuing`, and `blocked` as active navigation and retain the path display and pause/cancel controls; an old App treats unknown states as `idle`. An old gateway also cannot correctly recognize the added execution states and must not use them to decide whether the navigation slot is free.
 
 ### 5.3 HTTP REST (port 8082)

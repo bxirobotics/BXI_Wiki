@@ -491,6 +491,8 @@ Nav2 按实际阻塞起止时间累计扣除等待，阻塞与解除交替出现
 
 人工取消等待期间可呈现 `paused`。目标发送后 5 秒仍无接受确认时，也进入 `paused` 并保留导航槽位；收到迟到的接受响应后先取消该目标，确认结束后才报告 `failed`。
 
+收到 `succeeded`、`canceled` 或 `failed` 终态后，任务停车锁解除，后续 RViz 直接导航无需先触发 App 的 `pursuing`。雷达有效性和避障检查始终生效；`starting` 不会提前解除已有停车锁。
+
 使用这些新状态时，应配套升级 `bxi_rc_slam`、`bxi_rc_ros2` 与 App。新版网关和 App 继续接受旧版 `navigating` 和 `succeeded`。App 必须将 `starting`、`pursuing` 和 `blocked` 识别为活动导航，保留路径显示及暂停、取消入口；旧 App 会将未知状态当作 `idle`。旧网关也不能正确识别新增的执行状态，不能据此判断导航槽位是否空闲。
 
 ### 5.3 HTTP REST（端口 8082）
