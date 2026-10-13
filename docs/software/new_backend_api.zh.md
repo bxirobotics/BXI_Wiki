@@ -430,6 +430,69 @@ nav.reloc_required
 | `0xB2` | 关节位置，约 20Hz |
 | `0xB3` | IMU 朝向 |
 
+#### 5.2.1 导航状态、障碍等待与播报
+
+通过控制 WS 的 `nav.status.payload.state` 读取当前导航状态。该字段的名称和类型不变，成功到达继续使用 `succeeded`。
+
+| `state` | 含义 |
+|---|---|
+| `idle` | 当前没有导航任务 |
+| `starting` | 已接受目标，正在等待导航服务或规划路径 |
+| `pursuing` | 已收到当前目标的有效路径，正在执行导航；包括正常减速和绕行 |
+| `blocked` | 避障模块确认停车，等待障碍解除 |
+| `succeeded` | 当前导航目标成功到达 |
+| `paused` | 人工暂停，任务仍保留 |
+| `canceled` | 导航已取消，不表示到达 |
+| `failed` | 导航失败，不表示到达 |
+| `navigating` | 旧版 SLAM 的导航执行状态，不能区分规划、行走和障碍等待；客户端应继续识别 |
+
+典型状态变化：
+
+```text
+starting -> pursuing -> succeeded
+               |  ^
+               v  |
+              blocked
+```
+
+`starting` 没有固定持续时间。收到当前目标的非空全局路径后即进入 `pursuing`；规划很快时，低频轮询可能看不到 `starting`。需要跟踪状态变化时，应持续接收 WS 消息，不要要求它必须停留一段时间。普通静止、正常减速或绕行不能单独视为 `blocked`。
+
+示例帧：
+
+```json
+{
+  "type": "nav.status",
+  "ts": 1737940000000,
+  "seq": 12345,
+  "payload": {
+    "state": "blocked",
+    "distance_remaining": 2.4,
+    "estimated_time_remaining": 12.0,
+    "navigation_time": 35.0,
+    "number_of_recoveries": 0,
+    "stamp_ms": 1737940000000
+  }
+}
+```
+
+`distance_remaining` 的单位为米，`estimated_time_remaining` 和 `navigation_time` 的单位为秒。`number_of_recoveries` 是恢复行为次数，`stamp_ms` 是上游状态时间戳，单位为毫秒。`navigation_time` 仍包含障碍等待时间，不能直接用它判断扣除等待后的任务超时。
+
+上游每 0.1 秒补发状态，也会在状态或进度更新时发布。播报应按状态变化触发，并对重复状态去重：
+
+- 进入 `blocked`：播报“前方有障碍，请让行”。
+- 从 `blocked` 变为 `pursuing`：播报“障碍已解除，继续导航”；没有单独的 `unblocked` 状态。
+- 进入 `succeeded`：播报“已到达目标点”。`canceled` 和 `failed` 不得触发到达播报。
+
+巡游逐点下发导航目标，每个点均使用上述导航状态。某个点的 `succeeded` 不表示整条巡游结束；整条巡游完成以 `nav.tour.status.payload.state=finished` 为准。ROS 2 原生 `/nav/follow_waypoints` 的 `succeeded` 则表示整个多点 action 成功，中间点进度使用 action feedback 的 `current_index`。
+
+确认阻塞期间，Nav2 进展检查和巡游的航点/导航槽位等待超时不消耗等待时间；解除阻塞后继续使用剩余预算，不重新给予完整预算。例如阻塞前还剩 40 秒，等待结束后仍剩余约 40 秒。语音播放和动作 ACK 的超时不受影响。SLAM 到网关的状态心跳中断超过 1 秒后，巡游不再延长等待预算，避免状态源丢失后任务永久挂起。
+
+Nav2 按实际阻塞起止时间累计扣除等待，阻塞与解除交替出现时不会额外扣除未阻塞时间。只有明确收到清障信号才恢复 `pursuing`。已进入 `blocked` 后内部障碍信号超过 0.5 秒未更新，或执行期间雷达缺失、数据超时、无有效测量、TF 不可用时，SLAM 停止 Nav2 进展检查的超时豁免并请求取消目标。取消期间保持 `blocked`、安全速度为零，并保留导航槽位；取消被拒绝会重试，响应或终态未确认时继续停车等待，拒绝新目标，不因等待超过 5 秒释放槽位。确认 Nav2 目标结束后才报告 `failed`。信号失联不是障碍解除，迟到的清障消息也不会恢复已进入故障取消流程的任务。人工暂停、取消同样等待旧目标结束后，才重发目标或释放槽位。
+
+人工取消等待期间可呈现 `paused`。目标发送后 5 秒仍无接受确认时，也进入 `paused` 并保留导航槽位；收到迟到的接受响应后先取消该目标，确认结束后才报告 `failed`。
+
+使用这些新状态时，应配套升级 `bxi_rc_slam`、`bxi_rc_ros2` 与 App。新版网关和 App 继续接受旧版 `navigating` 和 `succeeded`。App 必须将 `starting`、`pursuing` 和 `blocked` 识别为活动导航，保留路径显示及暂停、取消入口；旧 App 会将未知状态当作 `idle`。旧网关也不能正确识别新增的执行状态，不能据此判断导航槽位是否空闲。
+
 ### 5.3 HTTP REST（端口 8082）
 
 除 CORS `OPTIONS` 和下表三条 `/api/v1/pairing/*` 精确路由外，业务路由均使用 HTTP v2 HMAC。配对路由在尚无 `deviceKey` 时无法使用 HTTP HMAC，因此改用第 5.3.1 节的 X25519 会话和 AES-256-GCM 载荷保护：
@@ -481,6 +544,8 @@ nav.reloc_required
 地图 bundle 固定包含 `manifest.json`、`map.pcd`、`map.pgm` 和 `map.yaml`。只有旧二维 PGM/YAML 的 `legacy_2d_only` 地图不能激活、导航或续建，必须重新完成三维建图。续建会生成不可变子版本，并继承父版本的 waypoints、regions、topology 和自定义路线快照。
 
 路线 ID 必须匹配 `[A-Za-z0-9_-]{1,64}`。默认路线 `default` 继续读写旧接口 `/maps/{id}/waypoints`，自定义路线保存在 `<id>.routes/<route_id>.json`；默认路线可重命名但不可删除。`tour/status` 和 WS `nav.tour.status` 都包含 `route_id`，旧状态缺少该字段时按 `default` 处理。新 App 遇到旧固件的 routes API 返回 404 时，只使用默认路线。
+
+`GET /api/v1/tour/status` 的响应与 WS `nav.tour.status.payload` 都包含 `execution_phase`。在导航阶段，该字段可为 `starting`、`pursuing` 或 `blocked`，兼容旧值 `navigating`；障碍等待期间，巡游顶层 `state` 仍为 `running`。动作阶段仍可为 `waypoint_actions`、`event_actions` 或 `pass_actions`，不能把这些值当作导航失败。结合 `map_id`、`route_id` 和从 0 开始的 `current_idx` 识别当前巡游点；导航播报及超时规则见第 5.2.1 节。
 
 `GET /api/v1/runtime/status` 与 WS `nav.runtime.status` 的主要字段为：
 
@@ -1118,7 +1183,7 @@ http_json("POST", "/api/v1/nav/goal",
           {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"})
 ```
 
-导航进度通过 `nav.status` 跟踪。地图激活、初始位姿和定位状态任一步失败时，应展示 `last_error` 并停止后续请求，而不是继续发目标让服务端重复拒绝。
+导航进度通过 `nav.status` 跟踪，状态含义、阻塞恢复和播报规则见第 5.2.1 节。收到 `succeeded` 才表示当前导航目标成功到达。地图激活、初始位姿和定位状态任一步失败时，应展示 `last_error` 并停止后续请求，而不是继续发目标让服务端重复拒绝。
 
 ## 9. 安全要求
 

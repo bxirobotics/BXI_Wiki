@@ -430,6 +430,69 @@ Digital-twin telemetry uses length-prefixed binary frames rather than JSON. The 
 | `0xB2` | Joint positions, approximately 20 Hz |
 | `0xB3` | IMU orientation |
 
+#### 5.2.1 Navigation states, obstacle waits, and announcements
+
+Read the current navigation state from `nav.status.payload.state` on the control WS. The field name and type remain unchanged. Successful arrival continues to use `succeeded`.
+
+| `state` | Meaning |
+|---|---|
+| `idle` | No navigation task is active |
+| `starting` | The goal is accepted; navigation is waiting for its service or planning a path |
+| `pursuing` | A valid path for the current goal has been received and navigation is executing; this includes normal slowing and obstacle avoidance |
+| `blocked` | The collision monitor has confirmed a stop; navigation is waiting for the obstacle to clear |
+| `succeeded` | The current navigation goal has been reached successfully |
+| `paused` | Navigation is paused by the user; the task is retained |
+| `canceled` | Navigation was canceled; this does not mean arrival |
+| `failed` | Navigation failed; this does not mean arrival |
+| `navigating` | Legacy SLAM execution state; it does not distinguish planning, movement, and obstacle waits. Clients must continue to recognize it |
+
+Typical state transitions:
+
+```text
+starting -> pursuing -> succeeded
+               |  ^
+               v  |
+              blocked
+```
+
+`starting` has no fixed duration. Navigation enters `pursuing` when it receives a nonempty global path for the current goal. If planning is fast, infrequent polling can miss `starting`. Consume WS messages continuously to track state changes; do not require a minimum duration for this state. Being stationary, slowing normally, or steering around an obstacle does not by itself mean `blocked`.
+
+Example frame:
+
+```json
+{
+  "type": "nav.status",
+  "ts": 1737940000000,
+  "seq": 12345,
+  "payload": {
+    "state": "blocked",
+    "distance_remaining": 2.4,
+    "estimated_time_remaining": 12.0,
+    "navigation_time": 35.0,
+    "number_of_recoveries": 0,
+    "stamp_ms": 1737940000000
+  }
+}
+```
+
+`distance_remaining` is in meters. `estimated_time_remaining` and `navigation_time` are in seconds. `number_of_recoveries` counts recovery behaviors, and `stamp_ms` is the upstream status timestamp in milliseconds. `navigation_time` still includes obstacle waits; do not use it directly to enforce a task timeout that excludes those waits.
+
+The upstream node repeats its status every 0.1 seconds and also publishes state or progress updates. Trigger announcements on state changes and ignore repeated copies of the same state:
+
+- On entering `blocked`: announce “Obstacle ahead. Please clear the path.”
+- On changing from `blocked` to `pursuing`: announce “The obstacle has cleared. Continuing navigation.” There is no separate `unblocked` state.
+- On entering `succeeded`: announce “Destination reached.” Neither `canceled` nor `failed` may trigger an arrival announcement.
+
+A tour sends one navigation goal per waypoint, and each goal uses these states. A waypoint's `succeeded` state does not mean the entire tour has finished; use `nav.tour.status.payload.state=finished` for tour completion. For the native ROS 2 `/nav/follow_waypoints` action, `succeeded` means the entire multi-point action succeeded; intermediate progress uses `current_index` in action feedback.
+
+During a confirmed obstacle stop, the Nav2 progress check and the tour's waypoint/navigation-slot wait timeouts exclude the blocked time. When the obstacle clears, the remaining budget continues; it does not reset to the full budget. For example, approximately 40 seconds remain after the wait if 40 seconds remained before it. Voice playback and motion ACK timeouts are unchanged. If status heartbeats from SLAM to the gateway stop for more than one second, the tour stops extending the wait budget so a missing status source cannot suspend the task indefinitely.
+
+Nav2 accumulates the actual blocked intervals. Alternating blocked and clear signals do not exclude additional unblocked time. Only an explicit clear signal permits a return to `pursuing`. If the internal obstacle signal stops updating for more than 0.5 seconds after entering `blocked`, or laser data is missing, stale, has no usable measurements, or cannot be transformed during execution, SLAM ends the Nav2 progress-check timeout exemption and requests goal cancellation. While cancellation is pending, the state remains `blocked`, safe velocity stays zero, and the navigation slot remains occupied. Rejected cancellation requests are retried. A cancellation acknowledgement alone does not release the slot: navigation stays stopped and rejects new goals until Nav2 reports a terminal result, even after five seconds. SLAM reports `failed` only after Nav2 confirms that the goal has ended. Signal loss does not mean obstacle clearance, and a late clear signal cannot resume a task already being canceled for a fault. User pause and cancellation also wait for the old goal to end before resending a goal or releasing the slot.
+
+While waiting for user-requested cancellation, the state may be `paused`. If goal acceptance is still unconfirmed after five seconds, navigation also enters `paused` and retains its slot. A goal accepted late is canceled first, and `failed` is reported only after the goal has ended.
+
+Upgrade `bxi_rc_slam`, `bxi_rc_ros2`, and the App together when using these new states. The new gateway and App still accept legacy `navigating` and `succeeded` values. The App must treat `starting`, `pursuing`, and `blocked` as active navigation and retain the path display and pause/cancel controls; an old App treats unknown states as `idle`. An old gateway also cannot correctly recognize the added execution states and must not use them to decide whether the navigation slot is free.
+
 ### 5.3 HTTP REST (port 8082)
 
 Except for CORS `OPTIONS` and the three exact `/api/v1/pairing/*` routes below, business routes use HTTP v2 HMAC. Pairing cannot use HTTP HMAC before a `deviceKey` exists, so section 5.3.1 protects it with an X25519 session and AES-256-GCM payloads:
@@ -481,6 +544,8 @@ Request-body limits depend on the route: 64 KB for regular and OTA routes, 8 MB 
 A map bundle always contains `manifest.json`, `map.pcd`, `map.pgm`, and `map.yaml`. A `legacy_2d_only` map containing only the old PGM/YAML format cannot be activated, used for navigation, or extended; it must be rebuilt with the 3D mapping flow. Extending a map creates an immutable child version and inherits the parent waypoints, regions, topology, and custom-route snapshots.
 
 Route IDs must match `[A-Za-z0-9_-]{1,64}`. The `default` route continues to use the legacy `/maps/{id}/waypoints` endpoint; custom routes are stored under `<id>.routes/<route_id>.json`. The default route may be renamed but not deleted. Both `tour/status` and WS `nav.tour.status` include `route_id`; clients treat a missing field from old status payloads as `default`. When an old firmware returns 404 for the routes API, the new App uses only the default route.
+
+Both the `GET /api/v1/tour/status` response and WS `nav.tour.status.payload` include `execution_phase`. During navigation, this field can be `starting`, `pursuing`, or `blocked`; the legacy value `navigating` remains supported. The tour's top-level `state` stays `running` during an obstacle wait. Action phases can still be `waypoint_actions`, `event_actions`, or `pass_actions`; do not treat these values as navigation failures. Use `map_id`, `route_id`, and the zero-based `current_idx` to identify the current tour waypoint. See section 5.2.1 for navigation announcements and timeout rules.
 
 The main fields returned by `GET /api/v1/runtime/status` and WS `nav.runtime.status` are:
 
@@ -920,7 +985,7 @@ http_json("POST", "/api/v1/nav/goal",
           {"x": 2.0, "y": 1.0, "yaw": 0.0, "frame_id": "map"})
 ```
 
-Track navigation progress through `nav.status`. If map activation, initial pose, or localization fails, show `last_error` and stop the sequence instead of sending more goals that the server will reject.
+Track navigation progress through `nav.status`. Section 5.2.1 defines the states, obstacle recovery, and announcement rules. Only `succeeded` confirms successful arrival at the current navigation goal. If map activation, initial pose, or localization fails, show `last_error` and stop the sequence instead of sending more goals that the server will reject.
 
 ## 9. Security requirements
 
