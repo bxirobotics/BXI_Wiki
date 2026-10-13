@@ -11,6 +11,8 @@ pattern will automatically be redirected.
 """
 
 from pathlib import Path
+from html import escape
+import json
 
 _ZERO_WIDTH_SPACE = "\u200b"
 
@@ -97,6 +99,7 @@ def on_page_content(html, page, config, files, **kwargs):
         return html
 
     target = "/" + target_url.lstrip("/")
+    page.meta["robots"] = "noindex, follow"
 
     # Return a lightweight redirect; the surrounding template still renders
     # so users with JS disabled also get the <meta> fallback.
@@ -111,8 +114,47 @@ def on_post_build(config, **kwargs):
     for alternate in config.extra["alternate"]:
         target = Path(config.site_dir, alternate["link"].strip("/"), "index.html")
         target.parent.mkdir(parents=True, exist_ok=True)
+        is_en = alternate["lang"] == "en"
+        title = "ELF3 Humanoid Robot Documentation and Developer Guides" if is_en else "ELF3 人形机器人使用文档与开发指南入口"
+        description = (
+            "Open the BXI ELF3 documentation for robot specifications, safe operation, ROS2 development, joint actuator interfaces and control software integration guides."
+            if is_en else
+            "进入半醒科技 ELF3 人形机器人文档，查阅整机规格、开箱操作、安全须知、ROS2 开发、关节电机通信与控制软件指南。本页将自动跳转到产品介绍，也可通过正文链接继续访问。"
+        )
+        canonical = config.site_url.rstrip("/") + alternate["link"] + "elf3/overview/"
         target.write_text(
-            '<script>window.location.replace("elf3/overview/");</script>\n'
-            '<noscript><meta http-equiv="refresh" content="0; url=elf3/overview/"></noscript>\n',
+            f'<!doctype html><html lang="{escape(alternate["lang"])}"><head>'
+            '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            f'<title>{escape(title)} - BXI Robotics</title>'
+            f'<meta name="description" content="{escape(description)}">'
+            f'<link rel="canonical" href="{escape(canonical)}">'
+            '<script>location.replace("elf3/overview/"+location.search+location.hash);</script>'
+            '<meta http-equiv="refresh" content="0; url=elf3/overview/">'
+            f'</head><body><h1>{escape(title)}</h1>'
+            f'<p>{escape(description)}</p><a href="elf3/overview/">'
+            f'{"Continue to ELF3 documentation" if is_en else "查看 ELF3 产品介绍"}</a></body></html>\n',
+            encoding="utf-8",
+        )
+
+    # Keep old /en/ bookmarks after English becomes the unprefixed default.
+    site_dir = Path(config.site_dir)
+    for source in list(site_dir.rglob("index.html")):
+        relative = source.relative_to(site_dir)
+        if relative.parts[0] in {"en", "zh"}:
+            continue
+        path = "/" + relative.as_posix().removesuffix("index.html")
+        canonical = config.site_url.rstrip("/") + path
+        alias = site_dir / "en" / relative
+        alias.parent.mkdir(parents=True, exist_ok=True)
+        alias.write_text(
+            '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+            '<title>Moved - BXI Robotics documentation</title>'
+            '<meta name="robots" content="noindex, follow">'
+            f'<link rel="canonical" href="{escape(canonical)}">'
+            '<script>document.cookie="bxi_locale=en; Path=/; Max-Age=31536000; SameSite=Lax";'
+            f'location.replace({json.dumps(path)}+location.search+location.hash);</script>'
+            f'<meta http-equiv="refresh" content="0; url={escape(path)}">'
+            '</head><body><h1>Documentation has moved</h1>'
+            f'<a href="{escape(path)}">Continue to the English documentation</a></body></html>\n',
             encoding="utf-8",
         )

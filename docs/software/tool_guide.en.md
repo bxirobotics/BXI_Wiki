@@ -1,3 +1,8 @@
+---
+seo_title: "BXI Tool Software Guide and USB-CAN Setup"
+description: "Learn the BXI Tool interface, download entry, feature menus and USB-CAN connection workflow, with serial settings and device selection before motor configuration."
+---
+
 # BXI Tool User Guide
 
 ## 1. Software Overview
@@ -8,7 +13,7 @@
 - Icon: <img src="/assets/other/logo.png" alt="logo" width="45" style="display:inline; vertical-align:middle;" />
 - Version: `Latest`
 - Languages: Chinese and English (switch in the top-right corner)
-- Download: [Go to Download Page](https://download.bxirobotics.cn/%E7%94%B5%E6%9C%BAAPP)
+- Download: [Go to Download Page](https://download.bxirobotics.com/%E7%94%B5%E6%9C%BAAPP)
 
 ### Interface Overview (Left Menu)
 

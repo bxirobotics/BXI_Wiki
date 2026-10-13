@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Revo2 Dexterous Hand Integration Guide"
+description: "Integrate a Revo2 hand with ELF3 using wiring guidance, dependency setup, build instructions and acceptance checks, with model-specific power and motion precautions."
 title: External Dexterous Hand
 ---
 

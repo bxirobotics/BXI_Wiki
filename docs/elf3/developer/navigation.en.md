@@ -1,3 +1,8 @@
+---
+seo_title: "ELF3 Navigation App: LiDAR, Mapping and Tours"
+description: "Configure ELF3 navigation with Livox MID-360s LiDAR and the BXI RC App, from network and ROS2 setup to mapping, map editing and guided-route operation on the robot."
+---
+
 # ELF3 Navigation App User Guide
 
 This guide explains how to configure a Livox MID-360s LiDAR for ELF3 and use `bxi_rc_app` to create maps, edit navigation data, and run guided tours.

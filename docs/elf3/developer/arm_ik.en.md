@@ -1,3 +1,8 @@
+---
+seo_title: "ELF3 Arm Inverse Kinematics with Pinocchio"
+description: "Build a minimal ELF3 arm inverse-kinematics solver using Pinocchio, with example resources, installation instructions and code for left- and right-arm development."
+---
+
 # Minimal ELF3 Arm IK with Pinocchio
 
 This guide uses Pinocchio's damped least-squares method to convert a wrist target pose into seven ELF3 single-arm joint angles. Resources for both the left and right arms are provided. It performs offline inverse kinematics only; it does not start ROS or command any motors.

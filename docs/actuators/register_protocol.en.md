@@ -1,3 +1,8 @@
+---
+seo_title: "BXI Motor Register Protocol: Read, Write and Save"
+description: "Access BXI motor configuration registers over CAN with command and reply formats for reading, writing, saving and version queries, using the matching firmware register map."
+---
+
 # Motor Register Communication Protocol
 
 This page describes how to read, write, save, and query BXI motor configuration registers over CAN. Register maps differ between motor firmware versions, so check the motor software version, hardware/program model, and configuration version before operating on registers.

@@ -1,3 +1,8 @@
+---
+seo_title: "ELF3 Mod API: Head and 31-DOF Joint Control"
+description: "Control ELF3 head joints or all 31 degrees of freedom with Mod API 4.0 examples, including joint commands, trajectory updates and head-module configuration checks."
+---
+
 # Minimal 31-DoF ELF3 Control
 
 This guide presents two joint-control paths. To control only the head, publish named joint commands directly to `actuators_cmds_override` without writing code. For complete 31-DoF control, create a Mod containing only `state.py` and `mod.yaml` and generate the trajectory directly in `on_update()`.

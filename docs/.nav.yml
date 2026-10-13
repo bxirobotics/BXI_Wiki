@@ -3,7 +3,7 @@ use_index_title: true
 nav:
   - elf3
   - software
-  - Demo: https://demo.bxirobotics.cn/
+  - Demo: https://demo.bxirobotics.com/
   - actuators
   - rl
   - remapping

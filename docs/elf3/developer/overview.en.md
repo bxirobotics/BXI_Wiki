@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Control Architecture and Joint CAN Mapping"
+description: "Understand ELF3 control architecture, 31 joint indices and five CANFD buses, with CAN ID mappings and ROS2 interfaces for integrating simulation and robot hardware."
 title: System Settings Guide
 ---
 

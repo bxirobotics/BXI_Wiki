@@ -1,4 +1,6 @@
 ---
+seo_title: "BXI Motor Register Maps by Firmware Version"
+description: "Select the BXI motor register map matching software and configuration versions, with links to the 1.4.1 and 0.3.1 tables for compatible parameter lookup and CAN access."
 title: Register Maps
 ---
 

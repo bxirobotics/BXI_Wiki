@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Sonic 全身遥操作：安装、校准与安全退出"
+description: "在 ELF3 上部署 Sonic 全身遥操作，查阅机器人端依赖、PICO 体感追踪器校准、XRoboToolkit 网络配置与动作跟随流程。了解运行环境、安全注意事项及退出步骤后再进行真机调试。"
 title: Sonic 全身遥操
 ---
 

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block htmltitle %}
+  {% if page and page.meta.seo_title %}
+    <title>{{ page.meta.seo_title | e }} - BXI Robotics</title>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+  {{ super() }}
+  {% if page and page.meta.robots %}
+    <meta name="robots" content="{{ page.meta.robots | e }}">
+  {% endif %}
+{% endblock %}

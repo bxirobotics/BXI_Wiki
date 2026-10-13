@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 控制系统架构、CAN 总线与关节映射说明"
+description: "了解 ELF3 人形机器人的控制系统架构、31 个关节索引、5 路 CANFD 总线与 CAN ID 对应关系，查阅 ROS2、MuJoCo 和硬件控制接口说明，帮助开发者核对关节命名及软硬件集成边界。"
 title: 系统设置说明
 ---
 

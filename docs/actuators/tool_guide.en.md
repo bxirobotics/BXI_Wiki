@@ -1,3 +1,8 @@
+---
+seo_title: "BXI Motor PC Tool: Connection and Configuration"
+description: "Connect and configure BXI joint motors with the PC tool and bxi_usb2can, covering serial-port selection, device connection, debugging views and parameter management."
+---
+
 # BXI Motor PC Tool User Guide
 
 ## 1. Software Overview
@@ -8,7 +13,7 @@
 - Icon: <img src="/assets/other/logo.png" alt="logo" width="45" style="display:inline; vertical-align:middle;" />
 - Version: `Latest`
 - Languages: Chinese and English (switch in the top-right corner)
-- Download: [Go to Download Page](https://download.bxirobotics.cn/%E7%94%B5%E6%9C%BAAPP)
+- Download: [Go to Download Page](https://download.bxirobotics.com/%E7%94%B5%E6%9C%BAAPP)
 
 ### Interface Overview (Left Menu)
 

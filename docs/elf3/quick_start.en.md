@@ -1,3 +1,8 @@
+---
+seo_title: "ELF3 Robot Quick Start and Operation Guide"
+description: "Set up and operate the ELF3 humanoid robot with unboxing checks, power controls, gamepad connection, startup and shutdown steps, plus links to safety guidance."
+---
+
 # Operation Guide    
 
 This document contains instructions for unboxing, basic operations, safety precautions, and secondary development for the Genie 3 ELF3 robot.    

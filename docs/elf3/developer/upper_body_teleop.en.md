@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Upper-Body Teleoperation with PICO and IK"
+description: "Configure ELF3 upper-body teleoperation with PICO tracking, dual-arm IK and camera streaming, covering Mod installation, calibration, operation and troubleshooting."
 title: Upper-Body Teleoperation
 ---
 

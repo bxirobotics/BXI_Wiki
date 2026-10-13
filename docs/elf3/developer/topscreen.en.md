@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Head Display: ESP32 and Touch Development"
+description: "Develop the ELF3 head display with its ESP32-S3 hardware, expression rendering, Bluetooth and Wi-Fi communication, and touch interaction for robot status displays."
 title: Top Screen Guide
 ---
 

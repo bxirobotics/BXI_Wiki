@@ -1,3 +1,8 @@
+---
+seo_title: "ELF3 导航 App 教程：雷达配置、建图与导览"
+description: "通过 BXI RC App 为 ELF3 配置 Livox MID-360s 激光雷达，完成网络与 ROS2 环境准备、建图、地图编辑和导览。文档提供操作步骤与配置说明，适用于已安装相应雷达和导航软件的机器人。"
+---
+
 # ELF3 导航 App 使用教程
 
 本文介绍如何为 ELF3 配置 Livox MID-360s 激光雷达，并通过 `bxi_rc_app` 完成建图、地图编辑和导览。

@@ -1,4 +1,6 @@
 ---
+seo_title: "BXI Robot Gripper Features and Specifications"
+description: "Review BXI gripper features, parameter ranges and CAN/CANFD MIT control, including position, speed and gripping-force units for robot end-effector integration."
 title: Gripper Introduction
 ---
 

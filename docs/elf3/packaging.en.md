@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Robot Packing and Transport Preparation"
+description: "Follow the ELF3 packing workflow for lifting, foam placement, accessories and final case checks, with handling precautions before robot transport or storage."
 title: Packaging Instructions
 ---
 

@@ -1,4 +1,6 @@
 ---
+seo_title: "BXI Gripper CAN Protocol and MIT Control Guide"
+description: "Implement BXI gripper CAN communication for 0.3.x and 1.4.x firmware, with IDs, MIT frames, physical units, parameter ranges and feedback for end-effector control."
 title: Gripper Communication Guide
 ---
 

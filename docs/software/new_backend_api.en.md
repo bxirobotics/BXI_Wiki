@@ -1,4 +1,6 @@
 ---
+seo_title: "BXI RC ROS2 API: BLE Binding and Local Control"
+description: "Connect a custom app to BXI RC ROS2 using BLE provisioning, device binding and local-network control APIs, with integration steps independent of the app cloud service."
 title: New Software Backend Interfaces
 ---
 

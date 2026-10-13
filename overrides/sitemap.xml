@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+{%- for locale, files in i18n_alternates.items() %}
+{%- for file in files %}
+{%- if file.page and not file.page.is_link and 'noindex' not in file.page.meta.get('robots', '') %}
+    <url>
+        <loc>{{ file.page.canonical_url | e }}</loc>
+        {%- if file.page.update_date %}
+        <lastmod>{{ file.page.update_date }}</lastmod>
+        {%- endif %}
+        {%- for language, alternate in file.alternates.items() %}
+        {%- if not alternate.page or 'noindex' not in alternate.page.meta.get('robots', '') %}
+        {%- set href = alternate.page.canonical_url if alternate.page and alternate.page.canonical_url else config.site_url ~ alternate.url %}
+        <xhtml:link rel="alternate" hreflang="{{ language }}" href="{{ href | e }}"/>
+        {%- endif %}
+        {%- endfor %}
+    </url>
+{%- endif %}
+{%- endfor %}
+{%- endfor %}
+</urlset>

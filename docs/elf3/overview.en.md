@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Humanoid Robot Specifications and SDK"
+description: "Explore ELF3 dimensions, joint layout, electrical systems, sensors and software support, with specifications for robot selection and ROS2 development planning."
 title: Product Introduction
 ---
 
@@ -44,7 +46,7 @@ ELF 3 is a medium-sized humanoid robot developed in-house by BXI Robotics, stand
 
 ## Full-Body Joint Parameters
 
-Detailed motor specifications can be found in [Joint Actuator Modules](https://wiki.bxirobotics.cn/actuators/Introduction).
+Detailed motor specifications can be found in [Joint Actuator Modules](https://wiki.bxirobotics.com/actuators/Introduction).
 
 | Joint | Motor | Min (rad) | Max (rad) | Peak Torque (Nm) | Peak Speed (rad/s) | Inertia (kg*m^2) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |

@@ -1,3 +1,8 @@
+---
+seo_title: "ELF3 Humanoid Robot Safety and Handling Guide"
+description: "Review ELF3 safety instructions before operation or development, including handling precautions, workspace preparation and requirements for safe robot testing."
+---
+
 # Safety Notice and Safety Guidelines
 
 ## I. Safety Notice

@@ -1,3 +1,8 @@
+---
+seo_title: "BXI 电机上位机使用指南：连接、调试与参数配置"
+description: "使用 BXI 电机上位机与 bxi_usb2can 连接关节电机，了解串口选择、目标设备连接、调试界面、参数配置及软件各功能入口。文档提供操作流程，帮助开发者在控制前确认通信链路和设备状态。"
+---
+
 # BXI电机上位机软件使用指南
 
 ## 一、软件介绍
@@ -8,7 +13,7 @@
 - 图标：<img src="/assets/other/logo.png" alt="logo" width="45" style="display:inline; vertical-align:middle;" />
 - 版本：`Latest`
 - 语言：中文与英文（右上角可切换）
-- 下载链接：[点击跳转下载站](https://download.bxirobotics.cn/%E7%94%B5%E6%9C%BAAPP)
+- 下载链接：[点击跳转下载站](https://download.bxirobotics.com/%E7%94%B5%E6%9C%BAAPP)
 
 ### 界面介绍（左侧菜单）
 

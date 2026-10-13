@@ -1,4 +1,6 @@
 ---
+seo_title: "BXI RC ROS2 后端接口：BLE 绑定与局域网控制"
+description: "自研 App 接入 BXI RC ROS2 的后端接口说明，介绍 BLE Provisioning、凭据与设备绑定、局域网控制及通信流程。文档给出接入顺序和接口细节，帮助开发者建立不依赖 App 云服务的本地控制链路。"
 title: 新版软件后端接口
 ---
 

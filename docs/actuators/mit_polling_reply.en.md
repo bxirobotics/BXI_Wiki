@@ -1,3 +1,8 @@
+---
+seo_title: "BXI MIT Motor Reply Frames and AUX Polling"
+description: "Decode BXI MIT motor replies and AUX polling data, including feedback triggers, frame fields, polling order, status words and conversions from bus values to physical units."
+---
+
 # MIT Polling Reply Guide
 
 This page describes the BXI motor MIT-mode reply frame and the AUX polling reply format enabled by `mit_aux_enable`. After the host sends MIT control frames periodically, the motor returns one status frame for each valid control frame; AUX polling data reuses the last two bytes of that reply frame.

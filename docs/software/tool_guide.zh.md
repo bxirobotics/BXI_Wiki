@@ -1,3 +1,8 @@
+---
+seo_title: "BXI Tool 软件指南：界面导航与 USB-CAN 连接"
+description: "BXI Tool 软件使用指南，介绍中英文界面、下载入口、功能菜单、串口设置与 bxi_usb2can 设备连接流程。了解各软件页面的用途和参数操作方式，再进入具体电机型号与通信协议文档完成调试。"
+---
+
 # BXI Tool 使用指南
 
 ## 一、软件介绍
@@ -8,7 +13,7 @@
 - 图标：<img src="/assets/other/logo.png" alt="logo" width="45" style="display:inline; vertical-align:middle;" />
 - 版本：`Latest`
 - 语言：中文与英文（右上角可切换）
-- 下载链接：[点击跳转下载站](https://download.bxirobotics.cn/%E7%94%B5%E6%9C%BAAPP)
+- 下载链接：[点击跳转下载站](https://download.bxirobotics.com/%E7%94%B5%E6%9C%BAAPP)
 
 ### 界面介绍（左侧菜单）
 

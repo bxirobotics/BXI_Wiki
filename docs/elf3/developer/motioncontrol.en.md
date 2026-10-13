@@ -1,3 +1,8 @@
+---
+seo_title: "ELF3 ROS2 Motion Control Development Guide"
+description: "Develop ELF3 motion control with the ROS2 example stack, startup services and hardware launch workflow, including service management and policy deployment guidance."
+---
+
 # Motion Control Development Guide
 
 This document provides motion control development instructions for the Elf3 robot.

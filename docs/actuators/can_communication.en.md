@@ -1,3 +1,8 @@
+---
+seo_title: "BXI Motor CAN/CANFD and MIT Control Frames"
+description: "Integrate BXI joint motors over CAN or CANFD using MIT control frames, parameter ranges, bit layouts, response formats and broadcast commands for multiple actuators."
+---
+
 # CAN Communication Guide
 
 This document describes the CAN/CANFD communication protocol of the BXI actuator in MIT control mode.

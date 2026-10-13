@@ -1,3 +1,8 @@
+---
+seo_title: "BXI 关节电机 CAN/CANFD 通信与 MIT 控制帧"
+description: "BXI 关节模组 CAN/CANFD 通信说明，涵盖 MIT 主控控制帧、字段布局、参数范围、反馈格式和广播多电机控制。开发者可据此核对总线设置、数据编码与电机响应，完成控制接口对接。"
+---
+
 # CANFD 通信说明
 
 本文档说明 BXI 关节模组在 MIT 控制模式下的 CAN/CANFD 通信协议。

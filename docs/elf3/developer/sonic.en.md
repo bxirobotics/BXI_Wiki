@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 Sonic Full-Body Teleoperation Setup Guide"
+description: "Set up Sonic full-body teleoperation on ELF3 with robot dependencies, PICO trackers and XRoboToolkit networking, including calibration, safe operation and exit steps."
 title: Sonic Full-Body Teleoperation
 ---
 

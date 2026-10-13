@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 人形机器人产品介绍：整机规格与开发平台"
+description: "查阅半醒科技 ELF3 人形机器人的尺寸、重量、31 自由度布局、关节参数、电气系统与传感器配置，了解 PCIE-CANFD 控制架构、ROS2 SDK 和仿真开发环境，为整机选型与二次开发提供技术参考。"
 title: 产品介绍
 ---
 
@@ -46,7 +48,7 @@ title: 产品介绍
 ---
 
 ### 全身关节参数
-详细电机参数 见 [关节电机模组](https://wiki.bxirobotics.cn/actuators/Introduction)      
+详细电机参数 见 [关节电机模组](https://wiki.bxirobotics.com/zh/actuators/Introduction)
 
 
 | 关节 | 电机 | 最小角度 (rad) | 最大角度 (rad) | 峰值扭矩 (Nm) | 峰值速度 (rad/s) | 等效转动惯量 (kg·m²) |

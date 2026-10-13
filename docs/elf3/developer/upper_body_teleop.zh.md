@@ -1,4 +1,6 @@
 ---
+seo_title: "ELF3 半身遥操作：PICO 接入、双臂 IK 与图传"
+description: "ELF3 半身遥操作 Mod 使用指南，涵盖安装启动、PICO 连接校准、Pinocchio 双臂逆运动学、头部相机图传与验收排查。说明基础动作依赖和运行方式，帮助开发者配置上半身动作跟随。"
 title: 半身遥操
 ---
 
