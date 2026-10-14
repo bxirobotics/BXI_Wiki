@@ -123,6 +123,10 @@ Example configuration:
 
 ## 2. Use the Navigation App
 
+!!! warning "Check the head-mounted LiDAR orientation"
+
+    Before entering the mapping or navigation screen, ensure that the robot's head-mounted LiDAR is **pointing vertically downward**.
+
 1. Open `bxi_rc_app` and select **My Devices (我的设备)**.
 
    ![Open My Devices in bxi_rc_app](../../assets/elf3/developer/navigation/open-my-devices.jpg)

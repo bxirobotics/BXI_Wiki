@@ -123,6 +123,10 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
 ## 2. 使用导航 App
 
+!!! warning "注意：确认头部雷达朝向"
+
+    在进入建图或导航界面前，请确保机器人头部雷达**竖直向下**。
+
 1. 打开 `bxi_rc_app`，点击 **我的设备**。
 
    ![在 bxi_rc_app 中打开我的设备](../../assets/elf3/developer/navigation/open-my-devices.jpg)
