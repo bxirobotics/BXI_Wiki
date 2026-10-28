@@ -15,11 +15,11 @@ BXI Robotics 开发者文档中心，基于 **MkDocs Material** 构建，支持�
 1. 在本地编辑或新增 Markdown 文件
 2. `git push` 到 `master` 分支
 
-推送后，GitHub Actions 会通过 SSH 使用 rsync，按内容校验和增量同步 `docs/`、`overrides/`、`hooks/`、`mkdocs.yml`、`requirements.txt` 和 `.git/`。未修改的图片、视频等文件不会重复上传；仓库中删除的文件会从对应目录清理，部署目标目录中的其他文件会保留。完整 Git 历史用于生成作者和更新时间信息。
+推送后，GitHub Actions 会通过 SSH 检查服务器是否支持 rsync。如果支持，就按内容校验和增量同步 `docs/`、`overrides/`、`hooks/`、`mkdocs.yml`、`requirements.txt` 和 `.git/`，跳过未修改的图片、视频等文件。如果不支持，则直接通过 SSH 上传完整压缩包，无需手动登录服务器安装软件。完整 Git 历史用于生成作者和更新时间信息。
 
-同步成功后才执行 `docker compose restart`。同一时间只运行一个发布任务，日志中的 rsync 统计会显示实际传输的文件数和数据量。
+压缩包模式会先在服务器临时目录完整解包，成功后再替换上述发布文件。两种模式都会清理对应目录中的旧文件，并保留部署目标目录中的其他文件。同步成功后才执行 `docker compose restart`。同一时间只运行一个发布任务；日志会显示使用的传输模式，rsync 模式还会输出传输统计。
 
-服务器需要预先安装 `rsync`。流程沿用 `SERVER_HOST`、`SERVER_USER`、`SERVER_SSH_KEY` 和 `SERVER_PORT` 四个 GitHub Actions secrets；未设置端口时使用 `22`。连接或同步失败时，任务会停止，不执行容器重启。
+流程沿用 `SERVER_HOST`、`SERVER_USER`、`SERVER_SSH_KEY` 和 `SERVER_PORT` 四个 GitHub Actions secrets；未设置端口时使用 `22`。服务器无需预先安装 `rsync`，备用模式使用原 SCP 发布流程已依赖的 SSH、tar 和 gzip。连接、上传或解包失败时，任务会停止，不执行容器重启。备用模式仍需全量上传，发布速度取决于资源大小和网络带宽。
 
 ---
 

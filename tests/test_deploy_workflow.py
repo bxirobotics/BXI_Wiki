@@ -1,4 +1,4 @@
-"""Exercise the deployment shell with real rsync and an isolated SSH transport."""
+"""Exercise rsync and archive deployment with an isolated SSH transport."""
 
 import json
 import os
@@ -51,6 +51,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import subprocess
 import sys
 
 args = sys.argv[1:]
@@ -66,7 +67,21 @@ if "--server" in args:
     receiver[-1] = os.environ["TEST_DESTINATION"] + "/"
     os.execv(os.environ["TEST_RSYNC"], ["rsync", *receiver])
 elif "command -v rsync" in args[-1]:
-    sys.exit(1 if os.environ.get("TEST_PREFLIGHT_FAIL") else 0)
+    if os.environ.get("TEST_PREFLIGHT_FAIL"):
+        sys.exit(1)
+    print("archive" if os.environ.get("TEST_NO_REMOTE_RSYNC") else "rsync")
+elif "tar -xzf" in args[-1]:
+    if os.environ.get("TEST_TRANSFER_FAIL"):
+        sys.exit(23)
+    script = args[-1].replace(
+        "/opt/1panel/apps/mkdocs-material/mkdocs-material/data",
+        os.environ["TEST_DESTINATION"],
+    )
+    if os.environ.get("TEST_TRUNCATED_ARCHIVE"):
+        archive = sys.stdin.buffer.read()
+        result = subprocess.run(["sh", "-c", script], input=archive[:len(archive) // 2])
+        sys.exit(result.returncode)
+    os.execv("/bin/sh", ["sh", "-c", script])
 elif "docker compose restart" not in args[-1]:
     raise AssertionError("Unexpected SSH command")
 ''')
@@ -100,6 +115,7 @@ elif "docker compose restart" not in args[-1]:
             text=True, capture_output=True, timeout=20,
         )
         self.assertEqual(list(self.ssh_temp.iterdir()), [], "temporary SSH credentials were not removed")
+        self.assertEqual(list(self.destination.glob(".deploy-*")), [], "remote staging directory was not removed")
         self.assertNotIn("test-private-key", result.stdout + result.stderr)
         calls = [json.loads(line) for line in self.log.read_text().splitlines()]
         return result, calls
@@ -154,6 +170,42 @@ elif "docker compose restart" not in args[-1]:
         result, calls = self.deploy(TEST_TRANSFER_FAIL="1")
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(any("--server" in call for call in calls))
+        self.assertFalse(any("docker compose restart" in call[-1] for call in calls))
+
+    def test_archive_fallback_without_remote_rsync(self):
+        (self.destination / "docs").mkdir()
+        stale = self.destination / "docs/removed.md"
+        stale.write_text("removed from repository")
+        unrelated = self.destination / "runtime-state.txt"
+        unrelated.write_text("preserve server state")
+        result, calls = self.deploy(TEST_NO_REMOTE_RSYNC="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("using a full archive over SSH", result.stdout)
+        self.assertFalse(any("--server" in call for call in calls))
+        self.assertFalse(stale.exists())
+        self.assertEqual(unrelated.read_text(), "preserve server state")
+        for source in self.source.rglob("*"):
+            if source.is_file():
+                self.assertEqual(
+                    (self.destination / source.relative_to(self.source)).read_bytes(),
+                    source.read_bytes(),
+                )
+        self.assertIn("docker compose restart", calls[-1][-1])
+
+    def test_incomplete_archive_keeps_existing_site(self):
+        (self.destination / "docs").mkdir()
+        existing = self.destination / "docs/page.md"
+        existing.write_text("existing published page")
+        result, calls = self.deploy(TEST_NO_REMOTE_RSYNC="1", TEST_TRUNCATED_ARCHIVE="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(existing.read_text(), "existing published page")
+        self.assertFalse((self.destination / ".git").exists())
+        self.assertFalse(any("docker compose restart" in call[-1] for call in calls))
+
+    def test_archive_upload_failure_does_not_restart_container(self):
+        result, calls = self.deploy(TEST_NO_REMOTE_RSYNC="1", TEST_TRANSFER_FAIL="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(list(self.destination.iterdir()), [])
         self.assertFalse(any("docker compose restart" in call[-1] for call in calls))
 
 

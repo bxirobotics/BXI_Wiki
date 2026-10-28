@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Incrementally sync source files and restart MkDocs
+      - name: Sync source files and restart MkDocs
         shell: bash
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
@@ -55,22 +55,56 @@ jobs:
           printf -v rsync_ssh '%q ' ssh "${ssh_options[@]}"
           remote="${SERVER_USER}@${SERVER_HOST}"
 
-          ssh "${ssh_options[@]}" "$remote" '
-            command -v rsync >/dev/null 2>&1 || {
-              echo "Install rsync on the deployment server before deploying." >&2
-              exit 1
-            }
+          sync_mode=$(ssh "${ssh_options[@]}" "$remote" '
+            set -e
             mkdir -p /opt/1panel/apps/mkdocs-material/mkdocs-material/data/
-          '
+            if command -v rsync >/dev/null 2>&1; then
+              printf "rsync\n"
+            else
+              printf "archive\n"
+            fi
+          ')
 
-          # Compare content: checkout timestamps change even for unchanged media.
-          # Named directories scope deletions to content managed by this repository.
-          rsync --archive --no-owner --no-group --checksum --compress \
-            --delete-delay --delay-updates --stats --timeout=120 \
-            --exclude='__pycache__/' --exclude='*.pyc' \
-            --rsh="$rsync_ssh" \
-            docs overrides hooks .git mkdocs.yml requirements.txt \
-            "$remote:/opt/1panel/apps/mkdocs-material/mkdocs-material/data/"
+          case "$sync_mode" in
+            rsync)
+              echo 'Using rsync checksum-based incremental sync.'
+              # Checkout timestamps change even for unchanged media.
+              # Named sources scope deletions to repository-managed directories.
+              rsync --archive --no-owner --no-group --checksum --compress \
+                --delete-delay --delay-updates --stats --timeout=120 \
+                --exclude='__pycache__/' --exclude='*.pyc' \
+                --rsh="$rsync_ssh" \
+                docs overrides hooks .git mkdocs.yml requirements.txt \
+                "$remote:/opt/1panel/apps/mkdocs-material/mkdocs-material/data/"
+              ;;
+            archive)
+              echo 'Remote rsync is unavailable; using a full archive over SSH.'
+              tar -czf "$ssh_dir/site.tar.gz" \
+                --exclude='__pycache__' --exclude='*.pyc' \
+                docs overrides hooks .git mkdocs.yml requirements.txt
+              extract_script=$(cat <<'REMOTE'
+          set -eu
+          target=/opt/1panel/apps/mkdocs-material/mkdocs-material/data
+          stage=$(mktemp -d "$target/.deploy-XXXXXX")
+          trap 'rm -rf -- "$stage"' EXIT
+          tar -xzf - -C "$stage"
+          for path in docs overrides hooks .git mkdocs.yml requirements.txt; do
+            test -e "$stage/$path"
+          done
+          # Replace only managed paths, after the complete archive has been extracted.
+          for path in docs overrides hooks .git mkdocs.yml requirements.txt; do
+            rm -rf -- "$target/$path"
+            mv -- "$stage/$path" "$target/$path"
+          done
+          REMOTE
+              )
+              ssh "${ssh_options[@]}" "$remote" "$extract_script" < "$ssh_dir/site.tar.gz"
+              ;;
+            *)
+              echo 'Unexpected sync mode returned by the deployment server.' >&2
+              exit 1
+              ;;
+          esac
 
           ssh "${ssh_options[@]}" "$remote" '
             cd /opt/1panel/apps/mkdocs-material/mkdocs-material/ &&

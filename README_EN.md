@@ -15,11 +15,11 @@ This repository uses a GitHub Actions pipeline — **no local `mkdocs build` req
 1. Edit or create Markdown files locally
 2. `git push` to the `master` branch
 
-After pushing, GitHub Actions uses rsync over SSH to incrementally sync `docs/`, `overrides/`, `hooks/`, `mkdocs.yml`, `requirements.txt`, and `.git/`, comparing file contents by checksum. Unchanged images, videos, and other files are not uploaded again. Files removed from the repository are deleted from the corresponding directories, while other files in the deployment target are preserved. Full Git history is retained for author and revision-date metadata.
+After pushing, GitHub Actions checks whether the server supports rsync over SSH. If available, it incrementally syncs `docs/`, `overrides/`, `hooks/`, `mkdocs.yml`, `requirements.txt`, and `.git/` by checksum, skipping unchanged images, videos, and other files. Otherwise, it sends a complete archive directly over SSH, without requiring a manual server login or software installation. Full Git history is retained for author and revision-date metadata.
 
-The workflow runs `docker compose restart` only after a successful sync. Only one deployment runs at a time, and the rsync statistics in the logs show the number of files and amount of data transferred.
+Archive mode extracts the complete upload into a temporary directory on the server before replacing the managed files. Both modes remove stale files from the managed directories while preserving unrelated files in the deployment target. The workflow runs `docker compose restart` only after a successful sync. Only one deployment runs at a time. Logs identify the transfer mode and include transfer statistics when using rsync.
 
-The server must have `rsync` installed. The workflow reuses the existing `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`, and `SERVER_PORT` GitHub Actions secrets, defaulting to port `22` when no port is configured. Connection or sync failures stop the job before the container is restarted.
+The workflow reuses the existing `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`, and `SERVER_PORT` GitHub Actions secrets, defaulting to port `22` when no port is configured. The server does not need rsync installed: the fallback uses SSH, tar, and gzip, which the previous SCP deployment already required. Connection, upload, or extraction failures stop the job before the container is restarted. The fallback still uploads the full payload, so its speed depends on asset size and network bandwidth.
 
 ---
 
