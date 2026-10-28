@@ -15,7 +15,11 @@ This repository uses a GitHub Actions pipeline — **no local `mkdocs build` req
 1. Edit or create Markdown files locally
 2. `git push` to the `master` branch
 
-After pushing, GitHub Actions syncs `docs/`, `mkdocs.yml`, and `requirements.txt` to the server via SCP, then runs `docker compose restart` to restart the MkDocs container. The container installs dependencies from `requirements.txt` and renders pages on startup.
+After pushing, GitHub Actions uses rsync over SSH to incrementally sync `docs/`, `overrides/`, `hooks/`, `mkdocs.yml`, `requirements.txt`, and `.git/`, comparing file contents by checksum. Unchanged images, videos, and other files are not uploaded again. Files removed from the repository are deleted from the corresponding directories, while other files in the deployment target are preserved. Full Git history is retained for author and revision-date metadata.
+
+The workflow runs `docker compose restart` only after a successful sync. Only one deployment runs at a time, and the rsync statistics in the logs show the number of files and amount of data transferred.
+
+The server must have `rsync` installed. The workflow reuses the existing `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`, and `SERVER_PORT` GitHub Actions secrets, defaulting to port `22` when no port is configured. Connection or sync failures stop the job before the container is restarted.
 
 ---
 

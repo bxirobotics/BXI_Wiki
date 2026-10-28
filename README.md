@@ -15,7 +15,11 @@ BXI Robotics 开发者文档中心，基于 **MkDocs Material** 构建，支持�
 1. 在本地编辑或新增 Markdown 文件
 2. `git push` 到 `master` 分支
 
-推送后，GitHub Actions 会自动将 `docs/`、`mkdocs.yml`、`requirements.txt` 通过 SCP 同步到服务器，然后执行 `docker compose restart` 重启 MkDocs 容器。容器启动时依据 `requirements.txt` 安装依赖并实时渲染页面。
+推送后，GitHub Actions 会通过 SSH 使用 rsync，按内容校验和增量同步 `docs/`、`overrides/`、`hooks/`、`mkdocs.yml`、`requirements.txt` 和 `.git/`。未修改的图片、视频等文件不会重复上传；仓库中删除的文件会从对应目录清理，部署目标目录中的其他文件会保留。完整 Git 历史用于生成作者和更新时间信息。
+
+同步成功后才执行 `docker compose restart`。同一时间只运行一个发布任务，日志中的 rsync 统计会显示实际传输的文件数和数据量。
+
+服务器需要预先安装 `rsync`。流程沿用 `SERVER_HOST`、`SERVER_USER`、`SERVER_SSH_KEY` 和 `SERVER_PORT` 四个 GitHub Actions secrets；未设置端口时使用 `22`。连接或同步失败时，任务会停止，不执行容器重启。
 
 ---
 

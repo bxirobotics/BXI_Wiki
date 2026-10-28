@@ -5,35 +5,74 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-1panel
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Sync source files to 1Panel server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          source: "docs/,overrides/,hooks/,mkdocs.yml,requirements.txt,.git/"
-          target: /opt/1panel/apps/mkdocs-material/mkdocs-material/data/
-          overwrite: true
-          rm: true
+      - name: Incrementally sync source files and restart MkDocs
+        shell: bash
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          set -euo pipefail
+          : "${SERVER_HOST:?SERVER_HOST is required}"
+          : "${SERVER_USER:?SERVER_USER is required}"
+          : "${SERVER_SSH_KEY:?SERVER_SSH_KEY is required}"
+          port="${SERVER_PORT:-22}"
+          [[ "$port" =~ ^[0-9]+$ ]] || { echo 'SERVER_PORT must be numeric' >&2; exit 1; }
+          command -v rsync >/dev/null
 
-      - name: Restart MkDocs container
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            cd /opt/1panel/apps/mkdocs-material/mkdocs-material/
+          umask 077
+          ssh_dir=$(mktemp -d)
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          printf '%s\n' "$SERVER_SSH_KEY" > "$ssh_dir/key"
+          ssh-keyscan -T 15 -p "$port" "$SERVER_HOST" > "$ssh_dir/known_hosts"
+          ssh_options=(
+            -i "$ssh_dir/key" -p "$port"
+            -o BatchMode=yes -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o "UserKnownHostsFile=$ssh_dir/known_hosts"
+            -o ConnectTimeout=15
+          )
+          printf -v rsync_ssh '%q ' ssh "${ssh_options[@]}"
+          remote="${SERVER_USER}@${SERVER_HOST}"
+
+          ssh "${ssh_options[@]}" "$remote" '
+            command -v rsync >/dev/null 2>&1 || {
+              echo "Install rsync on the deployment server before deploying." >&2
+              exit 1
+            }
+            mkdir -p /opt/1panel/apps/mkdocs-material/mkdocs-material/data/
+          '
+
+          # Compare content: checkout timestamps change even for unchanged media.
+          # Named directories scope deletions to content managed by this repository.
+          rsync --archive --no-owner --no-group --checksum --compress \
+            --delete-delay --delay-updates --stats --timeout=120 \
+            --exclude='__pycache__/' --exclude='*.pyc' \
+            --rsh="$rsync_ssh" \
+            docs overrides hooks .git mkdocs.yml requirements.txt \
+            "$remote:/opt/1panel/apps/mkdocs-material/mkdocs-material/data/"
+
+          ssh "${ssh_options[@]}" "$remote" '
+            cd /opt/1panel/apps/mkdocs-material/mkdocs-material/ &&
             docker compose restart
+          '
