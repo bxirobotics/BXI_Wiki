@@ -110,3 +110,34 @@ jobs:
             cd /opt/1panel/apps/mkdocs-material/mkdocs-material/ &&
             docker compose restart
           '
+
+      - name: Verify public video range requests
+        shell: bash
+        env:
+          VIDEO_CHECK_URL: https://wiki.bxirobotics.com/assets/elf3/developer/navigation/relocalize-robot-demo.mp4
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import time
+          from urllib.request import Request, urlopen
+
+          url = os.environ['VIDEO_CHECK_URL'] + '?deploy=' + os.environ['GITHUB_SHA']
+          for attempt in range(12):
+              try:
+                  request = Request(url, headers={'Range': 'bytes=0-1', 'Cache-Control': 'no-cache'})
+                  with urlopen(request, timeout=10) as response:
+                      status = response.status
+                      content_range = response.headers.get('Content-Range', '')
+                      data = response.read(3)
+                  if status == 206 and re.fullmatch(r'bytes 0-1/[0-9]+', content_range) and len(data) == 2:
+                      print('Public video range check passed: HTTP 206, bytes 0-1.')
+                      break
+                  print(f'Attempt {attempt + 1}: HTTP {status}, Content-Range={content_range!r}, bytes read={len(data)}')
+              except OSError as error:
+                  print(f'Attempt {attempt + 1}: {error}')
+              if attempt < 11:
+                  time.sleep(5)
+          else:
+              raise SystemExit('Video range check failed. Check the MkDocs startup hook and the ESA/CDN Range forwarding settings.')
+          PY

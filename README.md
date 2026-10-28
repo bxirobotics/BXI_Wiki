@@ -19,6 +19,8 @@ BXI Robotics 开发者文档中心，基于 **MkDocs Material** 构建，支持�
 
 压缩包模式会先在服务器临时目录完整解包，成功后再替换上述发布文件。两种模式都会清理对应目录中的旧文件，并保留部署目标目录中的其他文件。同步成功后才执行 `docker compose restart`。同一时间只运行一个发布任务；日志会显示使用的传输模式，rsync 模式还会输出传输统计。
 
+重启后，流程会等待公开视频地址返回正确的 `206 Partial Content` 分段响应。检测失败时，发布任务会报告错误，以便排查服务启动配置或 ESA/CDN 的 Range 回源设置。
+
 流程沿用 `SERVER_HOST`、`SERVER_USER`、`SERVER_SSH_KEY` 和 `SERVER_PORT` 四个 GitHub Actions secrets；未设置端口时使用 `22`。服务器无需预先安装 `rsync`，备用模式使用原 SCP 发布流程已依赖的 SSH、tar 和 gzip。连接、上传或解包失败时，任务会停止，不执行容器重启。备用模式仍需全量上传，发布速度取决于资源大小和网络带宽。
 
 ---
@@ -39,7 +41,7 @@ mkdocs serve --livereload
 
 访问 `http://127.0.0.1:8000` 即可实时预览。
 
-请保留 `--livereload`，以启用自动刷新和本地视频分段读取支持，确保视频进度可以拖动。
+`--livereload` 用于启用自动刷新。视频分段读取会在服务启动时启用，也支持关闭自动刷新的服务器启动方式（`--no-livereload`）和 `--clean` 模式，无需额外修改服务器启动参数。
 
 ---
 

@@ -1,9 +1,13 @@
 import io
+from pathlib import Path
+import tempfile
 import unittest
-from types import SimpleNamespace
+from unittest.mock import patch
 from wsgiref.util import FileWrapper
 
-from hooks.video_ranges import on_serve
+from mkdocs.livereload import LiveReloadServer
+
+from hooks import video_ranges
 
 
 class VideoRangeTests(unittest.TestCase):
@@ -11,11 +15,7 @@ class VideoRangeTests(unittest.TestCase):
         self.data = bytes(range(256)) * 1024
         self.content_type = "video/mp4"
         self.status = "200 OK"
-        self.server = SimpleNamespace(get_app=lambda: self.app, set_app=self.install)
-        self.assertIs(on_serve(self.server, None, None), self.server)
-
-    def install(self, app):
-        self.wrapped_app = app
+        self.wrapped_app = video_ranges._with_video_ranges(self.app)
 
     def app(self, environ, start_response):
         self.stream = io.BytesIO(self.data)
@@ -125,6 +125,58 @@ class VideoRangeTests(unittest.TestCase):
         self.assertEqual(next(body), self.data[100:100 + 64 * 1024])
         body.close()
         self.assertTrue(self.stream.closed)
+
+
+class VideoRangeStartupTests(unittest.TestCase):
+    def setUp(self):
+        self.original = LiveReloadServer.serve_request
+        self.addCleanup(video_ranges.on_shutdown)
+
+    def test_ranges_without_live_reload_including_clean_serve(self):
+        for command in ("serve", "build"):
+            with self.subTest(command=command), tempfile.TemporaryDirectory() as root:
+                Path(root, "video.mp4").write_bytes(b"0123456789")
+                Path(root, "index.html").write_text("<html><body>Preview</body></html>")
+                video_ranges.on_startup(command=command, dirty=False)
+                # Exercise the actual MkDocs WSGI app without opening a socket.
+                with patch("socket.socket"):
+                    server = LiveReloadServer(lambda: None, "127.0.0.1", 0, root)
+                self.assertFalse(server._watched_paths)
+                response = {}
+
+                def start_response(status, headers, exc_info=None):
+                    response.update(status=status, headers=dict(headers))
+
+                body = server.get_app()(
+                    {"PATH_INFO": "/video.mp4", "REQUEST_METHOD": "GET", "HTTP_RANGE": "bytes=3-5"},
+                    start_response,
+                )
+                self.assertEqual(b"".join(body), b"345")
+                self.assertEqual(response["status"], "206 Partial Content")
+                self.assertEqual(response["headers"]["Content-Range"], "bytes 3-5/10")
+                self.assertEqual(response["headers"]["Content-Length"], "3")
+
+                body = server.get_app()(
+                    {"PATH_INFO": "/", "REQUEST_METHOD": "GET"}, start_response,
+                )
+                try:
+                    self.assertEqual(b"".join(body), b"<html><body>Preview</body></html>")
+                finally:
+                    body.close()
+                self.assertEqual(response["status"], "200 OK")
+                server.server_close()
+                video_ranges.on_shutdown()
+                self.assertIs(LiveReloadServer.serve_request, self.original)
+
+    def test_startup_is_idempotent_and_shutdown_restores_server(self):
+        video_ranges.on_startup(command="serve", dirty=False)
+        patched = LiveReloadServer.serve_request
+        video_ranges.on_startup(command="serve", dirty=False)
+        self.assertIs(LiveReloadServer.serve_request, patched)
+        video_ranges.on_shutdown()
+        self.assertIs(LiveReloadServer.serve_request, self.original)
+        video_ranges.on_shutdown()
+        self.assertIs(LiveReloadServer.serve_request, self.original)
 
 
 if __name__ == "__main__":

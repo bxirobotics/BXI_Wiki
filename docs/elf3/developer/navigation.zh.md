@@ -19,7 +19,7 @@ description: "通过 BXI RC App 为 ELF3 配置 Livox MID-360s 激光雷达，�
 
 ## 1. 配置 Livox MID-360s 雷达
 
-雷达无法启动时，通常是网络或雷达配置不正确。请先确认电脑与雷达处于同一网段，再检查配置文件。
+雷达无法启动时，通常是网络或雷达配置不正确。请先确认电脑与雷达处于同一网段，再检查 App 中的雷达网络配置。
 
 ### 1.1 配置静态 IP
 
@@ -29,78 +29,33 @@ description: "通过 BXI RC App 为 ELF3 配置 Livox MID-360s 激光雷达，�
 
 ![将网口设置为静态 IP](../../assets/elf3/developer/navigation/static-ip-configuration.png)
 
-### 1.2 修改雷达配置文件
+### 1.2 在 App 中配置雷达
 
-配置文件路径：
+1. 打开 `bxi_rc_app`，连接机器人后，在机器人详情页点击 **地图管理**，再点击 **新建地图** 进入建图页面。
 
-```text
-bxi_rc_slam/src/livox_ros_driver2/config/MID360s_config.json
-```
+    ![在机器人详情页进入地图管理](../../assets/elf3/developer/navigation/lidar-config-map-management.jpg)
 
-重点检查以下字段：
+2. 点击建图页面右上角的 **设置** 图标（下图红圈处）。
 
-- `host_ip`：电脑网口的静态 IP，例如 `192.168.1.51`。
-- `ip`：雷达 IP。MID-360s 的地址通常为 `192.168.1.1xx`，末尾两位可参考雷达机身二维码下方的数字。
+    ![打开建图页面右上角的设置](../../assets/elf3/developer/navigation/lidar-config-settings-entry.jpg)
 
-如果无法查看机身信息，可在电脑与雷达处于同一网段后运行：
+3. 在设置页面选择 **雷达**。在 **可用网卡地址** 中，点击与雷达相连的机器人网卡，将其地址填入 **机器人接收 IP**。
 
-```bash
-ros2 launch livox_ros_driver2 msg_MID360s_launch.py
-```
+    下图中的有线网卡为 `enp86s0`，接收 IP 为 `192.168.1.52`。请以实际网卡地址为准，不要直接照抄示例，也不要将接收 IP 与雷达 IP 混淆。
 
-从程序输出中确认雷达 IP，再填写到配置文件中。
+    ![选择与雷达相连的网卡并填写机器人接收 IP](../../assets/elf3/developer/navigation/lidar-config-receive-ip.jpg)
 
-配置示例：
+4. 点击 **搜索雷达**，在搜索结果中选择对应的雷达，将地址填入 **雷达 IP**。如果已知雷达的实际 IP，也可以手动填写。
 
-```json
-{
-  "lidar_summary_info": {
-    "lidar_type": 8
-  },
-  "Mid360s": {
-    "lidar_net_info": {
-      "cmd_data_port": 56100,
-      "push_msg_port": 56200,
-      "point_data_port": 56300,
-      "imu_data_port": 56400,
-      "log_data_port": 56500
-    },
-    "host_net_info": [
-      {
-        "host_ip": "192.168.1.51",
-        "cmd_data_port": 56101,
-        "push_msg_port": 56201,
-        "point_data_port": 56301,
-        "imu_data_port": 56401,
-        "log_data_port": 56501
-      }
-    ]
-  },
-  "lidar_configs": [
-    {
-      "ip": "192.168.1.128",
-      "pcl_data_type": 1,
-      "pattern_mode": 0,
-      "extrinsic_parameter": {
-        "roll": 0.0,
-        "pitch": 0.0,
-        "yaw": 0.0,
-        "x": 0,
-        "y": 0,
-        "z": 0
-      }
-    }
-  ]
-}
-```
+    下图中搜索到的 MID360S 雷达 IP 为 `192.168.1.100`，请以实际搜索结果为准。
 
-!!! warning "修改配置后需要重新编译"
+    ![搜索雷达并将设备地址填入雷达 IP](../../assets/elf3/developer/navigation/lidar-config-search-result.jpg)
 
-    保存配置后，请进入包含 `install.sh` 的工程目录，并使用 root 权限重新编译安装：
+5. 确认 **机器人接收 IP** 和 **雷达 IP** 无误后，点击 **保存配置**。等待保存成功的提示，再重启机器人。
 
-    ```bash
-    sudo /opt/bxi/bxi_rc_slam/install.sh
-    ```
+6. 重启完成后，重新连接机器人并返回建图页面。确认头部雷达竖直向下、机身保持稳定后，点击顶部的 **开始**。界面中出现红色点云，说明已正常接收到雷达数据，雷达配置完成。
+
+    ![启动建图后显示红色点云，确认雷达数据接收正常](../../assets/elf3/developer/navigation/lidar-config-point-cloud.jpg)
 
 ## 2. 使用导航 App
 
@@ -236,8 +191,9 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 ### 雷达无法启动
 
 - 确认电脑与雷达使用网线连接，并处于同一网段。
-- 确认 `host_ip` 与电脑网口的静态 IP 一致。
-- 确认 `ip` 与雷达实际 IP 一致。
+- 确认 App 中的 **机器人接收 IP** 与机器人上连接雷达的网卡 IP 一致。
+- 确认 **雷达 IP** 与搜索到的雷达实际 IP 一致，且与接收 IP 处于同一网段。
+- 确认配置已保存成功，并已重启机器人。
 
 ### 地图中出现人员或动态障碍物
 

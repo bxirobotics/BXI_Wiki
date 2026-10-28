@@ -19,7 +19,7 @@ Reference project: [bxi_nav](https://github.com/Luckyt1/bxi_nav)
 
 ## 1. Configure the Livox MID-360s LiDAR
 
-If the LiDAR does not start, the network or device configuration is usually incorrect. First confirm that the computer and LiDAR are on the same subnet, then check the configuration file.
+If the LiDAR does not start, the network or device configuration is usually incorrect. First confirm that the computer and LiDAR are on the same subnet, then check the LiDAR network settings in the app.
 
 ### 1.1 Configure a Static IP Address
 
@@ -29,78 +29,33 @@ Set the computer's Ethernet interface to a static IP address, such as `192.168.1
 
 ![Configure a static IP address for the Ethernet interface](../../assets/elf3/developer/navigation/static-ip-configuration.png)
 
-### 1.2 Update the LiDAR Configuration File
+### 1.2 Configure the LiDAR in the App
 
-Configuration file path:
+1. Open `bxi_rc_app` and connect to the robot. On the robot details page, select **Map Management (地图管理)**, then **New Map (新建地图)** to open the mapping screen.
 
-```text
-bxi_rc_slam/src/livox_ros_driver2/config/MID360s_config.json
-```
+    ![Open Map Management from the robot details page](../../assets/elf3/developer/navigation/lidar-config-map-management.jpg)
 
-Check the following fields:
+2. Select the **Settings** icon in the upper-right corner of the mapping screen, circled in red below.
 
-- `host_ip`: the static IP address of the computer's Ethernet interface, such as `192.168.1.51`.
-- `ip`: the LiDAR IP address. A MID-360s address is typically in the `192.168.1.1xx` range. The final two digits may be printed below the QR code on the LiDAR housing.
+    ![Open Settings in the upper-right corner of the mapping screen](../../assets/elf3/developer/navigation/lidar-config-settings-entry.jpg)
 
-If the label is difficult to read, place the computer and LiDAR on the same subnet and run:
+3. Select **LiDAR (雷达)** on the Settings page. Under **Available Network Interface Addresses (可用网卡地址)**, select the robot's network interface connected to the LiDAR to fill in **Robot Receive IP (机器人接收 IP)**.
 
-```bash
-ros2 launch livox_ros_driver2 msg_MID360s_launch.py
-```
+    The screenshot shows the Ethernet interface `enp86s0` with a receive IP of `192.168.1.52`. Use the actual interface address rather than copying the example, and keep the receive IP distinct from the LiDAR IP.
 
-Identify the LiDAR IP address in the program output, then enter it in the configuration file.
+    ![Select the network interface connected to the LiDAR and fill in the robot receive IP](../../assets/elf3/developer/navigation/lidar-config-receive-ip.jpg)
 
-Example configuration:
+4. Select **Search for LiDAR (搜索雷达)**, then select the matching device in the results to fill in **LiDAR IP (雷达 IP)**. You can also enter the address manually if you already know the LiDAR's actual IP.
 
-```json
-{
-  "lidar_summary_info": {
-    "lidar_type": 8
-  },
-  "Mid360s": {
-    "lidar_net_info": {
-      "cmd_data_port": 56100,
-      "push_msg_port": 56200,
-      "point_data_port": 56300,
-      "imu_data_port": 56400,
-      "log_data_port": 56500
-    },
-    "host_net_info": [
-      {
-        "host_ip": "192.168.1.51",
-        "cmd_data_port": 56101,
-        "push_msg_port": 56201,
-        "point_data_port": 56301,
-        "imu_data_port": 56401,
-        "log_data_port": 56501
-      }
-    ]
-  },
-  "lidar_configs": [
-    {
-      "ip": "192.168.1.128",
-      "pcl_data_type": 1,
-      "pattern_mode": 0,
-      "extrinsic_parameter": {
-        "roll": 0.0,
-        "pitch": 0.0,
-        "yaw": 0.0,
-        "x": 0,
-        "y": 0,
-        "z": 0
-      }
-    }
-  ]
-}
-```
+    The MID360S in the screenshot has the IP address `192.168.1.100`. Use the address from your actual search results.
 
-!!! warning "Rebuild after changing the configuration"
+    ![Search for the LiDAR and fill in its IP address](../../assets/elf3/developer/navigation/lidar-config-search-result.jpg)
 
-    After saving the configuration, enter the project directory containing `install.sh` and rebuild the installation with root privileges:
+5. Check that **Robot Receive IP (机器人接收 IP)** and **LiDAR IP (雷达 IP)** are correct, then select **Save Configuration (保存配置)**. Wait for confirmation that the configuration has been saved, then restart the robot.
 
-    ```bash
-    sudo /opt/bxi/bxi_rc_slam/install.sh
-    ```
+6. After the restart, reconnect to the robot and return to the mapping screen. Make sure the head-mounted LiDAR points vertically downward and the robot remains stable, then select **Start (开始)** at the top. A red point cloud indicates that LiDAR data is being received correctly and the LiDAR configuration is complete.
+
+    ![A red point cloud after starting mapping confirms that LiDAR data is being received](../../assets/elf3/developer/navigation/lidar-config-point-cloud.jpg)
 
 ## 2. Use the Navigation App
 
@@ -236,8 +191,9 @@ After changing the ranges, test the robot at low speed in a clear, safe area. In
 ### The LiDAR Does Not Start
 
 - Confirm that the computer and LiDAR are connected by Ethernet and are on the same subnet.
-- Confirm that `host_ip` matches the static IP address of the computer's Ethernet interface.
-- Confirm that `ip` matches the actual LiDAR IP address.
+- Confirm that **Robot Receive IP (机器人接收 IP)** in the app matches the IP address of the robot's network interface connected to the LiDAR.
+- Confirm that **LiDAR IP (雷达 IP)** matches the device address found in the search and is on the same subnet as the receive IP.
+- Confirm that the configuration was saved successfully and the robot has been restarted.
 
 ### People or Dynamic Obstacles Appear on the Map
 

@@ -1,6 +1,8 @@
 """Exercise rsync and archive deployment with an isolated SSH transport."""
 
 import json
+import io
+from contextlib import redirect_stdout
 import os
 from pathlib import Path
 import re
@@ -9,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import yaml
 
@@ -207,6 +210,33 @@ elif "docker compose restart" not in args[-1]:
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(list(self.destination.iterdir()), [])
         self.assertFalse(any("docker compose restart" in call[-1] for call in calls))
+
+
+class PublicVideoCheckTests(unittest.TestCase):
+    def setUp(self):
+        workflow = yaml.safe_load(WORKFLOW.read_text())
+        step = next(step for step in workflow['jobs']['deploy']['steps'] if step['name'] == 'Verify public video range requests')
+        self.script = step['run'].split("<<'PY'\n", 1)[1].rsplit('\nPY', 1)[0]
+
+    def check(self, status, content_range, body):
+        def response(*args, **kwargs):
+            stream = io.BytesIO(body)
+            stream.status = status
+            stream.headers = {'Content-Range': content_range}
+            return stream
+
+        with patch.dict(os.environ, {'VIDEO_CHECK_URL': 'https://example.invalid/video.mp4', 'GITHUB_SHA': 'test'}):
+            with patch('urllib.request.urlopen', side_effect=response), patch('time.sleep'), redirect_stdout(io.StringIO()):
+                exec(compile(self.script, '<video-range-check>', 'exec'), {})
+
+    def test_accepts_valid_partial_response(self):
+        self.check(206, 'bytes 0-1/100', b'01')
+
+    def test_rejects_full_or_invalid_partial_responses(self):
+        for status, content_range, body in ((200, '', b'012'), (206, 'bytes 2-3/100', b'23'), (206, 'bytes 0-1/100', b'0')):
+            with self.subTest(status=status, content_range=content_range, body=body):
+                with self.assertRaisesRegex(SystemExit, 'Video range check failed'):
+                    self.check(status, content_range, body)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,8 @@ After pushing, GitHub Actions checks whether the server supports rsync over SSH.
 
 Archive mode extracts the complete upload into a temporary directory on the server before replacing the managed files. Both modes remove stale files from the managed directories while preserving unrelated files in the deployment target. The workflow runs `docker compose restart` only after a successful sync. Only one deployment runs at a time. Logs identify the transfer mode and include transfer statistics when using rsync.
 
+After restarting, the workflow waits for the public video URL to return a valid `206 Partial Content` range response. A failed check marks the deployment job as failed so that the server startup configuration or ESA/CDN Range forwarding settings can be investigated.
+
 The workflow reuses the existing `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`, and `SERVER_PORT` GitHub Actions secrets, defaulting to port `22` when no port is configured. The server does not need rsync installed: the fallback uses SSH, tar, and gzip, which the previous SCP deployment already required. Connection, upload, or extraction failures stop the job before the container is restarted. The fallback still uploads the full payload, so its speed depends on asset size and network bandwidth.
 
 ---
@@ -39,7 +41,7 @@ mkdocs serve --livereload
 
 Visit `http://127.0.0.1:8000` for a live preview.
 
-Keep `--livereload` enabled for automatic refresh and local video byte-range support, so the video seek bar works.
+`--livereload` enables automatic refresh. Video byte-range support is enabled at server startup, including `--no-livereload` and `--clean` modes, without requiring changes to the server's startup arguments.
 
 ---
 

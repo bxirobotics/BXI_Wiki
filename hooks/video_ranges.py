@@ -3,6 +3,11 @@
 import re
 from wsgiref.util import FileWrapper
 
+from mkdocs.livereload import LiveReloadServer
+
+
+_original_serve_request = None
+
 
 def _range_bounds(value, size):
     """Return a half-open byte interval, or ignore unsupported/invalid ranges."""
@@ -84,7 +89,26 @@ def _with_video_ranges(app):
     return serve
 
 
-def on_serve(server, config, builder, **kwargs):
-    # Use the existing app so path checks, rebuild waiting and live reload stay intact.
-    server.set_app(_with_video_ranges(server.get_app()))
-    return server
+def on_startup(**kwargs):
+    """Enable ranges even when serve disables live reload or uses --clean."""
+    global _original_serve_request
+    if _original_serve_request is not None:
+        return
+
+    original = LiveReloadServer.serve_request
+
+    def serve_request(server, environ, start_response):
+        app = original.__get__(server, type(server))
+        return _with_video_ranges(app)(environ, start_response)
+
+    # on_serve is skipped with --no-livereload. Startup runs before the server
+    # captures this method as its WSGI app, including serve --clean (command=build).
+    _original_serve_request = original
+    LiveReloadServer.serve_request = serve_request
+
+
+def on_shutdown():
+    global _original_serve_request
+    if _original_serve_request is not None:
+        LiveReloadServer.serve_request = _original_serve_request
+        _original_serve_request = None
