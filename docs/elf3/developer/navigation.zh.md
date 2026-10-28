@@ -13,28 +13,9 @@ description: "通过 BXI RC App 为 ELF3 配置 Livox MID-360s 激光雷达，�
 
 - 安装最新版 `bxi_rc_app`。
 - 准备一台已安装 Livox MID-360s 激光雷达的 ELF3 机器人。
-- 确保 `bxi_rc_slam` 包已更新至最新版本。
+- 确保 `bxi_rc_slam` 和 `bxi_rc_ros2`包已更新至最新版本。(注意最好先更新bxi_rc_ros2 来保证环境完整)
 - 使用网线连接电脑与雷达。
-- 确保作业区域安全、通道畅通，并尽量减少人员走动。
-
-## 环境准备
-
-本教程基于 Ubuntu 22.04 和 ROS 2 Humble。开始配置前，请先加载已安装 Navigation2 的 ROS 2 环境，并安装点云转激光扫描工具：
-
-```bash
-source /opt/ros/humble/setup.bash
-sudo apt update
-sudo apt install -y ros-humble-pointcloud-to-laserscan
-```
-
-安装完成后，可运行以下命令确认相关软件包已正确安装：
-
-```bash
-ros2 pkg prefix nav2_bringup
-ros2 pkg prefix pointcloud_to_laserscan
-```
-
-如果命令能输出软件包的安装路径，说明环境准备完成。
+- 确保作业区域安全、通道畅通。
 
 ## 1. 配置 Livox MID-360s 雷达
 
@@ -145,6 +126,10 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
     请将机器人头部摆正并保持机身稳定，避免大幅晃动导致 IMU 初始化异常。
 
+建图全流程演示：
+
+![type:video](../../assets/elf3/developer/navigation/mapping-workflow-demo.mp4 "建图全流程演示")
+
 1. 进入 **地图管理**，点击 **新建地图**。
 
    ![在地图管理页新建地图](../../assets/elf3/developer/navigation/create-map.jpg)
@@ -153,13 +138,21 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
    ![确认点云后开始建图](../../assets/elf3/developer/navigation/mapping-in-progress.jpg)
 
-3. 站在机器人后方遥控机器人遍历目标区域，避免建图人员被扫描进地图。建图期间尽量减少现场人员走动。
+3. 建图时，请站在机器人后方，遥控机器人遍历目标区域，并尽量减少现场人员走动，避免人员被扫描进地图。
+
+    新版本已支持动态障碍物过滤。若人员或其他动态障碍物被扫描进地图，待其离开后，遥控机器人重新扫描受影响区域，以过滤地图中的动态障碍物残留。
 
 4. 地图覆盖目标区域后，点击 **保存**。等待界面确认地图保存成功，再退出建图页面。
 
    ![完成建图并保存地图](../../assets/elf3/developer/navigation/mapping-complete.jpg)
 
+   ![type:video](../../assets/elf3/developer/navigation/save-map-demo.mp4 "保存地图操作演示")
+
 ### 2.2 编辑地图
+
+导览编辑演示：
+
+![type:video](../../assets/elf3/developer/navigation/tour-editing-demo.mp4 "导览编辑操作演示")
 
 1. 在 **地图管理** 中选择刚刚保存的地图。
 
@@ -199,9 +192,15 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
    ![选择地图并开始导览](../../assets/elf3/developer/navigation/select-navigation-map.jpg)
 
-3. 点击 **重定位**。在地图上点击机器人的大致位置，并沿机器人当前朝向拖动定位标记。
+3. 点击 **重定位**，支持自动和手动两种方式。可先使用自动重定位；如果长时间无法完成定位，请切换为手动重定位，在地图上点击机器人的大致位置，并沿机器人当前朝向拖动定位标记。
 
-   ![type:video](../../assets/elf3/developer/navigation/relocalize-robot-demo.mp4 "机器人重定位操作演示")
+   自动重定位演示：
+
+   ![type:video](../../assets/elf3/developer/navigation/auto-relocalize-demo.mp4 "机器人自动重定位操作演示")
+
+   手动重定位演示：
+
+   ![type:video](../../assets/elf3/developer/navigation/relocalize-robot-demo.mp4 "机器人手动重定位操作演示")
 
 4. 检查机器人周围的红色点云是否与地图墙壁重合。重合后点击 **确认**；如果偏差明显，请重新调整位置和方向。
 
@@ -244,6 +243,7 @@ ros2 launch livox_ros_driver2 msg_MID360s_launch.py
 
 - 建图人员应始终站在机器人后方。
 - 建图期间减少现场人员走动。
+- 若人员或动态障碍物已被扫描进地图，待其离开后，遥控机器人重新扫描受影响区域，利用新版本的动态障碍物过滤功能清除残留。
 - 对实际已不存在的障碍物，可在地图编辑中添加清除区。
 
 ### 重定位后点云与墙壁不重合

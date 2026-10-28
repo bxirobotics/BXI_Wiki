@@ -90,6 +90,7 @@ plugins:
 
 hooks:
   - hooks/redirect_empty_sections.py
+  - hooks/video_ranges.py
 
 markdown_extensions:
   - admonition

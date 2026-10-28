@@ -30,10 +30,12 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # Start local preview server
-mkdocs serve
+mkdocs serve --livereload
 ```
 
 Visit `http://127.0.0.1:8000` for a live preview.
+
+Keep `--livereload` enabled for automatic refresh and local video byte-range support, so the video seek bar works.
 
 ---
 

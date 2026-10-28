@@ -30,10 +30,12 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 # 启动本地预览服务器
-mkdocs serve
+mkdocs serve --livereload
 ```
 
 访问 `http://127.0.0.1:8000` 即可实时预览。
+
+请保留 `--livereload`，以启用自动刷新和本地视频分段读取支持，确保视频进度可以拖动。
 
 ---
 
