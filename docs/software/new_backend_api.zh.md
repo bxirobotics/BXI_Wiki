@@ -434,6 +434,10 @@ nav.reloc_required
 
 通过控制 WS 的 `nav.status.payload.state` 读取当前导航状态。该字段的名称和类型不变，成功到达继续使用 `succeeded`。
 
+导航失败时，`nav.status.payload` 可附带 `error_code`：`planning_failed` 表示未能生成可行路径，`execution_failed` 表示路径跟随执行失败。字段缺失或值未知时显示通用导航失败，不能默认判为规划失败。细分原因可能晚于第一次 `failed` 到达，客户端应继续更新失败说明，而不是忽略同一状态的后续帧；`blocked` 本身不是失败。
+
+巡游的 HTTP 状态及 `nav.tour.status.payload.error_code` 使用 `planning_failed:<waypoint_id>`、`execution_failed:<waypoint_id>`，旧版本仍可能返回 `navigation_failed:<waypoint_id>`。这三类均可重试当前航点。`current_idx` 从 0 开始，表示当前/失败航点，不是已完成数量；例如 `current_idx=11,total=12,state=error` 表示第 12 个航点失败，不能显示“已完成 12/12”。只有 `state=finished` 表示整条巡游完成。
+
 | `state` | 含义 |
 |---|---|
 | `idle` | 当前没有导航任务 |
@@ -506,11 +510,13 @@ Nav2 按实际阻塞起止时间累计扣除等待，阻塞与解除交替出现
 | POST | `/api/v1/pairing/session` | 创建 60 秒加密配对会话；无需 HTTP HMAC |
 | POST | `/api/v1/pairing/bind` | 在配对会话内提交加密绑定载荷 |
 | DELETE | `/api/v1/pairing/binding` | 在配对会话内提交加密 owner 解绑证明 |
-| GET | `/api/v1/ota/releases?robot=ELF3` | OTA 目录 |
+| GET | `/api/v1/ota/releases` | OTA 目录；型号由机器人服务端确定 |
 | GET | `/api/v1/ota/status` | OTA 状态 |
-| POST | `/api/v1/ota/start` | `{robot,version,reboot_after,package_names?}` |
+| POST | `/api/v1/ota/start` | `{version,reboot_after?,package_names?}`；App 显式传 `reboot_after:false` |
 | POST | `/api/v1/ota/reboot/precheck` | 重启前检查 |
-| POST | `/api/v1/ota/reboot` | `{robot}` 重启 |
+| POST | `/api/v1/ota/reboot` | 调度机器人重启 |
+| GET/PUT | `/api/v1/lidar/config` | 读取/保存雷达和机器人接收 IP，见第 5.3.2 节 |
+| POST | `/api/v1/lidar/discover` | `{host_ip}` 搜索该接收网卡上的 Livox SDK2 雷达 |
 | GET | `/api/v1/maps` | 地图列表 |
 | GET | `/api/v1/maps/{id}` | 完整地图 |
 | GET | `/api/v1/maps/{id}/thumbnail.png` | 缩略图 |
@@ -620,6 +626,26 @@ HMAC(deviceKey, "wifi-unbind-v1|" || session_id || "|" || sn)
 
 会话有效期为 60 秒；执行一次 `bind` 或 `binding` 请求后即被消费，不能重放。
 
+#### 5.3.2 雷达网络配置与搜索
+
+这些接口使用 HTTP v2 HMAC。读取和搜索不依赖 SLAM 或 ROS 正常运行；旧固件返回 404 时，应提示升级后端。
+
+`GET /api/v1/lidar/config` 返回 `status`、`lidar_ip`、`host_ip`、`host_interfaces`、`restart_required` 和 `config_source`。`host_interfaces` 的条目为 `{name,ipv4}`。
+
+`PUT /api/v1/lidar/config` 的 body 必须恰好包含两个字段：
+
+```json
+{"lidar_ip":"192.168.1.199","host_ip":"192.168.1.52"}
+```
+
+两个地址必须是不同的 IPv4 单播地址；`host_ip` 必须已配置在机器人网卡上。此接口只修改机器人端连接配置，不给网卡设置 IP，也不改写雷达设备自身的地址。保存后返回 HTTP 200，`restart_required=true`，由用户重启机器人生效。
+
+配置写入 `/etc/bxi/livox/MID360s_config.json`，不在 OTA 替换目录内。该文件存在时优先读取；不存在时使用 SLAM 包内默认 JSON，持久文件损坏时报告错误。只更新单雷达 IP 和单主机接收 IP，保留 JSON 其他字段；多雷达/多主机配置暂不支持编辑。若 `BXI_LIVOX_CONFIG_PATH` 指向另一文件，接口返回 409 `lidar.config_override`，应先统一配置来源。
+
+`POST /api/v1/lidar/discover` 接收 `{"host_ip":"192.168.1.52"}`，在唯一匹配的网卡搜索约 4 秒。成功响应包含 `status`、`host_ip`、`interface`、`devices`；每个设备为 `{ip,sn,device_type,model}`。未找到设备时 `devices=[]`，最多返回 64 台去重结果。搜索不会修改或保存配置，不重启驱动；选中发现结果后仍须 PUT 保存并按提示重启。
+
+错误体为 `{"status":"error","code":"lidar.…","message":"…"}`：无效请求/IP/未配置的接收地址返回 400，不支持的结构或配置覆盖返回 409，配置读写或网卡查询失败返回 503。并发搜索返回 409 `lidar.discovery_busy`，同一接收 IP 匹配多张网卡返回 409 `lidar.ambiguous_interface`，套接字不可用返回 503 `lidar.discovery_unavailable`。搜索使用 Livox SDK2 协议，不涵盖旧 SDK1 设备；发现成功也不等于点云链路已验证。
+
 ### 5.4 BLE Control GATT
 
 | 服务/特征 | UUID 尾号 | 属性 | 用途 |
@@ -693,6 +719,60 @@ ros2 topic pub --once /tts/say std_msgs/msg/String \
 ```
 
 `voice` 省略时按 `female` 处理；导览语音动作当前固定使用 `speed=1.0`。
+
+### 5.6 运行配置与 OTA 配置保留
+
+本节对应 RC `v261031` 及之后沿用该策略的版本。主要运行配置为 `/opt/bxi/bxi_rc_ros2/env.conf`；“升级保留配置”表示默认保留设备现有值，不表示禁止用户修改，也不表示全部包内配置都不会更新。
+
+| 配置位置 | 升级行为 |
+|---|---|
+| RC 的 `env.conf` | 默认整份保留，包括 DDS、后端地址、密钥、日志开关和自定义下载源；不会自动补齐新配置项 |
+| `/etc/bxi/livox/MID360s_config.json` | 持久雷达配置不随 OTA 包目录替换；旧设备仍用包内 JSON 时，自动 OTA 和手动恢复保留雷达 IP、主机接收 IP，其余字段使用新包配置 |
+| 外部参数 YAML / DDS XML | 放在 OTA 包目录之外时文件不被替换；`env.conf` 中引用它们的路径默认保留 |
+| 包内 `gateway_params.yaml`、SLAM 算法配置等 | 随新包更新，不属于整份保留范围；需要持久覆盖的网关参数应使用外部 YAML |
+| `/etc/tmpfiles.d/bxi-log-retention.conf`、systemd drop-in | 设备自定义覆盖保留；发行版日志保留默认值更新到 `/usr/lib/tmpfiles.d/` |
+| `/etc/bxi/control_backend.env` | 独立于 RC 包保存，启动时在 `env.conf` 之后加载，决定 `elf3` / `car2` 控制后端 |
+
+在设备现有 `env.conf` 中设置：
+
+```ini
+BXI_OTA_RESET_ENV=0
+```
+
+缺少此项也按 `0` 保留。设为 `1` 时，下次 RC 更新改用发布包的整份默认 `env.conf`，开关随默认值回到 `0`；这会重置 DDS、后端地址及文件内的密钥等配置，操作前先备份。单独更新 SLAM 不重置 RC 的 `env.conf`，也不会删除 `/etc` 下的独立配置文件。源码安装和手动恢复沿用同一策略；首次由旧管理器升级时，新 RC 安装钩子从 `_bak/env.conf` 恢复原配置。
+
+常用配置入口如下。修改后执行 `sudo systemctl restart bxi_rc_ros2.service` 生效；OTA 任务期间不热切换下载站或超时。
+
+| 变量 | 默认值与用途 |
+|---|---|
+| `BXI_INDOOR_SLAM_ENABLED` | `1`；设 `0` 跳过本机 SLAM 的开机依赖钩子、overlay 和子 launch，导航网关仍可经 DDS 连接另一主机 |
+| `BXI_INDOOR_SLAM_SETUP` | 留空使用 `/opt/bxi/bxi_rc_slam/install/setup.bash` |
+| `ROS_DOMAIN_ID`、`RMW_IMPLEMENTATION`、`ROS_LOCALHOST_ONLY`、`CYCLONEDDS_URI` | DDS 配置；外部 XML 必须存在于本机，多主机通信需匹配域和网络设置 |
+| `BXI_GATEWAY_PARAMS_FILE` | 外部 ROS 参数 YAML，叠加在包默认值之后；共享 topic 根最后统一覆盖 |
+| `BXI_GATEWAY_TOPIC_ROOT`、`BXI_DEVICE_NAME` | 自定义 topic 根和 BLE 名称；留空使用现有默认规则，launch 同名参数可覆盖环境默认值 |
+| `BXI_LIVOX_CONFIG_PATH` | 显式指定 Livox JSON；使用雷达配置 API 时需留空或指向上述持久路径 |
+| `BXI_BACKEND_BASE_URL` | 后端地址；`BXI_ACTIVATION_URL`、`BXI_HEARTBEAT_URL` 可分别覆盖派生地址 |
+| `BXI_LOGS_AUTO_UPLOAD`、`BXI_LOG_MAX_ARCHIVE_BYTES` | 日志上传开关与单包字节上限；`/etc/default/bxi-log-upload` 同名配置优先 |
+| `BXI_OTA_BASE_URL` | 默认 `https://download.bxirobotics.cn`；自定义源需兼容 HTTPS `/api/fs/list`、`/api/fs/get` |
+| `BXI_OTA_REMOTE_ROOT` | 留空按架构选 `/ELF3` 或 `/ELF3/arm64`；非空时填写完整远端根目录，不再自动追加架构 |
+| `BXI_OTA_REQUEST_TIMEOUT_SEC`、`BXI_OTA_DOWNLOAD_TIMEOUT_SEC` | 自动 OTA 默认分别为 `60`、`300` 秒，必须为至少 1 的有限数字；这是每次 socket 操作的等待上限，不是整批升级总时限 |
+| `BXI_RL_REPOSITORY_URL` | ELF3 RL 开发工作区的源码仓库地址，与 OTA 下载源分别配置 |
+
+五个 ELF3 包可分别设置 `BXI_OTA_<标识>_REMOTE_DIR` 和 `BXI_OTA_<标识>_FILENAME_PREFIX`。标识依次为 `ROS2_PKG`、`RL_CONTROLLER_ROS2_EXAMPLE`、`RC_ROS2`、`RC_SLAM`、`OFFLINE_TTS`。目录留空使用原包目录，相对路径基于远端根目录，`/` 开头表示完整路径；前缀留空不过滤。修改下载位置不会改变本机包名、安装目录或钩子归属。
+
+下载源中的包必须匹配设备架构，包含 `vYYMMDD` 或 `vYYMMDD-N` 版本，并提供同名 `.tar.gz.sha256`；包根目录及 `.version` 必须符合对应包契约。手动恢复还要求下载站支持 `/d/远端目录/文件名` 直链。旧设备手动升级到该版本时，应使用配套恢复脚本和包含 `bxi_bridge.ota_env` 的完整新 RC 包；该模块是 RC 包的一部分，不应通过另装同名 pip 包修复。
+
+手动恢复也读取上述超时变量；旧配置未设置时，脚本的 wget 请求/下载等待默认 30 秒，目录查询默认 60 秒。弱网环境可在运行前按需设置。完整变量和发布包约定见 [RC 运行与 OTA 配置](https://github.com/bxirobotics/bxi_rc_ros2/blob/main/docs/OTA_CONFIGURATION.md)。
+
+App OTA 示例：
+
+```json
+{"version":"latest","reboot_after":false,"package_names":["bxi_rc_ros2","bxi_rc_slam"]}
+```
+
+将上面的 body 提交到 `/api/v1/ota/start`，收到 202 仅表示任务已接受，随后轮询 `/api/v1/ota/status`。`package_names` 可省略；设备型号由服务端决定，旧客户端的 `robot` 字段或查询参数不能切换设备身份。不要把下载 100% 或 `.version` 已变化当作完成：继续等待校验、解压、安装钩子和任务终态。`reboot_after` 省略时默认 `true`；App 单台和批量升级显式传 `false`，安装后显示待重启，再由用户确认重启。`pending_reboot` 与是否有更新是独立信息，重启后仍应检查服务和定位健康。
+
+目录暂缺的包显示为 `version_status=unavailable`；普通批量升级跳过该包，显式选择则返回 409 `ota.package_unavailable`。car2 设备只替换对应控制器包，仍保留 `ELF3` 设备身份；控制程序运行或互锁被占用时返回 `ota.robot_running`，应先停止控制程序再升级。自动 OTA 不会先执行全机停止脚本；手动恢复则会停止服务并替换五个 ELF3 包，两个入口的运维步骤不能混用。
 
 ## 6. 维修模式
 

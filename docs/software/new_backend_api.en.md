@@ -434,6 +434,10 @@ Digital-twin telemetry uses length-prefixed binary frames rather than JSON. The 
 
 Read the current navigation state from `nav.status.payload.state` on the control WS. The field name and type remain unchanged. Successful arrival continues to use `succeeded`.
 
+On failure, `nav.status.payload` may include `error_code`: `planning_failed` means that no usable path could be planned, and `execution_failed` means that path execution failed. Show a generic navigation failure when the field is absent or unknown; do not assume a planning failure. A detailed reason can arrive after the first `failed` frame, so update the explanation even when the state has not changed. `blocked` alone is not a failure.
+
+Tour HTTP status and `nav.tour.status.payload.error_code` use `planning_failed:<waypoint_id>` or `execution_failed:<waypoint_id>`; older versions may still use `navigation_failed:<waypoint_id>`. All three allow retrying the current waypoint. `current_idx` is the zero-based current/failed waypoint index, not a completed count. For example, `current_idx=11,total=12,state=error` means that waypoint 12 failed, not that all 12 completed. Only `state=finished` means that the entire tour completed.
+
 | `state` | Meaning |
 |---|---|
 | `idle` | No navigation task is active |
@@ -506,11 +510,13 @@ Request-body limits depend on the route: 64 KB for regular and OTA routes, 8 MB 
 | POST | `/api/v1/pairing/session` | Create a 60-second encrypted pairing session; no HTTP HMAC |
 | POST | `/api/v1/pairing/bind` | Submit an encrypted binding payload within the session |
 | DELETE | `/api/v1/pairing/binding` | Submit an encrypted owner unbinding proof within the session |
-| GET | `/api/v1/ota/releases?robot=ELF3` | OTA catalog |
+| GET | `/api/v1/ota/releases` | OTA catalog; the server determines the robot model |
 | GET | `/api/v1/ota/status` | OTA status |
-| POST | `/api/v1/ota/start` | `{robot,version,reboot_after,package_names?}` |
+| POST | `/api/v1/ota/start` | `{version,reboot_after?,package_names?}`; the App explicitly sends `reboot_after:false` |
 | POST | `/api/v1/ota/reboot/precheck` | Pre-reboot checks |
-| POST | `/api/v1/ota/reboot` | Reboot with `{robot}` |
+| POST | `/api/v1/ota/reboot` | Schedule a robot reboot |
+| GET/PUT | `/api/v1/lidar/config` | Read/save LiDAR and robot receive IPs; see section 5.3.2 |
+| POST | `/api/v1/lidar/discover` | Search for Livox SDK2 LiDARs on the receive interface with `{host_ip}` |
 | GET | `/api/v1/maps` | Map list |
 | GET | `/api/v1/maps/{id}` | Complete map |
 | GET | `/api/v1/maps/{id}/thumbnail.png` | Thumbnail |
@@ -620,6 +626,26 @@ HMAC(deviceKey, "wifi-unbind-v1|" || session_id || "|" || sn)
 
 Sessions expire after 60 seconds. A `bind` or `binding` request consumes the session, preventing replay.
 
+#### 5.3.2 LiDAR network configuration and discovery
+
+These endpoints use HTTP v2 HMAC. Reading and discovery do not require a healthy SLAM or ROS process. A 404 from older firmware means that the backend must be upgraded.
+
+`GET /api/v1/lidar/config` returns `status`, `lidar_ip`, `host_ip`, `host_interfaces`, `restart_required`, and `config_source`. Each `host_interfaces` entry is `{name,ipv4}`.
+
+The body of `PUT /api/v1/lidar/config` must contain exactly these two fields:
+
+```json
+{"lidar_ip":"192.168.1.199","host_ip":"192.168.1.52"}
+```
+
+The addresses must be different unicast IPv4 addresses, and `host_ip` must already be assigned to a robot interface. This endpoint changes the robot's connection configuration; it does not assign an interface IP or change the LiDAR device's own address. Saving returns HTTP 200 with `restart_required=true`; the user must reboot the robot to apply it.
+
+Configuration is saved to `/etc/bxi/livox/MID360s_config.json`, outside the OTA replacement directories. Reads prefer this file and use the SLAM package default JSON only when it does not exist. A corrupt persistent file produces an error. Only one LiDAR IP and one receive-host IP are edited, preserving other JSON fields; editing multiple LiDARs or receive hosts is not supported. If `BXI_LIVOX_CONFIG_PATH` selects another file, the endpoint returns 409 `lidar.config_override`; align the configuration sources first.
+
+`POST /api/v1/lidar/discover` accepts `{"host_ip":"192.168.1.52"}` and searches the uniquely matching interface for approximately four seconds. A successful response contains `status`, `host_ip`, `interface`, and `devices`; each device is `{ip,sn,device_type,model}`. No results produce `devices=[]`; at most 64 deduplicated devices are returned. Discovery does not change or save configuration and does not restart the driver. After selecting a result, save with PUT and reboot as instructed.
+
+Errors use `{"status":"error","code":"lidar.…","message":"…"}`. Invalid requests/IPs or an unassigned receive IP return 400, unsupported structures or configuration overrides return 409, and configuration or interface-query failures return 503. Concurrent discovery returns 409 `lidar.discovery_busy`; an IP matching multiple interfaces returns 409 `lidar.ambiguous_interface`; unavailable sockets return 503 `lidar.discovery_unavailable`. Discovery uses Livox SDK2, not the older SDK1 protocol. Discovering a device does not verify its point-cloud connection.
+
 ### 5.4 BLE Control GATT
 
 | Service/characteristic | UUID suffix | Properties | Purpose |
@@ -693,6 +719,60 @@ A tour waypoint `actions` entry can also select the voice:
 ```
 
 Omitting `voice` selects `female`. Tour voice actions currently use a fixed `speed=1.0`.
+
+### 5.6 Runtime configuration and OTA preservation
+
+This section describes RC `v261031` and later versions retaining this policy. The main runtime configuration is `/opt/bxi/bxi_rc_ros2/env.conf`. Preservation means keeping existing device values by default; users can still edit them, and not every file inside a package is preserved.
+
+| Configuration location | Upgrade behavior |
+|---|---|
+| RC `env.conf` | Preserved as a whole by default, including DDS, backend addresses, keys, logging switches, and custom download sources; new entries are not automatically added |
+| `/etc/bxi/livox/MID360s_config.json` | Persistent LiDAR settings are outside OTA replacement directories. For legacy package-local JSON, automatic OTA and manual recovery retain LiDAR and receive-host IPs while using new package values for other fields |
+| External parameter YAML / DDS XML | Files outside OTA package directories are not replaced; their paths in `env.conf` are preserved by default |
+| Package-local `gateway_params.yaml`, SLAM algorithm settings, etc. | Updated with the package. Use an external YAML file for persistent gateway parameter overrides |
+| `/etc/tmpfiles.d/bxi-log-retention.conf` and systemd drop-ins | Device overrides are retained; release logging defaults are updated under `/usr/lib/tmpfiles.d/` |
+| `/etc/bxi/control_backend.env` | Stored outside the RC package and loaded after `env.conf` at startup to select the `elf3` or `car2` control backend |
+
+Set the following in the device's existing `env.conf`:
+
+```ini
+BXI_OTA_RESET_ENV=0
+```
+
+A missing setting also means `0`, preserving the file. Set it to `1` to use the release's entire default `env.conf` on the next RC update; the switch returns to `0` with those defaults. This resets DDS, backend addresses, keys in that file, and other settings, so back up first. Updating SLAM alone does not reset RC's `env.conf` or delete separate files under `/etc`. Source installation and manual recovery follow the same policy. When upgrading through an old manager for the first time, the new RC installation hook restores the previous configuration from `_bak/env.conf`.
+
+Common settings are listed below. Apply changes with `sudo systemctl restart bxi_rc_ros2.service`. Download sources and timeouts do not switch during an OTA task.
+
+| Variable | Default and purpose |
+|---|---|
+| `BXI_INDOOR_SLAM_ENABLED` | `1`; `0` skips local SLAM boot dependency hooks, overlay, and child launch. The navigation gateway can still communicate with another host over DDS |
+| `BXI_INDOOR_SLAM_SETUP` | Empty uses `/opt/bxi/bxi_rc_slam/install/setup.bash` |
+| `ROS_DOMAIN_ID`, `RMW_IMPLEMENTATION`, `ROS_LOCALHOST_ONLY`, `CYCLONEDDS_URI` | DDS settings. External XML must exist on this host; multi-host communication requires matching domain and network settings |
+| `BXI_GATEWAY_PARAMS_FILE` | External ROS parameter YAML layered after package defaults; the shared topic root is applied last |
+| `BXI_GATEWAY_TOPIC_ROOT`, `BXI_DEVICE_NAME` | Custom topic root and BLE name. Empty values retain existing defaults; same-name launch arguments can override environment defaults |
+| `BXI_LIVOX_CONFIG_PATH` | Explicit Livox JSON path. Leave empty or select the persistent path above when using the LiDAR configuration API |
+| `BXI_BACKEND_BASE_URL` | Backend address; `BXI_ACTIVATION_URL` and `BXI_HEARTBEAT_URL` can override the derived addresses individually |
+| `BXI_LOGS_AUTO_UPLOAD`, `BXI_LOG_MAX_ARCHIVE_BYTES` | Log upload switch and archive byte limit; matching settings in `/etc/default/bxi-log-upload` take precedence |
+| `BXI_OTA_BASE_URL` | Defaults to `https://download.bxirobotics.cn`; a custom source must implement the HTTPS `/api/fs/list` and `/api/fs/get` APIs |
+| `BXI_OTA_REMOTE_ROOT` | Empty selects `/ELF3` or `/ELF3/arm64` by architecture. A nonempty value specifies the complete remote root; the architecture suffix is not appended |
+| `BXI_OTA_REQUEST_TIMEOUT_SEC`, `BXI_OTA_DOWNLOAD_TIMEOUT_SEC` | Automatic OTA defaults are `60` and `300` seconds. Values must be finite and at least 1. They limit each socket operation, not the entire upgrade |
+| `BXI_RL_REPOSITORY_URL` | Source repository for the ELF3 RL development workspace, configured separately from OTA downloads |
+
+Each of the five ELF3 packages supports `BXI_OTA_<identifier>_REMOTE_DIR` and `BXI_OTA_<identifier>_FILENAME_PREFIX`. Identifiers are `ROS2_PKG`, `RL_CONTROLLER_ROS2_EXAMPLE`, `RC_ROS2`, `RC_SLAM`, and `OFFLINE_TTS`. An empty directory uses the package's original directory; relative paths use the remote root, while `/` starts an absolute remote path. An empty prefix does not filter filenames. Changing download locations does not change local package identities, installation directories, or hook ownership.
+
+Packages must match the device architecture, include a `vYYMMDD` or `vYYMMDD-N` version, and provide a matching `.tar.gz.sha256` sidecar. The archive root and `.version` must match the package contract. Manual recovery also requires `/d/remote-directory/filename` direct links. When manually upgrading a legacy device to this release, use the matching recovery script and a complete new RC package containing `bxi_bridge.ota_env`. This module belongs to the RC package; installing an unrelated pip package is not a repair.
+
+Manual recovery reads the same timeout variables. When legacy configuration omits them, its wget requests/downloads default to 30 seconds and directory queries to 60 seconds. Set them as needed before running on a slow network. See [RC runtime and OTA configuration](https://github.com/bxirobotics/bxi_rc_ros2/blob/main/docs/OTA_CONFIGURATION.md) for the full variable and release-package contract.
+
+Example App OTA body:
+
+```json
+{"version":"latest","reboot_after":false,"package_names":["bxi_rc_ros2","bxi_rc_slam"]}
+```
+
+Send this body to `/api/v1/ota/start`. HTTP 202 means only that the task was accepted; poll `/api/v1/ota/status` afterward. `package_names` is optional. The server determines the device model; a legacy client's `robot` body field or query parameter cannot change it. Neither download completion nor a changed `.version` means installation is complete: wait for verification, extraction, installation hooks, and the terminal task state. Omitting `reboot_after` defaults to `true`. The App explicitly sends `false` for individual and batch upgrades, displays pending reboot after installation, and asks the user to reboot. `pending_reboot` is independent of update availability; check service and localization health after reboot.
+
+A missing download-site package is shown as `version_status=unavailable`. A normal batch skips it; explicitly selecting it returns 409 `ota.package_unavailable`. A car2 device replaces only its controller package and retains its `ELF3` identity. Running control processes or an occupied interlock return `ota.robot_running`; stop control before upgrading. Automatic OTA does not first run the whole-robot stop script. Manual recovery stops services and replaces the five ELF3 packages, so the two operational procedures must not be mixed.
 
 ## 6. Maintenance mode
 
