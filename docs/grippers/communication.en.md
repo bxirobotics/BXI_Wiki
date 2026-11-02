@@ -31,7 +31,7 @@ kd = 0.05
 
 ## 2. CAN Bus Parameters
 
-The gripper uses the same CAN/CAN FD communication method as the joint module. See the [Joint-Module CAN Communication Guide](../can_communication.md#1-communication-overview) for the common communication overview.
+The gripper uses the same CAN/CAN FD communication method as the joint module. See the [Joint-Module CAN Communication Guide](../actuators/can_communication.md#1-communication-overview) for the common communication overview.
 
 The current gripper communication configuration is a 1 Mbps FDCAN nominal rate, a 5 Mbps data-phase rate, and CAN FD BRS. MIT command and reply frames are 8 bytes long.
 
@@ -50,9 +50,9 @@ The firmware uses the received frame format for its reply. Keep CAN/CAN FD and B
 
 The general rules for CAN IDs, MIT unicast, broadcast, and reply IDs are the same as for the joint module. See:
 
-- [MIT Mode Master Control Frame](../can_communication.md#2-mit-mode-master-control-frame-8-bytes)
-- [CANFD Broadcast Multi-Motor Control](../can_communication.md#3-canfd-broadcast-multi-motor-control)
-- [Relationship Between `master_id` and `can_id`](../can_communication.md#53-relationship-between-master_id-and-can_id)
+- [MIT Mode Master Control Frame](../actuators/can_communication.md#2-mit-mode-master-control-frame-8-bytes)
+- [CANFD Broadcast Multi-Motor Control](../actuators/can_communication.md#3-canfd-broadcast-multi-motor-control)
+- [Relationship Between `master_id` and `can_id`](../actuators/can_communication.md#53-relationship-between-master_id-and-can_id)
 
 The following only lists the gripper defaults and usage.
 
@@ -96,7 +96,7 @@ Configuration-register commands respond only to the target unicast ID. They do n
 
 ## 4. MIT Control Frame
 
-The MIT byte layout, bit widths, and packing method are the same as for the joint module. See the [MIT Mode Master Control Frame](../can_communication.md#2-mit-mode-master-control-frame-8-bytes) and [Bit Width Description](../can_communication.md#24-bit-width-description).
+The MIT byte layout, bit widths, and packing method are the same as for the joint module. See the [MIT Mode Master Control Frame](../actuators/can_communication.md#2-mit-mode-master-control-frame-8-bytes) and [Bit Width Description](../actuators/can_communication.md#24-bit-width-description).
 
 The gripper physical ranges and sign convention differ from ordinary joint motors; use the definitions in [Gripper Communication Ranges](#5-gripper-communication-ranges) below.
 
@@ -194,13 +194,13 @@ When `t_raw` is `0x7FF` or `0x800`, the firmware decodes it as exactly zero feed
 
 ## 6. MIT Reply Frame
 
-For the common reply layout and `master_id` rules, see the [Joint-Module Motor Response Frame](../can_communication.md#5-motor-response-frame). The gripper position, velocity, and force fields use the physical ranges in Section 5.
+For the common reply layout and `master_id` rules, see the [Joint-Module Motor Response Frame](../actuators/can_communication.md#5-motor-response-frame). The gripper position, velocity, and force fields use the physical ranges in Section 5.
 
-For default NTC decoding, AUX polling format, and polling order of `data[6]` and `data[7]`, see the [MIT Polling Reply Guide](../mit_polling_reply.md). Writing `1` to register `0x6D` switches the last two bytes to AUX polling data.
+For default NTC decoding, AUX polling format, and polling order of `data[6]` and `data[7]`, see the [MIT Polling Reply Guide](../actuators/mit_polling_reply.md). Writing `1` to register `0x6D` switches the last two bytes to AUX polling data.
 
 ## 7. Configuration Register Communication
 
-The gripper register configuration function is consistent with the joint-module implementation. For register commands, request and reply formats, save operations, information queries, data types, and write levels, see the [Motor Register Communication Protocol](../register_protocol.md). The sections below only list commonly used registers and gripper-specific parameter ranges.
+The gripper register configuration function is consistent with the joint-module implementation. For register commands, request and reply formats, save operations, information queries, data types, and write levels, see the [Motor Register Communication Protocol](../actuators/register_protocol.md). The sections below only list commonly used registers and gripper-specific parameter ranges.
 
 ### 7.1 Request and Reply Format
 

@@ -1,3 +1,3 @@
 ---
-title: Software
+title: Software & Algorithms
 ---

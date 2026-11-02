@@ -3,7 +3,7 @@ seo_title: "BXI Control App: Connection, Control and Firmware"
 description: "Use the BXI Control App for robot setup, Bluetooth provisioning, local or cloud connection, remote control, diagnostics, firmware management and support workflows."
 ---
 
-# BXI Control App User Guide (New Version)
+# BXI Control App User Guide
 
 BXI Control is used to add, connect to, control, and maintain BXI robots. This guide reflects the current App pages and routing for Android and Windows.
 

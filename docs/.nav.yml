@@ -6,6 +6,7 @@ nav:
   - Demo: https://demo.bxirobotics.com/
   - URDF: https://urdf.bxirobotics.com/
   - actuators
+  - grippers
   - rl
   - remapping
   - others

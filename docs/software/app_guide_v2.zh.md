@@ -1,9 +1,9 @@
 ---
 seo_title: "BXI Control App 使用指南：设备连接、遥控与固件"
-description: "BXI Control App 新版使用指南，涵盖设备添加、蓝牙配网、本地与云端连接、遥控模式、状态自检、固件管理和远程协助。按页面流程了解各项功能入口、访问条件与操作前的设备状态检查。"
+description: "BXI Control App 使用指南，涵盖设备添加、蓝牙配网、本地与云端连接、遥控模式、状态自检、固件管理和远程协助。按页面流程了解各项功能入口、访问条件与操作前的设备状态检查。"
 ---
 
-# BXI Control App 使用指南（新版）
+# BXI Control App 使用指南
 
 BXI Control 是用于添加、连接和管理 BXI 机器人的控制应用。本指南以当前 App 的页面与路由实现为准，适用于 Android 和 Windows 版本。
 

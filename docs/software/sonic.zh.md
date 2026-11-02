@@ -120,13 +120,13 @@ python3 -m pip install \
 
 1. 正常启动 ELF3，确认机器人已完成自检，并使用遥控器让机器人进入行走模式。此时机器人应保持正常站立姿态。
 
-   ![ELF3 处于正常站立状态](../../assets/elf3/developer/sonic/normal_state.jpg)
+   ![ELF3 处于正常站立状态](../assets/elf3/developer/sonic/normal_state.jpg)
 
 2. 同时按下遥控器的 `LB + RB + X`，请求进入 Sonic 全身遥操状态。
 
 3. 等待机器人完成状态切换。进入 Sonic 就绪状态后，机器人会切换到下图所示姿态；机器人姿态稳定后，再开始 PICO 校准和动作跟随。
 
-   ![ELF3 进入 Sonic 全身遥操就绪状态](../../assets/elf3/developer/sonic/sonic_state.jpg)
+   ![ELF3 进入 Sonic 全身遥操就绪状态](../assets/elf3/developer/sonic/sonic_state.jpg)
 
 !!! note "没有进入 Sonic 状态"
     请先确认机器人已经处于正常行走模式，再同时按下 `LB + RB + X`。如果仍无响应，请检查运动控制工程是否已更新、重新编译并正确加载。
@@ -139,25 +139,25 @@ python3 -m pip install \
 
 2. 戴好 PICO 头显并拿起左右手柄。在 PICO 主界面点击右下角的 **体感追踪器**。
 
-   ![在 PICO 主界面打开体感追踪器](../../assets/elf3/developer/sonic/pico_screen1.png)
+   ![在 PICO 主界面打开体感追踪器](../assets/elf3/developer/sonic/pico_screen1.png)
 
 3. 确认两个腿部追踪器均已连接，然后点击 **开始校准**，按照头显中的引导完成校准动作。
 
-   ![确认追踪器连接并开始校准](../../assets/elf3/developer/sonic/pico_screen2.png)
+   ![确认追踪器连接并开始校准](../assets/elf3/developer/sonic/pico_screen2.png)
 
 4. 校准完成后，点击 **调整地面**，按照提示将虚拟地面调整到实际地面位置。
 
-   ![调整 PICO 体感追踪的地面高度](../../assets/elf3/developer/sonic/pico_screen3.png)
+   ![调整 PICO 体感追踪的地面高度](../assets/elf3/developer/sonic/pico_screen3.png)
 
 5. 观察界面中的虚拟人物。操作者活动头部、双手和双腿时，虚拟人物应同步变化，且双脚应基本贴合地面。
 
-   ![确认虚拟人物与操作者动作同步](../../assets/elf3/developer/sonic/pico_screen4.png)
+   ![确认虚拟人物与操作者动作同步](../assets/elf3/developer/sonic/pico_screen4.png)
 
 ## 连接 XRoboToolkit
 
 1. 返回 PICO 资源库，在 **未知来源** 中打开 `XRoboToolkit`。
 
-   ![在未知来源中打开 XRoboToolkit](../../assets/elf3/developer/sonic/pico_screen5.png)
+   ![在未知来源中打开 XRoboToolkit](../assets/elf3/developer/sonic/pico_screen5.png)
 
 2. 确认 PICO 与机器人连接到同一局域网，并获取机器人的局域网 IP 地址。
 
@@ -176,13 +176,13 @@ python3 -m pip install \
 
 5. 确认 **Network** 区域的 `Status` 显示为 `WORKING`，日志中没有持续报错。
 
-   ![配置 XRoboToolkit 全身追踪和数据发送](../../assets/elf3/developer/sonic/pico_screen6.png)
+   ![配置 XRoboToolkit 全身追踪和数据发送](../assets/elf3/developer/sonic/pico_screen6.png)
 
 ## 校准姿态并开始跟随
 
 1. 操作者面向与机器人一致的方向，全身保持直立。双臂自然下垂，肘关节弯曲约 90°，前臂水平向前，使身体和双臂呈下图所示姿态。
 
-   ![Sonic 全身遥操初始校准姿态](../../assets/elf3/developer/sonic/inital_pose.png)
+   ![Sonic 全身遥操初始校准姿态](../assets/elf3/developer/sonic/inital_pose.png)
 
 2. 保持姿态稳定，同时按下左右 PICO 手柄上的 `A + B + X + Y` 四个按键，完成 PICO 三点追踪与机器人参考姿态的对齐。
 

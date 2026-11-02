@@ -24,7 +24,7 @@ title: 夹爪通信说明
 
 ## 2. CAN 总线参数
 
-夹爪使用与关节模组一致的 CAN/CAN FD 通信方式。通用通信概述请参考[关节模组 CANFD 通信说明](../can_communication.md#1-通信概述)。
+夹爪使用与关节模组一致的 CAN/CAN FD 通信方式。通用通信概述请参考[关节模组 CANFD 通信说明](../actuators/can_communication.md#1-通信概述)。
 
 夹爪当前通信配置为：FDCAN 名义速率 1 Mbps，数据段速率 5 Mbps，并启用 CAN FD BRS。MIT 控制帧和回复帧均为 8 字节。
 
@@ -43,9 +43,9 @@ title: 夹爪通信说明
 
 CAN ID、MIT 单播、广播和回复 ID 的通用规则与关节模组一致，详细说明请参考：
 
-- [MIT 模式主控控制帧](../can_communication.md#2-mit-模式主控控制帧8-字节)
-- [CANFD 广播多电机控制](../can_communication.md#3-canfd-广播多电机控制)
-- [`master_id` 与 `can_id` 关系](../can_communication.md#53-master_id-与-can_id-关系)
+- [MIT 模式主控控制帧](../actuators/can_communication.md#2-mit-模式主控控制帧8-字节)
+- [CANFD 广播多电机控制](../actuators/can_communication.md#3-canfd-广播多电机控制)
+- [`master_id` 与 `can_id` 关系](../actuators/can_communication.md#53-master_id-与-can_id-关系)
 
 以下仅列出夹爪的默认 ID 和使用方式。
 
@@ -89,7 +89,7 @@ CAN ID = (cmd << 4) | can_id
 
 ## 4. MIT 控制帧格式
 
-MIT 控制帧的字节布局、位宽和打包方式与关节模组一致，请直接参考[MIT 模式主控控制帧](../can_communication.md#2-mit-模式主控控制帧8-字节)及[位宽说明](../can_communication.md#24-位宽说明)。
+MIT 控制帧的字节布局、位宽和打包方式与关节模组一致，请直接参考[MIT 模式主控控制帧](../actuators/can_communication.md#2-mit-模式主控控制帧8-字节)及[位宽说明](../actuators/can_communication.md#24-位宽说明)。
 
 夹爪的物理量范围和正负方向与普通关节电机不同，具体使用本页[夹爪通信范围](#5-夹爪通信范围)中的定义。
 
@@ -202,13 +202,13 @@ t_ff  = t_raw / 4095 × (2 × F_limit) - F_limit
 
 ## 6. MIT 回复帧
 
-回复帧的通用布局和 `master_id` 规则请参考[关节模组电机响应帧](../can_communication.md#5-电机响应帧)。夹爪的位置、速度和力字段使用本页第 5 节的物理量范围。
+回复帧的通用布局和 `master_id` 规则请参考[关节模组电机响应帧](../actuators/can_communication.md#5-电机响应帧)。夹爪的位置、速度和力字段使用本页第 5 节的物理量范围。
 
-`data[6]` 和 `data[7]` 的 NTC 默认解析、AUX 轮询格式和轮询顺序请参考 [MIT 轮询回复说明](../mit_polling_reply.md)。通过寄存器 `0x6D` 将 `mit_aux_enable` 写为 `1` 后，最后两个字节切换为 AUX 轮询数据。
+`data[6]` 和 `data[7]` 的 NTC 默认解析、AUX 轮询格式和轮询顺序请参考 [MIT 轮询回复说明](../actuators/mit_polling_reply.md)。通过寄存器 `0x6D` 将 `mit_aux_enable` 写为 `1` 后，最后两个字节切换为 AUX 轮询数据。
 
 ## 7. 配置寄存器通信
 
-夹爪的寄存器配置功能与关节模组一致，寄存器命令、读写格式、保存操作、信息查询、数据类型和写入等级请参考[电机寄存器通信协议](../register_protocol.md)。下文仅补充夹爪使用时的常用寄存器和参数范围。
+夹爪的寄存器配置功能与关节模组一致，寄存器命令、读写格式、保存操作、信息查询、数据类型和写入等级请参考[电机寄存器通信协议](../actuators/register_protocol.md)。下文仅补充夹爪使用时的常用寄存器和参数范围。
 
 ### 7.1 请求与回复格式
 

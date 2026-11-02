@@ -120,13 +120,13 @@ Download [XRoboToolkit-PICO-1.1.1.apk](https://github.com/XR-Robotics/XRoboToolk
 
 1. Start ELF3 normally, confirm that the robot has completed its self-check, and use the remote controller to put the robot into walking mode. The robot should hold its normal standing posture.
 
-   ![ELF3 in the normal standing state](../../assets/elf3/developer/sonic/normal_state.jpg)
+   ![ELF3 in the normal standing state](../assets/elf3/developer/sonic/normal_state.jpg)
 
 2. Press `LB + RB + X` simultaneously on the robot remote controller to request Sonic full-body teleoperation.
 
 3. Wait for the state transition to finish. The robot assumes the ready posture shown below. Continue with PICO calibration and motion following only after the posture is stable.
 
-   ![ELF3 in the Sonic full-body teleoperation ready state](../../assets/elf3/developer/sonic/sonic_state.jpg)
+   ![ELF3 in the Sonic full-body teleoperation ready state](../assets/elf3/developer/sonic/sonic_state.jpg)
 
 !!! note "Sonic Does Not Start"
     Confirm that the robot is already in normal walking mode, then press `LB + RB + X` simultaneously. If the robot still does not respond, check that the motion-control project has been updated, rebuilt, and sourced correctly.
@@ -139,25 +139,25 @@ Recalibrate the Motion Trackers before each full-body teleoperation session to r
 
 2. Put on the PICO headset and pick up both controllers. Select **Motion Tracker** in the lower-right corner of the PICO home screen.
 
-   ![Open Motion Tracker from the PICO home screen](../../assets/elf3/developer/sonic/pico_screen1.png)
+   ![Open Motion Tracker from the PICO home screen](../assets/elf3/developer/sonic/pico_screen1.png)
 
 3. Confirm that both leg trackers are connected. Select **Start Calibration** and follow the instructions in the headset.
 
-   ![Confirm the trackers and start calibration](../../assets/elf3/developer/sonic/pico_screen2.png)
+   ![Confirm the trackers and start calibration](../assets/elf3/developer/sonic/pico_screen2.png)
 
 4. After calibration, select **Adjust Floor** and follow the instructions to align the virtual floor with the physical floor.
 
-   ![Adjust the floor height for PICO body tracking](../../assets/elf3/developer/sonic/pico_screen3.png)
+   ![Adjust the floor height for PICO body tracking](../assets/elf3/developer/sonic/pico_screen3.png)
 
 5. Observe the avatar on the screen. When the operator moves their head, hands, and legs, the avatar should follow those movements and its feet should remain close to the floor.
 
-   ![Confirm that the avatar follows the operator](../../assets/elf3/developer/sonic/pico_screen4.png)
+   ![Confirm that the avatar follows the operator](../assets/elf3/developer/sonic/pico_screen4.png)
 
 ## Connect XRoboToolkit
 
 1. Return to the PICO Library and open `XRoboToolkit` under **Unknown Sources**.
 
-   ![Open XRoboToolkit under Unknown Sources](../../assets/elf3/developer/sonic/pico_screen5.png)
+   ![Open XRoboToolkit under Unknown Sources](../assets/elf3/developer/sonic/pico_screen5.png)
 
 2. Confirm that PICO and the robot are connected to the same LAN, then obtain the robot's LAN IP address.
 
@@ -176,13 +176,13 @@ Recalibrate the Motion Trackers before each full-body teleoperation session to r
 
 5. Confirm that `Status` in the **Network** section shows `WORKING` and that the log does not contain continuous errors.
 
-   ![Configure XRoboToolkit full-body tracking and data transmission](../../assets/elf3/developer/sonic/pico_screen6.png)
+   ![Configure XRoboToolkit full-body tracking and data transmission](../assets/elf3/developer/sonic/pico_screen6.png)
 
 ## Calibrate the Reference Posture and Start Following
 
 1. Face the same direction as the robot and stand upright. Let the upper arms hang naturally, bend the elbows approximately 90 degrees, and hold the forearms horizontally in front of the body as shown below.
 
-   ![Initial calibration posture for Sonic full-body teleoperation](../../assets/elf3/developer/sonic/inital_pose.png)
+   ![Initial calibration posture for Sonic full-body teleoperation](../assets/elf3/developer/sonic/inital_pose.png)
 
 2. Hold the posture steady and press `A + B + X + Y` across the two PICO controllers at the same time. This aligns PICO three-point tracking with the robot's reference posture.
 

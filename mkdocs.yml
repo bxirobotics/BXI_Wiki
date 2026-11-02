@@ -64,7 +64,20 @@ plugins:
       assets: false
       links_attr_map:
         target: _blank
-  - redirects
+  - redirects:
+      redirect_maps:
+        elf3/developer/sonic.md: https://wiki.bxirobotics.com/software/sonic/
+        elf3/developer/navigation.md: https://wiki.bxirobotics.com/software/navigation/
+        elf3/developer/manipulation.md: https://wiki.bxirobotics.com/software/manipulation/
+        actuators/grippers/index.md: https://wiki.bxirobotics.com/grippers/
+        actuators/grippers/introduction.md: https://wiki.bxirobotics.com/grippers/introduction/
+        actuators/grippers/communication.md: https://wiki.bxirobotics.com/grippers/communication/
+        zh/elf3/developer/sonic.md: https://wiki.bxirobotics.com/zh/software/sonic/
+        zh/elf3/developer/navigation.md: https://wiki.bxirobotics.com/zh/software/navigation/
+        zh/elf3/developer/manipulation.md: https://wiki.bxirobotics.com/zh/software/manipulation/
+        zh/actuators/grippers/index.md: https://wiki.bxirobotics.com/zh/grippers/
+        zh/actuators/grippers/introduction.md: https://wiki.bxirobotics.com/zh/grippers/introduction/
+        zh/actuators/grippers/communication.md: https://wiki.bxirobotics.com/zh/grippers/communication/
   - mkdocs-video:
       is_video: true
       css_style:
