@@ -23,7 +23,20 @@ If the LiDAR does not start, the network or device configuration is usually inco
 
 ### 1.1 Configure a Static IP Address
 
-Set the computer's Ethernet interface to a static IP address, such as `192.168.1.51`. A direct Ethernet connection is recommended. Changing network settings through a remote desktop session may cause permission issues.
+Choose either method below. Configuration through the app is recommended.
+
+#### Method 1: Configure Through the App (Recommended)
+
+1. Connect the LiDAR to the robot with an Ethernet cable. Connect to the robot in `bxi_rc_app` and open **Settings → LiDAR (设置 → 雷达)**.
+2. Under **Ethernet Interface (有线网口)**, select the interface connected to the LiDAR and confirm that its link speed is **100 Mbps**.
+3. Enter the static IP address for this interface in **Robot Receive IP (机器人接收 IP)**. The default is `192.168.1.51`.
+4. Select **Configure Ethernet Interface (一键配置网口)**. The app assigns the specified IP address to the selected interface, sets the subnet mask to `255.255.255.0`, leaves the gateway blank, and enables automatic connection at startup. It then searches for the LiDAR automatically.
+
+![Confirm the LiDAR Ethernet link speed, enter the robot receive IP, and configure the interface in the app](../assets/elf3/developer/navigation/lidar-config-app-ethernet.jpg)
+
+#### Method 2: Configure Manually on the Computer's Screen
+
+Open the system network settings on the computer's screen and set the Ethernet interface connected to the LiDAR to a static IP address, such as `192.168.1.51`. A direct Ethernet connection is recommended. Changing network settings through a remote desktop session may cause permission issues.
 
 ![Open the computer's network settings](../assets/elf3/developer/navigation/network-settings.png)
 
