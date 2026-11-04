@@ -1,6 +1,7 @@
 nav:
   - overview.md
   - motioncontrol.md
+  - depth_camera.md
   - mod_api_31dof_control.md
   - arm_ik.md
   - topscreen.md
