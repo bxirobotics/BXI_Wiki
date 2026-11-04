@@ -256,8 +256,6 @@ RGB=(1080, 1920, 3), depth=(1080, 1920), center=1234 (raw)
 | 找不到 `bxi_depth_camera` | 确认部署版本包含该包，且已加载对应的 `install/setup.bash`；源码部署可按第 1 步构建。 |
 | 没有相机话题 | 遥控器启动时，先按第 2.1 节检查通信环境；再检查相机供电、USB 连接和设备枚举情况，具体命令见下文。 |
 | 报设备权限错误 | 首次部署可运行 `ros2 run bxi_depth_camera install-udev-rules`，安装规则后重新插拔相机。 |
-| 多台相机时名称与示例不同 | 查看 `ros2 topic list`，通过 `camera_name` 选择实际的逻辑名称或 `SN_<serial>`。 |
-| 处理或传输延迟较大 | 先用 `cameras-inspect` 查询支持的 profile，再选择较低的 `rgb_camera.color_profile`；对齐深度尺寸随彩色分辨率变化。 |
 
 ### USB 连接与设备检查
 
