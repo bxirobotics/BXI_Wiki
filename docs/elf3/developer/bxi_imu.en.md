@@ -6,8 +6,6 @@ title: IMU (bxi_imu)
 
 # bxi_imu: IMU Data Interface
 
-> Last updated: 2026-11-05 14:22 (UTC+8)
-
 `bxi_imu` publishes IMU data through ROS 2. Applications subscribe to a common topic to receive orientation, angular velocity and linear acceleration.
 
 ## 1. Interface Overview

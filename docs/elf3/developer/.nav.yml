@@ -5,6 +5,7 @@ nav:
   - bxi_imu.md
   - mod_api_31dof_control.md
   - arm_ik.md
+  - bxi_voice.md
   - topscreen.md
   - dexterous_hand.md
   - upper_body_teleop.md
