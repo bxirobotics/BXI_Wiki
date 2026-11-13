@@ -8,6 +8,38 @@ title: 夹爪介绍
 
 夹爪模组采用 BXI 夹爪电机固件，面向夹持、开合和末端执行器应用。
 
+## 接入方式及接口定义
+
+![夹爪模型展示](../assets/grippers/introduction/gripper-model.png){ width="500" }
+
+### 接入机器人
+
+机器人为夹爪预留了独立 CAN 通道，夹爪需从主控板 CAN 口接入：
+
+- **左夹爪：接主控板 `CAN5`。**
+- **右夹爪：接主控板 `CAN6`。**
+
+**不得从机器人手臂末端的电机直接接入夹爪。**
+
+### CAN 接口定义
+
+| Pin | 名称 | 方向 | 类型 | 电压/电流 | 电气特性 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `VOUT` | — | Power | 58.8 V | 电机电源 |
+| 2 | `AGND` | — | Power | — | 总电源地 |
+| 3 | `CANx_L` | I/O | Digital | — | 电机控制 CANL |
+| 4 | `CANx_H` | I/O | Digital | — | 电机控制 CANH |
+
+接口针脚位置如下图所示：
+
+![夹爪 CAN 接口针脚定义与位置](../assets/grippers/introduction/can-interface.png)
+
+### 电机连接线束接口定义
+
+线束包含电源正极、电源负极、`CAN_L` 和 `CAN_H`，对应位置如下图所示：
+
+![电机连接线束的电源正负极及 CAN_L、CAN_H 位置](../assets/grippers/introduction/motor-harness-pinout.png)
+
 ## 主要特性
 
 - 使用 CAN / CAN FD 总线通信。

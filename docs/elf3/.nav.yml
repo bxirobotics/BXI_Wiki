@@ -1,6 +1,7 @@
 nav:
   - overview.md
   - quick_start.md
+  - zero_calibration.md
   - safty.md
   - packaging.md
   - developer

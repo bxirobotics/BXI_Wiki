@@ -8,6 +8,38 @@ title: Gripper Introduction
 
 The gripper module uses the BXI gripper motor firmware for gripping, opening, closing, and end-effector applications.
 
+## Connection Method and Interface Pinout
+
+![Gripper model](../assets/grippers/introduction/gripper-model.png){ width="500" }
+
+### Connecting to the Robot
+
+The robot provides dedicated CAN channels for the grippers. Connect each gripper to the CAN port on the main control board:
+
+- **Left gripper: connect to `CAN5` on the main control board.**
+- **Right gripper: connect to `CAN6` on the main control board.**
+
+**Do not connect a gripper directly to the motor at the end of the robot arm.**
+
+### CAN Interface Pinout
+
+| Pin | Name | Direction | Type | Voltage/current | Electrical function |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `VOUT` | — | Power | 58.8 V | Motor power supply |
+| 2 | `AGND` | — | Power | — | Main power ground |
+| 3 | `CANx_L` | I/O | Digital | — | Motor control CANL |
+| 4 | `CANx_H` | I/O | Digital | — | Motor control CANH |
+
+The image below shows the connector pin positions:
+
+![Gripper CAN interface pin definitions and positions](../assets/grippers/introduction/can-interface.png)
+
+### Motor Wiring Harness Pinout
+
+The harness carries power positive (电源正极), power negative (电源负极), `CAN_L`, and `CAN_H`. Their positions are marked in the image below:
+
+![Motor harness power positive, power negative, CAN_L, and CAN_H positions](../assets/grippers/introduction/motor-harness-pinout.png)
+
 ## Main Features
 
 - CAN / CAN FD bus communication.
