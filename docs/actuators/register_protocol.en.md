@@ -168,7 +168,11 @@ After reading `0x60`, if the reply is:
 
 ## 4. Write Sending and Parsing
 
-Use `REG_WRITE` to write a register; `cmd = 0x18`. Writing only changes the configuration value in RAM. To keep the value after power-off, send `REG_SAVE` afterwards.
+Use `REG_WRITE` to write a register; `cmd = 0x18`. Writing normally changes only the configuration value in RAM. To keep the value after power-off, send `REG_SAVE` afterwards. See the matching register map for runtime parameters and automatic-save exceptions.
+
+!!! note "Automatic aging-status save in 1.5.5"
+
+    In the [1.5.5 register map](register_maps/1.5.5.md), `0x24` is `aging_test_status` (`type=3`, `uint32_t`). After a successful write, the main loop attempts to save the entire current configuration, including other RAM parameter changes. A successful write reply does not confirm that the later Flash save succeeded.
 
 ### 4.1 Transmit Frame
 
@@ -246,7 +250,7 @@ Recommended lookup flow:
 
 1. Read `VER code` and `VER config` from the boot information.
 2. You can also read `0x7C` over CAN to confirm the current `config_version`.
-3. Use the register map matching `VER config`. For example, software version `1.4.1` uses the [1.4.1 register map](register_maps/1.4.1.md), and software version `0.3.1` uses the [0.3.1 register map](register_maps/0.3.1.md).
+3. Use the register map matching `VER config`. For example, software version `1.5.5` (configuration `1.5`) uses the [1.5.5 register map](register_maps/1.5.5.md), software version `1.4.1` uses the [1.4.1 register map](register_maps/1.4.1.md), and software version `0.3.1` uses the [0.3.1 register map](register_maps/0.3.1.md).
 4. For automatic host-side adaptation, send `REG_INFO` to query the number of public registers, then combine it with the `0x7C` configuration version to select the matching register map.
 
 !!! warning
