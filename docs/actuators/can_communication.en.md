@@ -9,7 +9,7 @@ Read the device's software and configuration versions from its startup informati
 
 ## MIT protocol on other firmware versions
 
-The following sections describe the earlier MIT protocol. Use the register map matching the device software and configuration, such as [0.2.2](register_maps/0.2.2.md), [0.3.1](register_maps/0.3.1.md), or [1.4.1](register_maps/1.4.1.md). Check the device firmware for AUX support and its polling format.
+The following sections describe the earlier MIT protocol. Use the register map matching the device software and configuration, such as [0.2](register_maps/0.2.md), [0.3](register_maps/0.3.md), or [1.4](register_maps/1.4.md). Check the device firmware for AUX support and its polling format.
 
 ### 1. Communication Overview
 
@@ -165,7 +165,7 @@ Position, velocity, and torque are unsigned codes mapped linearly to the configu
 2. Set the device to MIT communication mode. Send a unicast frame to its `can_id`. Each control block is eight bytes, with 16 bits for position and 12 bits for each remaining field. See [section 2](#2-mit-mode-master-control-frame-8-bytes) for the byte layout.
 3. For multi-motor broadcast, use CAN FD ID `0x7FF` and position blocks by node ID. The block for node `n` starts at byte `(n - 1) × 8`. The frame must include the node's complete eight-byte block. A 64-byte frame fits the blocks for nodes 1 through 8.
 
-Use the device's current encoding ranges for commands and feedback. See the [1.5.5 Register Map](register_maps/1.5.5.md) for addresses and access permissions.
+Use the device's current encoding ranges for commands and feedback. See the [1.5 Register Map](register_maps/1.5.md) for addresses and access permissions.
 
 | Control field | Bits | Standard motor encoding range | Range register |
 | --- | ---: | --- | --- |

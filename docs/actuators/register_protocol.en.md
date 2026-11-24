@@ -37,7 +37,7 @@ CON   : same
 
 !!! note
 
-    The first two components of the software version must match the configuration version. For example, software version `1.4.1` corresponds to configuration version `1.4`, and software version `0.3.1` corresponds to configuration version `0.3`. The CAN register interface currently exposes `config_version`, not the full `code=x.y.z` software version. Check the complete software version from the boot information, firmware file name, or upgrade package.
+    Select the register map by software major and minor version. Patch releases in the same series share a map. For example, `1.4.1` and `1.4.8` both use the `1.4.x` map and configuration `1.4`. The CAN register interface provides `config_version`. Read the boot information for the full software version.
 
 ## 2. CAN Command Format
 
@@ -172,7 +172,7 @@ Use `REG_WRITE` to write a register; `cmd = 0x18`. Writing normally changes only
 
 !!! note "Automatic aging-status save in 1.5.5"
 
-    In the [1.5.5 register map](register_maps/1.5.5.md), `0x24` is `aging_test_status` (`type=3`, `uint32_t`). After a successful write, the main loop attempts to save the entire current configuration, including other RAM parameter changes. A successful write reply does not confirm that the later Flash save succeeded.
+    In the [1.5 register map](register_maps/1.5.md), `0x24` is `aging_test_status` (`type=3`, `uint32_t`). After a successful write, the main loop attempts to save the entire current configuration, including other RAM parameter changes. A successful write reply does not confirm that the later Flash save succeeded.
 
 ### 4.1 Transmit Frame
 
@@ -250,8 +250,8 @@ Recommended lookup flow:
 
 1. Read `VER code` and `VER config` from the boot information.
 2. You can also read `0x7C` over CAN to confirm the current `config_version`.
-3. Use the register map matching `VER config`. For example, software version `1.5.5` (configuration `1.5`) uses the [1.5.5 register map](register_maps/1.5.5.md), software version `1.4.1` uses the [1.4.1 register map](register_maps/1.4.1.md), and software version `0.3.1` uses the [0.3.1 register map](register_maps/0.3.1.md).
-4. For automatic host-side adaptation, send `REG_INFO` to query the number of public registers, then combine it with the `0x7C` configuration version to select the matching register map.
+3. Check that the first two components of `VER code` match `VER config`. Use the [register map index](register_maps/index.md) to select the software series and the standard motor or gripper module. Ignore the third component when matching a map.
+4. Host software can read `0x7C` to confirm the configuration series and use `REG_INFO` to check the number of public registers in the module.
 
 !!! warning
 

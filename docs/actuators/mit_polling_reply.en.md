@@ -147,7 +147,7 @@ Decode AUX items as described in section 6 and read position from the basic `POS
 
 #### Enable and receive replies
 
-1. Set `mit_aux_enable=1` through register `0x6D`, using `type=1` (`bool`) and runtime read/write access. It defaults to `0` at power-on and is not persisted to Flash, so enable it for each run. Writing `0` restores temperature replies. See the [1.5.5 Register Map](register_maps/1.5.5.md).
+1. Set `mit_aux_enable=1` through register `0x6D`, using `type=1` (`bool`) and runtime read/write access. It defaults to `0` at power-on and is not persisted to Flash, so enable it for each run. Writing `0` restores temperature replies. See the [1.5 Register Map](register_maps/1.5.md).
 2. Send [MIT control frames](can_communication.md#2-mit-mode-master-control-frame-8-bytes). A reply is triggered by a received control frame; enabling AUX alone does not start periodic replies. Receive the 8-byte reply on the configured `master_id`.
 3. With AUX enabled, decode `data[6..7]` as `aux = (data[6] << 8) | data[7]`, `aux_id = (aux >> 12) & 0x0F`, and `payload = aux & 0x0FFF`. With AUX disabled, these bytes carry NTC1 and NTC2 temperatures as described in section 8.
 
@@ -190,7 +190,7 @@ If the final two bytes are `A7 FF`, then `aux_id=0xA` and `payload=0x7FF=2047`. 
 - `0x2` returns `0xFFF` when the winding temperature observer is disabled or has yet to initialize. `0x9` is the ratio of the reference voltage magnitude to the available voltage `v_bus / √3`. It returns `0xFFF` when the available voltage is at most `0.1 V`.
 - `0x7` uses the layout in section 7. Bits 0–3 can also return decimal `11` (`BACKLASH`), `12` (`AGING`), or `13` (`FACTORY`), depending on the device and firmware. Gripper firmware reports bit 6 as 0. On standard motors, use the `0xB` payload to determine whether ENCO position is valid.
 - On standard motors, `TOR` carries q-axis current in A in current test mode. During backlash testing, the three basic fields carry the single-turn ENCI position, single-turn ENCO position, and their position difference, all in rad.
-- A write to the `can_id` register leaves `master_id` at its current value. Receive replies on the actual configured `master_id`; see the [1.5.5 Register Map](register_maps/1.5.5.md).
+- A write to the `can_id` register leaves `master_id` at its current value. Receive replies on the actual configured `master_id`; see the [1.5 Register Map](register_maps/1.5.md).
 
 ## 6. AUX Data Parsing
 

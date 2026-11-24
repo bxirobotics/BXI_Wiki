@@ -66,6 +66,14 @@ plugins:
         target: _blank
   - redirects:
       redirect_maps:
+        actuators/register_maps/0.2.2.md: https://wiki.bxirobotics.com/actuators/register_maps/0.2/
+        actuators/register_maps/0.3.1.md: https://wiki.bxirobotics.com/actuators/register_maps/0.3/
+        actuators/register_maps/1.4.1.md: https://wiki.bxirobotics.com/actuators/register_maps/1.4/
+        actuators/register_maps/1.5.5.md: https://wiki.bxirobotics.com/actuators/register_maps/1.5/
+        zh/actuators/register_maps/0.2.2.md: https://wiki.bxirobotics.com/zh/actuators/register_maps/0.2/
+        zh/actuators/register_maps/0.3.1.md: https://wiki.bxirobotics.com/zh/actuators/register_maps/0.3/
+        zh/actuators/register_maps/1.4.1.md: https://wiki.bxirobotics.com/zh/actuators/register_maps/1.4/
+        zh/actuators/register_maps/1.5.5.md: https://wiki.bxirobotics.com/zh/actuators/register_maps/1.5/
         elf3/developer/sonic.md: https://wiki.bxirobotics.com/software/sonic/
         elf3/developer/navigation.md: https://wiki.bxirobotics.com/software/navigation/
         elf3/developer/manipulation.md: https://wiki.bxirobotics.com/software/manipulation/

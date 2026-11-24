@@ -1,16 +1,16 @@
 ---
 seo_title: "BXI Motor Register Maps by Firmware Version"
-description: "Select the BXI motor register map matching software and configuration versions, with links to the 1.5.5, 1.4.1, 0.3.1 and 0.2.2 tables for compatible parameter lookup and CAN access."
+description: "Select a BXI motor register map by software major and minor version. Covers addresses, data types, and access rules for 1.5.x, 1.4.x, 0.3.x, and 0.2.x."
 title: Register Maps
 ---
 
 # Register Maps
 
-Select the matching register map according to the motor software version and configuration version.
+Select a register map by the software major and minor version. All patch releases in the same series share a map. For example, `0.3.1` and `0.3.7` both match `0.3.x`. The device configuration version should match the software series and can be read from register `0x7C`.
 
-| Software Version | Configuration Version | Register Map |
+| Software Series | Configuration Version | Register Map |
 | --- | --- | --- |
-| `1.5.5` | `1.5` | [1.5.5](1.5.5.md) |
-| `1.4.1` | `1.4` | [1.4.1](1.4.1.md) |
-| `0.3.1` | `0.3` | [0.3.1](0.3.1.md) |
-| `0.2.2` | `0.2` | [0.2.2](0.2.2.md) |
+| `1.5.x` | `1.5` | [1.5 register map](1.5.md) |
+| `1.4.x` | `1.4` | [1.4 register map](1.4.md) |
+| `0.3.x` | `0.3` | [0.3 register map](0.3.md) |
+| `0.2.x` | `0.2` | [0.2 register map](0.2.md) |
