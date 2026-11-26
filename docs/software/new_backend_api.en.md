@@ -361,7 +361,7 @@ App → RC:
 | `offer` / `candidate` / `bye` | WebRTC fields | Signaling |
 | `assist.request/cancel/status/extend` | Assistance parameters | Remote assistance |
 | `logs.list/open/close` | `name/path/tail` | Log access |
-| `peek.set_domain` / `peek.clear` | `domain_id` / None | Set or clear cross-ROS-domain inspection |
+| `peek.set_domain` / `peek.clear` | `domain_id` / None | Subscribe to a ROS domain (0–232) or clear the subscription. See [System Settings](../elf3/developer/overview.en.md#default-domain-id) for the gamepad default. |
 
 Velocity control fields must be flat members of `payload`:
 

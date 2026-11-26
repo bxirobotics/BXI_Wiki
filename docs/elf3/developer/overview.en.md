@@ -90,11 +90,9 @@ When multiple robots exist on the same local network, or multiple debugging host
 
 Each robot is configured with a default Domain ID at the factory according to the following rules. The value depends on how the robot is started:
 
-- **Gamepad startup**: `ROS_DOMAIN_ID = generation × 10 + robot serial number`.
-  ELF3 is a third-generation product, so the generation number is `3`, and the Domain ID is `30 + serial number`.
-    - Example: `elf3-15` → `3 × 10 + 15 = 45`
-    - Example: `elf3-20` → `3 × 10 + 20 = 50`
-- **APP startup**: `ROS_DOMAIN_ID` is fixed at `22`.
+- **Gamepad startup** uses the trailing 1–3 digits of the short hostname (before the first dot). Read the device number in decimal and calculate `ROS_DOMAIN_ID = (device number + 201) % 202 + 31`. The controller configuration generator rejects missing or longer numeric suffixes.
+  Examples include `elf3-01.local → 31`, `elf3-15 → 45`, `elf3-202 → 232`, `elf3-203 → 31` and `elf3-255 → 83`. Both `0` and `000` map to `232`.
+- **App startup** uses RC gateway domain `22` by default. Diagnostics opened from the control screen selects this domain.
 
 ### How to Configure
 
@@ -112,7 +110,7 @@ source ~/.bashrc
 ```
 
 !!! tip "Notes"
-    - The recommended range for `ROS_DOMAIN_ID` is `0–101`.
+    - Gamepad domains cycle through `31–232` and repeat every 202 device numbers. Check the domain and DDS network interfaces before enabling cross-host communication.
     - The host (development machine) must be set to the **same** Domain ID as the target robot in order to communicate with it.
     - Restart the relevant ROS2 nodes after changing the value for it to take effect.
 

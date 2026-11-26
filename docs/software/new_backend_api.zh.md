@@ -361,7 +361,7 @@ App → RC：
 | `offer` / `candidate` / `bye` | WebRTC 字段 | signaling |
 | `assist.request/cancel/status/extend` | 协助参数 | 远程协助 |
 | `logs.list/open/close` | `name/path/tail` | 日志查看 |
-| `peek.set_domain` / `peek.clear` | `domain_id` / 无 | 设置或清除跨 ROS domain 查看 |
+| `peek.set_domain` / `peek.clear` | `domain_id` / 无 | 订阅指定 ROS 域（0–232）或清除订阅；手柄默认域见[系统设置](../elf3/developer/overview.zh.md#domain-id_1) |
 
 速度控制字段必须平铺：
 

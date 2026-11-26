@@ -218,7 +218,7 @@ Use **Import**, **Export**, and **Reset** at lower left to manage local settings
 
 ## 6. Diagnostics
 
-Diagnostics reads robot runtime data over Wi-Fi. Use it after the first connection, before remote control, or when something appears abnormal. On first entry, confirm **DOMAIN_ID**; it is the identifier used for internal robot communication and must match the robot's ROS 2 communication domain. If you do not know this value, ask the on-site technical team rather than changing it.
+Diagnostics reads robot runtime data over Wi-Fi. Use it after the first connection, before remote control, or when something appears abnormal. The device entry prefills the gamepad domain from the hostname. For example, `elf3-203` prefills `31`. Diagnostics opened from the control screen defaults to the App domain `22`. Enter the actual domain if it was customized. Leaving the field blank connects to the gateway without subscribing to cross-domain telemetry. See [Default Domain ID](../elf3/developer/overview.en.md#default-domain-id).
 
 ![Set DOMAIN_ID](../assets/control/app-guide-2026-en/status-domain.png)
 
